@@ -1,0 +1,18 @@
+{
+  "name": "hack-escrow",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "anchor": "anchor",
+    "build": "cargo build --manifest-path=programs/hack-escrow/Cargo.toml",
+    "test": "anchor test"
+  },
+  "devDependencies": {
+    "@solana/web3.js": "^1.91.0",
+    "@types/node": "^20.11.0",
+    "typescript": "^5.3.3"
+  },
+  "dependencies": {
+    "anchor-lang": "0.30.1"
+  }
+}
