@@ -1,120 +1,94 @@
 use anchor_lang::prelude::*;
-use anchor_lang::solana_program::program::invoke;
-use anchor_lang::solana_program::system_instruction;
 
 declare_id!("CdWRw7fqNCBpz34qHoFjua9Nry6pbhnVrsfpgMemKKrL");
 
+pub mod error;
+pub mod instructions;
+pub mod state;
+
+use instructions::*;
+
 #[program]
-pub mod hack_escrow {
+pub mod openbounty_v2 {
     use super::*;
 
-    // 1. Initialize the escrow vault
+    /// Initialize a new bounty escrow
+    /// 
+    /// Creates an escrow account and locks funds in a vault PDA.
+    /// Organizer specifies judges, voting threshold, prize tiers, and deadline.
     pub fn initialize_escrow(
         ctx: Context<InitializeEscrow>,
-        amount: u64,
         judges: Vec<Pubkey>,
         threshold: u8,
-        tiers: Vec<u64>,
+        tier_amounts: Vec<u64>,
         deadline: i64,
     ) -> Result<()> {
-        // Logic to create the escrow vault and store metadata
-        Ok(())
+        instructions::initialize_escrow(ctx, judges, threshold, tier_amounts, deadline)
     }
 
-    // 2. Judges sign a winner (off-chain; on-chain verification)
+    /// Finalize winner for a specific tier (TO BE IMPLEMENTED IN CHUNK 2)
+    /// 
+    /// Judges sign off-chain, signatures are verified on-chain.
+    /// When threshold is met, winner is recorded for the tier.
     pub fn finalize_winner(
-        ctx: Context<FinalizeWinner>,
-        tier: u8,
-        winner: Pubkey,
-        signatures: Vec<[u8; 64]>, // Ed25519 signatures
+        _ctx: Context<FinalizeWinner>,
+        _tier: u8,
+        _winner: Pubkey,
+        _signatures: Vec<[u8; 64]>,
     ) -> Result<()> {
-        // Logic to verify signatures and mark the tier as claimed
+        // TODO: Implement in Chunk 2
+        msg!("finalize_winner - Coming in Chunk 2!");
         Ok(())
     }
 
-    // 3. Winner claims their prize
-    pub fn claim_prize(ctx: Context<ClaimPrize>, tier: u8) -> Result<()> {
-        // Logic to transfer funds to the winner
+    /// Claim prize for a specific tier (TO BE IMPLEMENTED IN CHUNK 3)
+    /// 
+    /// Winner calls this after being finalized by judges.
+    /// Transfers funds from vault to winner's wallet.
+    pub fn claim_prize(_ctx: Context<ClaimPrize>, _tier: u8) -> Result<()> {
+        // TODO: Implement in Chunk 3
+        msg!("claim_prize - Coming in Chunk 3!");
         Ok(())
     }
 
-    // 4. Organizer refunds unclaimed funds after deadline
-    pub fn refund_unclaimed(ctx: Context<RefundUnclaimed>) -> Result<()> {
-        // Logic to return funds to the organizer
+    /// Refund unclaimed funds after deadline (TO BE IMPLEMENTED IN CHUNK 4)
+    /// 
+    /// Organizer can reclaim any unclaimed prizes after deadline expires.
+    pub fn refund_unclaimed(_ctx: Context<RefundUnclaimed>) -> Result<()> {
+        // TODO: Implement in Chunk 4
+        msg!("refund_unclaimed - Coming in Chunk 4!");
         Ok(())
     }
 }
 
-// Define custom errors
-#[error_code]
-pub enum EscrowError {
-    #[msg("Signature verification failed")]
-    InvalidSignature,
-    #[msg("Insufficient signatures")]
-    InsufficientSignatures,
-    #[msg("Tier already claimed")]
-    TierAlreadyClaimed,
-    #[msg("Deadline not reached")]
-    DeadlineNotReached,
-    #[msg("Escrow expired")]
-    EscrowExpired,
-    #[msg("Invalid judge")]
-    InvalidJudge,
-}
-
-// Context structs for each instruction
-#[derive(Accounts)]
-pub struct InitializeEscrow<'info> {
-    #[account(init, payer = organizer, space = 8 + Escrow::LEN)]
-    pub escrow: Account<'info, Escrow>,
-    #[account(mut)]
-    pub organizer: Signer<'info>,
-    pub system_program: Program<'info, System>,
-}
 
 #[derive(Accounts)]
 pub struct FinalizeWinner<'info> {
-    #[account(mut, has_one = organizer)]
-    pub escrow: Account<'info, Escrow>,
+    #[account(mut)]
+    pub escrow: Account<'info, state::Escrow>,
     pub organizer: Signer<'info>,
 }
 
 #[derive(Accounts)]
 pub struct ClaimPrize<'info> {
-    #[account(mut, has_one = organizer)]
-    pub escrow: Account<'info, Escrow>,
     #[account(mut)]
-    pub winner: SystemAccount<'info>,
-    pub organizer: Signer<'info>,
+    pub escrow: Account<'info, state::Escrow>,
+    /// CHECK: Vault PDA
+    #[account(mut)]
+    pub vault: AccountInfo<'info>,
+    #[account(mut)]
+    pub winner: Signer<'info>,
     pub system_program: Program<'info, System>,
 }
 
 #[derive(Accounts)]
 pub struct RefundUnclaimed<'info> {
-    #[account(mut, has_one = organizer)]
-    pub escrow: Account<'info, Escrow>,
+    #[account(mut)]
+    pub escrow: Account<'info, state::Escrow>,
+    /// CHECK: Vault PDA
+    #[account(mut)]
+    pub vault: AccountInfo<'info>,
     #[account(mut)]
     pub organizer: Signer<'info>,
-}
-
-// Escrow account structure
-#[account]
-pub struct Escrow {
-    pub organizer: Pubkey,
-    pub judges: Vec<Pubkey>,
-    pub threshold: u8,
-    pub tiers: Vec<u64>,
-    pub claimed_tiers: Vec<bool>, 
-    pub deadline: i64,
-    pub vault_bump: u8,
-}
-
-impl Escrow {
-    const LEN: usize = 32 +
-                       4 + 5 * 32 +
-                       1 +
-                       4 + 4 * 8 +
-                       4 + 4 * 1 +
-                       8 +
-                       1;
+    pub system_program: Program<'info, System>,
 }
