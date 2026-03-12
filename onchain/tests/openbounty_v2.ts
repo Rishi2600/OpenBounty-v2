@@ -968,15 +968,492 @@ describe("openbounty_v2", () => {
     });
   });
 
-  describe("claim_prize (Chunk 3 - Not Implemented Yet)", () => {
-    it("Should be implemented in Chunk 3", async () => {
-      console.log("claim_prize - Coming in Chunk 3");
+  describe("claim_prize", () => {
+    let escrowPda: PublicKey;
+    let vaultPda: PublicKey;
+    let organizerForClaim: Keypair;
+    let judgesForClaim: Keypair[];
+    let winner1: Keypair;
+    let winner2: Keypair;
+
+    before(async () => {
+      // Create fresh keypairs for claim tests
+      organizerForClaim = Keypair.generate();
+      judgesForClaim = [
+        Keypair.generate(),
+        Keypair.generate(),
+        Keypair.generate(),
+        Keypair.generate(),
+        Keypair.generate(),
+      ];
+      winner1 = Keypair.generate();
+      winner2 = Keypair.generate();
+
+      // Airdrop SOL to organizer
+      const airdropSig = await provider.connection.requestAirdrop(
+        organizerForClaim.publicKey,
+        100 * LAMPORTS_PER_SOL,
+      );
+      await provider.connection.confirmTransaction(airdropSig);
+
+      // Derive PDAs
+      [escrowPda] = PublicKey.findProgramAddressSync(
+        [Buffer.from("escrow"), organizerForClaim.publicKey.toBuffer()],
+        program.programId,
+      );
+
+      [vaultPda] = PublicKey.findProgramAddressSync(
+        [Buffer.from("vault"), organizerForClaim.publicKey.toBuffer()],
+        program.programId,
+      );
+
+      // Initialize escrow
+      const judges = judgesForClaim.map((j) => j.publicKey);
+      const threshold = 3;
+      const tierAmounts = [
+        new anchor.BN(20 * LAMPORTS_PER_SOL),
+        new anchor.BN(15 * LAMPORTS_PER_SOL),
+      ];
+      const deadline = new anchor.BN(
+        Math.floor(Date.now() / 1000) + 60 * 60 * 24 * 30,
+      );
+
+      await program.methods
+        .initializeEscrow(judges, threshold, tierAmounts, deadline)
+        .accountsPartial({
+          escrow: escrowPda,
+          vault: vaultPda,
+          organizer: organizerForClaim.publicKey,
+          systemProgram: anchor.web3.SystemProgram.programId,
+        })
+        .signers([organizerForClaim])
+        .rpc();
+
+      // Finalize winner for tier 0
+      const signatures0: [
+        number,
+        number,
+        number,
+        number,
+        number,
+        number,
+        number,
+        number,
+        number,
+        number,
+        number,
+        number,
+        number,
+        number,
+        number,
+        number,
+        number,
+        number,
+        number,
+        number,
+        number,
+        number,
+        number,
+        number,
+        number,
+        number,
+        number,
+        number,
+        number,
+        number,
+        number,
+        number,
+        number,
+        number,
+        number,
+        number,
+        number,
+        number,
+        number,
+        number,
+        number,
+        number,
+        number,
+        number,
+        number,
+        number,
+        number,
+        number,
+        number,
+        number,
+        number,
+        number,
+        number,
+        number,
+        number,
+        number,
+        number,
+        number,
+        number,
+        number,
+        number,
+        number,
+        number,
+        number,
+      ][] = [
+        Array(64).fill(1) as any,
+        Array(64).fill(2) as any,
+        Array(64).fill(3) as any,
+        Array(64).fill(0) as any,
+        Array(64).fill(0) as any,
+      ];
+
+      await program.methods
+        .finalizeWinner(0, winner1.publicKey, signatures0)
+        .accountsPartial({
+          escrow: escrowPda,
+          organizer: organizerForClaim.publicKey,
+        })
+        .rpc();
+
+      // Finalize winner for tier 1
+      const signatures1: [
+        number,
+        number,
+        number,
+        number,
+        number,
+        number,
+        number,
+        number,
+        number,
+        number,
+        number,
+        number,
+        number,
+        number,
+        number,
+        number,
+        number,
+        number,
+        number,
+        number,
+        number,
+        number,
+        number,
+        number,
+        number,
+        number,
+        number,
+        number,
+        number,
+        number,
+        number,
+        number,
+        number,
+        number,
+        number,
+        number,
+        number,
+        number,
+        number,
+        number,
+        number,
+        number,
+        number,
+        number,
+        number,
+        number,
+        number,
+        number,
+        number,
+        number,
+        number,
+        number,
+        number,
+        number,
+        number,
+        number,
+        number,
+        number,
+        number,
+        number,
+        number,
+        number,
+        number,
+        number,
+      ][] = [
+        Array(64).fill(4) as any,
+        Array(64).fill(5) as any,
+        Array(64).fill(6) as any,
+        Array(64).fill(0) as any,
+        Array(64).fill(0) as any,
+      ];
+
+      await program.methods
+        .finalizeWinner(1, winner2.publicKey, signatures1)
+        .accountsPartial({
+          escrow: escrowPda,
+          organizer: organizerForClaim.publicKey,
+        })
+        .rpc();
+    });
+
+    it("Successfully claims prize as the designated winner", async () => {
+      // Get balances before claim
+      const vaultBalanceBefore = await provider.connection.getBalance(vaultPda);
+      const winnerBalanceBefore = await provider.connection.getBalance(
+        winner1.publicKey,
+      );
+
+      console.log(
+        "Vault balance before:",
+        vaultBalanceBefore / LAMPORTS_PER_SOL,
+        "SOL",
+      );
+      console.log(
+        "Winner balance before:",
+        winnerBalanceBefore / LAMPORTS_PER_SOL,
+        "SOL",
+      );
+
+      // Winner claims prize
+      const tx = await program.methods
+        .claimPrize(0)
+        .accountsPartial({
+          escrow: escrowPda,
+          vault: vaultPda,
+          winner: winner1.publicKey,
+          systemProgram: anchor.web3.SystemProgram.programId,
+        })
+        .signers([winner1])
+        .rpc();
+
+      console.log("Claim prize transaction:", tx);
+
+      // Get balances after claim
+      const vaultBalanceAfter = await provider.connection.getBalance(vaultPda);
+      const winnerBalanceAfter = await provider.connection.getBalance(
+        winner1.publicKey,
+      );
+
+      console.log(
+        "Vault balance after:",
+        vaultBalanceAfter / LAMPORTS_PER_SOL,
+        "SOL",
+      );
+      console.log(
+        "Winner balance after:",
+        winnerBalanceAfter / LAMPORTS_PER_SOL,
+        "SOL",
+      );
+
+      // Verify vault balance decreased by prize amount
+      const expectedDecrease = 20 * LAMPORTS_PER_SOL;
+      assert.equal(
+        vaultBalanceBefore - vaultBalanceAfter,
+        expectedDecrease,
+        "Vault should have decreased by 20 SOL",
+      );
+
+      // Verify winner balance increased (accounting for tx fees)
+      const balanceIncrease = winnerBalanceAfter - winnerBalanceBefore;
+      assert.isAbove(
+        balanceIncrease,
+        19 * LAMPORTS_PER_SOL,
+        "Winner should have received approximately 20 SOL",
+      );
+
+      // Verify tier is marked as claimed
+      const escrowAccount = await program.account.escrow.fetch(escrowPda);
+      assert.isTrue(
+        escrowAccount.tiers[0].claimed,
+        "Tier 0 should be marked as claimed",
+      );
+
+      console.log("Prize claimed successfully");
+      console.log(
+        "Winner received approximately",
+        balanceIncrease / LAMPORTS_PER_SOL,
+        "SOL",
+      );
+    });
+
+    it("Fails to claim prize if not the winner", async () => {
+      const impostor = Keypair.generate();
+
+      // Airdrop to impostor for tx fees
+      const airdropSig = await provider.connection.requestAirdrop(
+        impostor.publicKey,
+        1 * LAMPORTS_PER_SOL,
+      );
+      await provider.connection.confirmTransaction(airdropSig);
+
+      try {
+        await program.methods
+          .claimPrize(1)
+          .accountsPartial({
+            escrow: escrowPda,
+            vault: vaultPda,
+            winner: impostor.publicKey,
+            systemProgram: anchor.web3.SystemProgram.programId,
+          })
+          .signers([impostor])
+          .rpc();
+
+        assert.fail("Should have failed - caller is not the winner");
+      } catch (error) {
+        assert.include(
+          error.message,
+          "Unauthorized",
+          "Should fail with Unauthorized error",
+        );
+        console.log("Correctly rejected non-winner claim attempt");
+      }
+    });
+
+    it("Fails to claim prize that was already claimed", async () => {
+      try {
+        await program.methods
+          .claimPrize(0)
+          .accountsPartial({
+            escrow: escrowPda,
+            vault: vaultPda,
+            winner: winner1.publicKey,
+            systemProgram: anchor.web3.SystemProgram.programId,
+          })
+          .signers([winner1])
+          .rpc();
+
+        assert.fail("Should have failed - prize already claimed");
+      } catch (error) {
+        assert.include(
+          error.message,
+          "TierAlreadyClaimed",
+          "Should fail with TierAlreadyClaimed error",
+        );
+        console.log("Correctly rejected double claim attempt");
+      }
+    });
+
+    it("Fails to claim prize for tier that has no winner set", async () => {
+      // Create a new escrow with 3 tiers
+      const newOrganizer = Keypair.generate();
+      const airdropSig = await provider.connection.requestAirdrop(
+        newOrganizer.publicKey,
+        50 * LAMPORTS_PER_SOL,
+      );
+      await provider.connection.confirmTransaction(airdropSig);
+
+      const [newEscrowPda] = PublicKey.findProgramAddressSync(
+        [Buffer.from("escrow"), newOrganizer.publicKey.toBuffer()],
+        program.programId,
+      );
+
+      const [newVaultPda] = PublicKey.findProgramAddressSync(
+        [Buffer.from("vault"), newOrganizer.publicKey.toBuffer()],
+        program.programId,
+      );
+
+      const judges = judgesForClaim.map((j) => j.publicKey);
+      const tierAmounts = [
+        new anchor.BN(10 * LAMPORTS_PER_SOL),
+        new anchor.BN(5 * LAMPORTS_PER_SOL),
+        new anchor.BN(3 * LAMPORTS_PER_SOL),
+      ];
+      const deadline = new anchor.BN(
+        Math.floor(Date.now() / 1000) + 60 * 60 * 24 * 30,
+      );
+
+      await program.methods
+        .initializeEscrow(judges, 3, tierAmounts, deadline)
+        .accountsPartial({
+          escrow: newEscrowPda,
+          vault: newVaultPda,
+          organizer: newOrganizer.publicKey,
+          systemProgram: anchor.web3.SystemProgram.programId,
+        })
+        .signers([newOrganizer])
+        .rpc();
+
+      // Try to claim tier 2 without finalizing winner
+      const someWinner = Keypair.generate();
+      const airdrop2 = await provider.connection.requestAirdrop(
+        someWinner.publicKey,
+        1 * LAMPORTS_PER_SOL,
+      );
+      await provider.connection.confirmTransaction(airdrop2);
+
+      try {
+        await program.methods
+          .claimPrize(2)
+          .accountsPartial({
+            escrow: newEscrowPda,
+            vault: newVaultPda,
+            winner: someWinner.publicKey,
+            systemProgram: anchor.web3.SystemProgram.programId,
+          })
+          .signers([someWinner])
+          .rpc();
+
+        assert.fail("Should have failed - winner not finalized");
+      } catch (error) {
+        assert.include(
+          error.message,
+          "NotFinalized",
+          "Should fail with NotFinalized error",
+        );
+        console.log("Correctly rejected claim for unfinalized tier");
+      }
+    });
+
+    it("Allows multiple different winners to claim their respective prizes", async () => {
+      // Winner 2 claims their prize (tier 1)
+      const vaultBalanceBefore = await provider.connection.getBalance(vaultPda);
+      const winner2BalanceBefore = await provider.connection.getBalance(
+        winner2.publicKey,
+      );
+
+      await program.methods
+        .claimPrize(1)
+        .accountsPartial({
+          escrow: escrowPda,
+          vault: vaultPda,
+          winner: winner2.publicKey,
+          systemProgram: anchor.web3.SystemProgram.programId,
+        })
+        .signers([winner2])
+        .rpc();
+
+      const vaultBalanceAfter = await provider.connection.getBalance(vaultPda);
+      const winner2BalanceAfter = await provider.connection.getBalance(
+        winner2.publicKey,
+      );
+
+      // Verify vault decreased by 15 SOL
+      assert.equal(
+        vaultBalanceBefore - vaultBalanceAfter,
+        15 * LAMPORTS_PER_SOL,
+        "Vault should decrease by 15 SOL",
+      );
+
+      // Verify winner2 received approximately 15 SOL
+      const increase = winner2BalanceAfter - winner2BalanceBefore;
+      assert.isAbove(
+        increase,
+        14 * LAMPORTS_PER_SOL,
+        "Winner 2 should receive approximately 15 SOL",
+      );
+
+      // Verify both tiers are claimed
+      const escrowAccount = await program.account.escrow.fetch(escrowPda);
+      assert.isTrue(escrowAccount.tiers[0].claimed, "Tier 0 should be claimed");
+      assert.isTrue(escrowAccount.tiers[1].claimed, "Tier 1 should be claimed");
+
+      console.log("Multiple winners claimed successfully");
+      console.log("Winner 1 claimed tier 0: 20 SOL");
+      console.log("Winner 2 claimed tier 1: 15 SOL");
     });
   });
 
   describe("refund_unclaimed (Chunk 4 - Not Implemented Yet)", () => {
     it("Should be implemented in Chunk 4", async () => {
-      console.log("refund_unclaimed - Coming in Chunk 4");
+      console.log("⏳ refund_unclaimed - Coming in Chunk 4");
     });
   });
 });
