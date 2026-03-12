@@ -39,14 +39,12 @@ pub mod openbounty_v2 {
         instructions::finalize_winner(ctx, tier, winner, judge_signatures)
     }
 
-    /// Claim prize for a specific tier (TO BE IMPLEMENTED IN CHUNK 3)
+    /// Claim prize for a specific tier
     /// 
     /// Winner calls this after being finalized by judges.
     /// Transfers funds from vault to winner's wallet.
-    pub fn claim_prize(_ctx: Context<ClaimPrize>, _tier: u8) -> Result<()> {
-        // TODO: Implement in Chunk 3
-        msg!("claim_prize - Coming in Chunk 3!");
-        Ok(())
+    pub fn claim_prize(ctx: Context<ClaimPrize>, tier: u8) -> Result<()> {
+        instructions::claim_prize(ctx, tier)
     }
 
     /// Refund unclaimed funds after deadline (TO BE IMPLEMENTED IN CHUNK 4)
@@ -59,18 +57,6 @@ pub mod openbounty_v2 {
     }
 }
 
-
-#[derive(Accounts)]
-pub struct ClaimPrize<'info> {
-    #[account(mut)]
-    pub escrow: Account<'info, state::Escrow>,
-    /// CHECK: Vault PDA
-    #[account(mut)]
-    pub vault: AccountInfo<'info>,
-    #[account(mut)]
-    pub winner: Signer<'info>,
-    pub system_program: Program<'info, System>,
-}
 
 #[derive(Accounts)]
 pub struct RefundUnclaimed<'info> {
