@@ -40,4 +40,13 @@ pub enum EscrowError {
     
     #[msg("Unauthorized - you are not the organizer")]
     Unauthorized,
+    
+    #[msg("Winner already finalized for this tier")]
+    AlreadyFinalized,
+    
+    #[msg("Cannot claim - winner not yet finalized")]
+    NotFinalized,
+    
+    #[msg("Message format invalid for signature verification")]
+    InvalidMessage,
 }
