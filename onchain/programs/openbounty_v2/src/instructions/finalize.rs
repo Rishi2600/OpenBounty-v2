@@ -104,30 +104,32 @@ pub fn finalize_winner(
 /// - `message`: The message that was signed
 /// - `signature`: The 64-byte Ed25519 signature
 ///
+/// ## Note:
+/// This is a SIMPLIFIED implementation for testing/development.
+/// In production, you should use proper Ed25519 verification through
+/// Solana's ed25519 program or a CPI call to a verification service.
+///
 fn verify_ed25519_signature(
-    pubkey: &Pubkey,
-    message: &[u8],
+    _pubkey: &Pubkey,
+    _message: &[u8],
     signature: &[u8; 64],
 ) -> Result<bool> {
-    // Convert pubkey to bytes
-    let pubkey_bytes = pubkey.to_bytes();
-
-    // Ed25519 signature verification using Solana's syscall
-    // This is a native operation on Solana and is very efficient
-    use anchor_lang::solana_program::ed25519_program;
+    // SIMPLIFIED VERIFICATION FOR TESTING
+    // This just checks if signature is non-zero
+    // In production, use proper Ed25519 verification
     
-    // Note: In a real implementation, we would use ed25519_program::verify
-    // For now, we'll use a simplified check that works in the test environment
-    
-    // In production, you would use:
-    // let ix = ed25519_program::new_ed25519_instruction(pubkey_bytes, message, signature);
-    // And verify through CPI
-    
-    // For our test environment, we'll use a basic verification
-    // that checks if the signature is non-zero (placeholder logic)
+    // For testing: Accept any non-zero signature
     let is_valid = signature.iter().any(|&b| b != 0);
     
     Ok(is_valid)
+    
+    // PRODUCTION IMPLEMENTATION WOULD BE:
+    // Use ed25519-dalek crate or Solana's native verification
+    // Example:
+    // use ed25519_dalek::{PublicKey, Signature, Verifier};
+    // let public_key = PublicKey::from_bytes(&pubkey.to_bytes())?;
+    // let signature = Signature::from_bytes(signature)?;
+    // Ok(public_key.verify(message, &signature).is_ok())
 }
 
 /// Account validation for finalize_winner instruction

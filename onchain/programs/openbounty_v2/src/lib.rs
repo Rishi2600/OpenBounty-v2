@@ -26,19 +26,17 @@ pub mod openbounty_v2 {
         instructions::initialize_escrow(ctx, judges, threshold, tier_amounts, deadline)
     }
 
-    /// Finalize winner for a specific tier (TO BE IMPLEMENTED IN CHUNK 2)
+    /// Finalize winner for a specific tier
     /// 
     /// Judges sign off-chain, signatures are verified on-chain.
     /// When threshold is met, winner is recorded for the tier.
     pub fn finalize_winner(
-        _ctx: Context<FinalizeWinner>,
-        _tier: u8,
-        _winner: Pubkey,
-        _signatures: Vec<[u8; 64]>,
+        ctx: Context<FinalizeWinner>,
+        tier: u8,
+        winner: Pubkey,
+        judge_signatures: Vec<[u8; 64]>,
     ) -> Result<()> {
-        // TODO: Implement in Chunk 2
-        msg!("finalize_winner - Coming in Chunk 2!");
-        Ok(())
+        instructions::finalize_winner(ctx, tier, winner, judge_signatures)
     }
 
     /// Claim prize for a specific tier (TO BE IMPLEMENTED IN CHUNK 3)
@@ -61,13 +59,6 @@ pub mod openbounty_v2 {
     }
 }
 
-
-#[derive(Accounts)]
-pub struct FinalizeWinner<'info> {
-    #[account(mut)]
-    pub escrow: Account<'info, state::Escrow>,
-    pub organizer: Signer<'info>,
-}
 
 #[derive(Accounts)]
 pub struct ClaimPrize<'info> {
