@@ -76,7 +76,7 @@ describe("openbounty_v2", () => {
       // Initialize escrow
       const tx = await program.methods
         .initializeEscrow(judges, threshold, tierAmounts, deadline)
-        .accounts({
+        .accountsPartial({
           escrow: escrowPda,
           vault: vaultPda,
           organizer: organizer.publicKey,
@@ -196,7 +196,7 @@ describe("openbounty_v2", () => {
       try {
         await program.methods
           .initializeEscrow(judges, invalidThreshold, tierAmounts, deadline)
-          .accounts({
+          .accountsPartial({
             escrow: escrowPda,
             vault: vaultPda,
             organizer: organizer2.publicKey,
@@ -242,7 +242,7 @@ describe("openbounty_v2", () => {
       try {
         await program.methods
           .initializeEscrow(judges, threshold, tierAmounts, pastDeadline)
-          .accounts({
+          .accountsPartial({
             escrow: escrowPda,
             vault: vaultPda,
             organizer: organizer3.publicKey,
@@ -288,7 +288,7 @@ describe("openbounty_v2", () => {
       try {
         await program.methods
           .initializeEscrow(emptyJudges, threshold, tierAmounts, deadline)
-          .accounts({
+          .accountsPartial({
             escrow: escrowPda,
             vault: vaultPda,
             organizer: organizer4.publicKey,
@@ -359,7 +359,7 @@ describe("openbounty_v2", () => {
 
       await program.methods
         .initializeEscrow(judges, threshold, tierAmounts, deadline)
-        .accounts({
+        .accountsPartial({
           escrow: escrowPda,
           vault: vaultPda,
           organizer: organizerForFinalize.publicKey,
