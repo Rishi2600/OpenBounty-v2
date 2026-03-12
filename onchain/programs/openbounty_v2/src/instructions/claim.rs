@@ -30,6 +30,11 @@ pub fn claim_prize(ctx: Context<ClaimPrize>, tier: u8) -> Result<()> {
         EscrowError::InvalidTier
     );
 
+    // Get organizer key BEFORE creating mutable borrow of prize_tier
+    // This avoids borrow checker conflict
+    let organizer_key = escrow.organizer.key();
+    let vault_bump = escrow.vault_bump;
+
     let prize_tier = &mut escrow.tiers[tier as usize];
 
     // Validation: Check that winner has been finalized
@@ -60,11 +65,10 @@ pub fn claim_prize(ctx: Context<ClaimPrize>, tier: u8) -> Result<()> {
 
     // Transfer SOL from vault to winner
     // We need to use the vault's PDA signer since the vault is owned by the program
-    let organizer_key = escrow.organizer.key();
     let vault_seeds = &[
         b"vault",
         organizer_key.as_ref(),
-        &[escrow.vault_bump],
+        &[vault_bump],
     ];
     let vault_signer = &[&vault_seeds[..]];
 
