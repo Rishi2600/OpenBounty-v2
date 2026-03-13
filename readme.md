@@ -164,6 +164,34 @@ OpenBounty Program
 ```
 
 ---
+ 
+## program core instructions  
+ 
+### 1. Trustless Fund Locking
+- Organizer locks funds in PDA vault at creation
+- No private key for vault (program-controlled)
+- Funds cannot be withdrawn before deadline
+- Guarantees prizes exist upfront
+ 
+### 2. Multi-Signature Judge Voting
+- 5 judges, 3-of-5 threshold (configurable)
+- Ed25519 signature verification
+- Byzantine fault tolerant
+- Permissionless submission (anyone can submit valid signatures)
+ 
+### 3. Permissionless Prize Claiming
+- Winners claim anytime after finalization
+- No organizer approval needed
+- Instant transfers (one transaction)
+- Cannot claim twice (idempotency)
+ 
+### 4. Automatic Refund System
+- Deadline-based access control
+- Only refunds unclaimed prizes
+- Preserves claimed prizes
+- Organizer only pays for claimed prizes
+ 
+---
 
 ## Tech Stack
 
