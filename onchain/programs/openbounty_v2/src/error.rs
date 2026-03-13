@@ -49,4 +49,10 @@ pub enum EscrowError {
     
     #[msg("Message format invalid for signature verification")]
     InvalidMessage,
+    
+    #[msg("Deadline has not passed yet - cannot refund")]
+    DeadlineNotPassed,
+    
+    #[msg("No unclaimed funds available to refund")]
+    NoUnclaimedFunds,
 }
