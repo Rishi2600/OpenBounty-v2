@@ -8,11 +8,14 @@ skip-lint = false
 [programs.localnet]
 openbounty_v2 = "CdWRw7fqNCBpz34qHoFjua9Nry6pbhnVrsfpgMemKKrL"
 
+[programs.devnet]
+openbounty_v2 = "CdWRw7fqNCBpz34qHoFjua9Nry6pbhnVrsfpgMemKKrL"
+
 [registry]
 url = "https://api.apr.dev"
 
 [provider]
-cluster = "localnet"
+cluster = "devnet"
 wallet = "~/.config/solana/bounty.json"
 
 [test]
