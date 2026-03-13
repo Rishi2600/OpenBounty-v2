@@ -138,6 +138,32 @@ Open [http://localhost:3000](http://localhost:3000) in your browser. Connect a S
 
 ---
 
+### Solana program architecture and instructions used - 
+ 
+```
+OpenBounty Program
+├─ 4 Instructions (Complete Lifecycle)
+│  1. initialize_escrow    - Lock funds upfront
+│  2. finalize_winner      - Multi-sig judge voting
+│  3. claim_prize          - Permissionless claiming
+│  4. refund_unclaimed     - Automatic refunds
+│
+├─ 2 PDAs (Data Storage)
+│  1. Escrow Account       - Metadata + state
+│  2. Vault Account        - SOL storage
+│
+├─ 15 Error Types (Comprehensive Validation)
+│  - Authorization errors
+│  - State validation errors
+│  - Timing errors
+│
+└─ 19 Tests (Full Coverage)
+   - Success scenarios
+   - Edge cases
+   - Attack prevention
+```
+
+---
 
 ## Tech Stack
 
