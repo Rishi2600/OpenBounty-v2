@@ -47,25 +47,11 @@ pub mod openbounty_v2 {
         instructions::claim_prize(ctx, tier)
     }
 
-    /// Refund unclaimed funds after deadline (TO BE IMPLEMENTED IN CHUNK 4)
+    /// Refund unclaimed prizes to organizer after deadline
     /// 
-    /// Organizer can reclaim any unclaimed prizes after deadline expires.
-    pub fn refund_unclaimed(_ctx: Context<RefundUnclaimed>) -> Result<()> {
-        // TODO: Implement in Chunk 4
-        msg!("refund_unclaimed - Coming in Chunk 4!");
-        Ok(())
+    /// Organizer calls this after deadline passes to reclaim
+    /// funds for prizes that were never claimed.
+    pub fn refund_unclaimed(ctx: Context<RefundUnclaimed>) -> Result<()> {
+        instructions::refund_unclaimed(ctx)
     }
-}
-
-
-#[derive(Accounts)]
-pub struct RefundUnclaimed<'info> {
-    #[account(mut)]
-    pub escrow: Account<'info, state::Escrow>,
-    /// CHECK: Vault PDA
-    #[account(mut)]
-    pub vault: AccountInfo<'info>,
-    #[account(mut)]
-    pub organizer: Signer<'info>,
-    pub system_program: Program<'info, System>,
 }
