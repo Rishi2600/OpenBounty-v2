@@ -1451,9 +1451,640 @@ describe("openbounty_v2", () => {
     });
   });
 
-  describe("refund_unclaimed (Chunk 4 - Not Implemented Yet)", () => {
-    it("Should be implemented in Chunk 4", async () => {
-      console.log("⏳ refund_unclaimed - Coming in Chunk 4");
+  describe("refund_unclaimed", () => {
+    let escrowPda: PublicKey;
+    let vaultPda: PublicKey;
+    let organizerForRefund: Keypair;
+    let judgesForRefund: Keypair[];
+    let winner1: Keypair;
+
+    before(async () => {
+      // Create fresh keypairs for refund tests
+      organizerForRefund = Keypair.generate();
+      judgesForRefund = [
+        Keypair.generate(),
+        Keypair.generate(),
+        Keypair.generate(),
+        Keypair.generate(),
+        Keypair.generate(),
+      ];
+      winner1 = Keypair.generate();
+
+      // Airdrop SOL to organizer
+      const airdropSig = await provider.connection.requestAirdrop(
+        organizerForRefund.publicKey,
+        100 * LAMPORTS_PER_SOL,
+      );
+      await provider.connection.confirmTransaction(airdropSig);
+
+      // Derive PDAs
+      [escrowPda] = PublicKey.findProgramAddressSync(
+        [Buffer.from("escrow"), organizerForRefund.publicKey.toBuffer()],
+        program.programId,
+      );
+
+      [vaultPda] = PublicKey.findProgramAddressSync(
+        [Buffer.from("vault"), organizerForRefund.publicKey.toBuffer()],
+        program.programId,
+      );
+
+      // Initialize escrow with short deadline (1 second from now)
+      const judges = judgesForRefund.map((j) => j.publicKey);
+      const threshold = 3;
+      const tierAmounts = [
+        new anchor.BN(20 * LAMPORTS_PER_SOL),
+        new anchor.BN(15 * LAMPORTS_PER_SOL),
+        new anchor.BN(10 * LAMPORTS_PER_SOL),
+      ];
+      const deadline = new anchor.BN(Math.floor(Date.now() / 1000) + 1);
+
+      await program.methods
+        .initializeEscrow(judges, threshold, tierAmounts, deadline)
+        .accountsPartial({
+          escrow: escrowPda,
+          vault: vaultPda,
+          organizer: organizerForRefund.publicKey,
+          systemProgram: anchor.web3.SystemProgram.programId,
+        })
+        .signers([organizerForRefund])
+        .rpc();
+
+      // Finalize and claim tier 0 only
+      const signatures0: [
+        number,
+        number,
+        number,
+        number,
+        number,
+        number,
+        number,
+        number,
+        number,
+        number,
+        number,
+        number,
+        number,
+        number,
+        number,
+        number,
+        number,
+        number,
+        number,
+        number,
+        number,
+        number,
+        number,
+        number,
+        number,
+        number,
+        number,
+        number,
+        number,
+        number,
+        number,
+        number,
+        number,
+        number,
+        number,
+        number,
+        number,
+        number,
+        number,
+        number,
+        number,
+        number,
+        number,
+        number,
+        number,
+        number,
+        number,
+        number,
+        number,
+        number,
+        number,
+        number,
+        number,
+        number,
+        number,
+        number,
+        number,
+        number,
+        number,
+        number,
+        number,
+        number,
+        number,
+        number,
+      ][] = [
+        Array(64).fill(1) as any,
+        Array(64).fill(2) as any,
+        Array(64).fill(3) as any,
+        Array(64).fill(0) as any,
+        Array(64).fill(0) as any,
+      ];
+
+      await program.methods
+        .finalizeWinner(0, winner1.publicKey, signatures0)
+        .accountsPartial({
+          escrow: escrowPda,
+          organizer: organizerForRefund.publicKey,
+        })
+        .rpc();
+
+      await program.methods
+        .claimPrize(0)
+        .accountsPartial({
+          escrow: escrowPda,
+          vault: vaultPda,
+          winner: winner1.publicKey,
+          systemProgram: anchor.web3.SystemProgram.programId,
+        })
+        .signers([winner1])
+        .rpc();
+
+      // Wait for deadline to pass
+      console.log("Waiting for deadline to pass...");
+      await new Promise((resolve) => setTimeout(resolve, 2000));
+    });
+
+    it("Successfully refunds unclaimed prizes after deadline", async () => {
+      const organizerBalanceBefore = await provider.connection.getBalance(
+        organizerForRefund.publicKey,
+      );
+      const vaultBalanceBefore = await provider.connection.getBalance(vaultPda);
+
+      console.log(
+        "Organizer balance before:",
+        organizerBalanceBefore / LAMPORTS_PER_SOL,
+        "SOL",
+      );
+      console.log(
+        "Vault balance before:",
+        vaultBalanceBefore / LAMPORTS_PER_SOL,
+        "SOL",
+      );
+
+      // Refund unclaimed prizes
+      const tx = await program.methods
+        .refundUnclaimed()
+        .accountsPartial({
+          escrow: escrowPda,
+          vault: vaultPda,
+          organizer: organizerForRefund.publicKey,
+          systemProgram: anchor.web3.SystemProgram.programId,
+        })
+        .signers([organizerForRefund])
+        .rpc();
+
+      console.log("Refund transaction:", tx);
+
+      const organizerBalanceAfter = await provider.connection.getBalance(
+        organizerForRefund.publicKey,
+      );
+      const vaultBalanceAfter = await provider.connection.getBalance(vaultPda);
+
+      console.log(
+        "Organizer balance after:",
+        organizerBalanceAfter / LAMPORTS_PER_SOL,
+        "SOL",
+      );
+      console.log(
+        "Vault balance after:",
+        vaultBalanceAfter / LAMPORTS_PER_SOL,
+        "SOL",
+      );
+
+      // Expected refund: tier 1 (15 SOL) + tier 2 (10 SOL) = 25 SOL
+      const expectedRefund = 25 * LAMPORTS_PER_SOL;
+      const actualRefund = vaultBalanceBefore - vaultBalanceAfter;
+
+      assert.equal(
+        actualRefund,
+        expectedRefund,
+        "Vault should decrease by 25 SOL (unclaimed tiers)",
+      );
+
+      // Organizer balance should increase (minus tx fees)
+      const balanceIncrease = organizerBalanceAfter - organizerBalanceBefore;
+      assert.isAbove(
+        balanceIncrease,
+        24 * LAMPORTS_PER_SOL,
+        "Organizer should receive approximately 25 SOL",
+      );
+
+      console.log("Refund successful");
+      console.log("Refunded amount:", actualRefund / LAMPORTS_PER_SOL, "SOL");
+    });
+
+    it("Fails to refund before deadline passes", async () => {
+      // Create new escrow with future deadline
+      const newOrganizer = Keypair.generate();
+      const airdropSig = await provider.connection.requestAirdrop(
+        newOrganizer.publicKey,
+        50 * LAMPORTS_PER_SOL,
+      );
+      await provider.connection.confirmTransaction(airdropSig);
+
+      const [newEscrowPda] = PublicKey.findProgramAddressSync(
+        [Buffer.from("escrow"), newOrganizer.publicKey.toBuffer()],
+        program.programId,
+      );
+
+      const [newVaultPda] = PublicKey.findProgramAddressSync(
+        [Buffer.from("vault"), newOrganizer.publicKey.toBuffer()],
+        program.programId,
+      );
+
+      const judges = judgesForRefund.map((j) => j.publicKey);
+      const tierAmounts = [new anchor.BN(10 * LAMPORTS_PER_SOL)];
+      const futureDeadline = new anchor.BN(
+        Math.floor(Date.now() / 1000) + 60 * 60 * 24 * 30,
+      );
+
+      await program.methods
+        .initializeEscrow(judges, 3, tierAmounts, futureDeadline)
+        .accountsPartial({
+          escrow: newEscrowPda,
+          vault: newVaultPda,
+          organizer: newOrganizer.publicKey,
+          systemProgram: anchor.web3.SystemProgram.programId,
+        })
+        .signers([newOrganizer])
+        .rpc();
+
+      try {
+        await program.methods
+          .refundUnclaimed()
+          .accountsPartial({
+            escrow: newEscrowPda,
+            vault: newVaultPda,
+            organizer: newOrganizer.publicKey,
+            systemProgram: anchor.web3.SystemProgram.programId,
+          })
+          .signers([newOrganizer])
+          .rpc();
+
+        assert.fail("Should have failed - deadline not passed");
+      } catch (error) {
+        assert.include(
+          error.message,
+          "DeadlineNotPassed",
+          "Should fail with DeadlineNotPassed error",
+        );
+        console.log("Correctly rejected refund before deadline");
+      }
+    });
+
+    it("Fails when non-organizer tries to refund", async () => {
+      const impostor = Keypair.generate();
+      const airdropSig = await provider.connection.requestAirdrop(
+        impostor.publicKey,
+        1 * LAMPORTS_PER_SOL,
+      );
+      await provider.connection.confirmTransaction(airdropSig);
+
+      try {
+        await program.methods
+          .refundUnclaimed()
+          .accountsPartial({
+            escrow: escrowPda,
+            vault: vaultPda,
+            organizer: impostor.publicKey,
+            systemProgram: anchor.web3.SystemProgram.programId,
+          })
+          .signers([impostor])
+          .rpc();
+
+        assert.fail("Should have failed - caller is not organizer");
+      } catch (error) {
+        assert.include(
+          error.message,
+          "Unauthorized",
+          "Should fail with Unauthorized error",
+        );
+        console.log("Correctly rejected non-organizer refund attempt");
+      }
+    });
+
+    it("Fails when all prizes are already claimed (nothing to refund)", async () => {
+      // Create escrow where all prizes will be claimed
+      const newOrganizer = Keypair.generate();
+      const airdropSig = await provider.connection.requestAirdrop(
+        newOrganizer.publicKey,
+        50 * LAMPORTS_PER_SOL,
+      );
+      await provider.connection.confirmTransaction(airdropSig);
+
+      const [newEscrowPda] = PublicKey.findProgramAddressSync(
+        [Buffer.from("escrow"), newOrganizer.publicKey.toBuffer()],
+        program.programId,
+      );
+
+      const [newVaultPda] = PublicKey.findProgramAddressSync(
+        [Buffer.from("vault"), newOrganizer.publicKey.toBuffer()],
+        program.programId,
+      );
+
+      const judges = judgesForRefund.map((j) => j.publicKey);
+      const tierAmounts = [new anchor.BN(10 * LAMPORTS_PER_SOL)];
+      const shortDeadline = new anchor.BN(Math.floor(Date.now() / 1000) + 1);
+
+      await program.methods
+        .initializeEscrow(judges, 3, tierAmounts, shortDeadline)
+        .accountsPartial({
+          escrow: newEscrowPda,
+          vault: newVaultPda,
+          organizer: newOrganizer.publicKey,
+          systemProgram: anchor.web3.SystemProgram.programId,
+        })
+        .signers([newOrganizer])
+        .rpc();
+
+      // Finalize and claim the only prize
+      const someWinner = Keypair.generate();
+      const signatures: [
+        number,
+        number,
+        number,
+        number,
+        number,
+        number,
+        number,
+        number,
+        number,
+        number,
+        number,
+        number,
+        number,
+        number,
+        number,
+        number,
+        number,
+        number,
+        number,
+        number,
+        number,
+        number,
+        number,
+        number,
+        number,
+        number,
+        number,
+        number,
+        number,
+        number,
+        number,
+        number,
+        number,
+        number,
+        number,
+        number,
+        number,
+        number,
+        number,
+        number,
+        number,
+        number,
+        number,
+        number,
+        number,
+        number,
+        number,
+        number,
+        number,
+        number,
+        number,
+        number,
+        number,
+        number,
+        number,
+        number,
+        number,
+        number,
+        number,
+        number,
+        number,
+        number,
+        number,
+        number,
+      ][] = [
+        Array(64).fill(1) as any,
+        Array(64).fill(2) as any,
+        Array(64).fill(3) as any,
+        Array(64).fill(0) as any,
+        Array(64).fill(0) as any,
+      ];
+
+      await program.methods
+        .finalizeWinner(0, someWinner.publicKey, signatures)
+        .accountsPartial({
+          escrow: newEscrowPda,
+          organizer: newOrganizer.publicKey,
+        })
+        .rpc();
+
+      await program.methods
+        .claimPrize(0)
+        .accountsPartial({
+          escrow: newEscrowPda,
+          vault: newVaultPda,
+          winner: someWinner.publicKey,
+          systemProgram: anchor.web3.SystemProgram.programId,
+        })
+        .signers([someWinner])
+        .rpc();
+
+      // Wait for deadline
+      await new Promise((resolve) => setTimeout(resolve, 2000));
+
+      try {
+        await program.methods
+          .refundUnclaimed()
+          .accountsPartial({
+            escrow: newEscrowPda,
+            vault: newVaultPda,
+            organizer: newOrganizer.publicKey,
+            systemProgram: anchor.web3.SystemProgram.programId,
+          })
+          .signers([newOrganizer])
+          .rpc();
+
+        assert.fail("Should have failed - no unclaimed funds");
+      } catch (error) {
+        assert.include(
+          error.message,
+          "NoUnclaimedFunds",
+          "Should fail with NoUnclaimedFunds error",
+        );
+        console.log("Correctly rejected refund when all prizes claimed");
+      }
+    });
+
+    it("Correctly calculates partial refund (some claimed, some unclaimed)", async () => {
+      // Create escrow with 3 tiers
+      const newOrganizer = Keypair.generate();
+      const airdropSig = await provider.connection.requestAirdrop(
+        newOrganizer.publicKey,
+        100 * LAMPORTS_PER_SOL,
+      );
+      await provider.connection.confirmTransaction(airdropSig);
+
+      const [newEscrowPda] = PublicKey.findProgramAddressSync(
+        [Buffer.from("escrow"), newOrganizer.publicKey.toBuffer()],
+        program.programId,
+      );
+
+      const [newVaultPda] = PublicKey.findProgramAddressSync(
+        [Buffer.from("vault"), newOrganizer.publicKey.toBuffer()],
+        program.programId,
+      );
+
+      const judges = judgesForRefund.map((j) => j.publicKey);
+      const tierAmounts = [
+        new anchor.BN(30 * LAMPORTS_PER_SOL),
+        new anchor.BN(20 * LAMPORTS_PER_SOL),
+        new anchor.BN(10 * LAMPORTS_PER_SOL),
+      ];
+      const shortDeadline = new anchor.BN(Math.floor(Date.now() / 1000) + 1);
+
+      await program.methods
+        .initializeEscrow(judges, 3, tierAmounts, shortDeadline)
+        .accountsPartial({
+          escrow: newEscrowPda,
+          vault: newVaultPda,
+          organizer: newOrganizer.publicKey,
+          systemProgram: anchor.web3.SystemProgram.programId,
+        })
+        .signers([newOrganizer])
+        .rpc();
+
+      // Claim only tier 0 (30 SOL)
+      const winner = Keypair.generate();
+      const signatures: [
+        number,
+        number,
+        number,
+        number,
+        number,
+        number,
+        number,
+        number,
+        number,
+        number,
+        number,
+        number,
+        number,
+        number,
+        number,
+        number,
+        number,
+        number,
+        number,
+        number,
+        number,
+        number,
+        number,
+        number,
+        number,
+        number,
+        number,
+        number,
+        number,
+        number,
+        number,
+        number,
+        number,
+        number,
+        number,
+        number,
+        number,
+        number,
+        number,
+        number,
+        number,
+        number,
+        number,
+        number,
+        number,
+        number,
+        number,
+        number,
+        number,
+        number,
+        number,
+        number,
+        number,
+        number,
+        number,
+        number,
+        number,
+        number,
+        number,
+        number,
+        number,
+        number,
+        number,
+        number,
+      ][] = [
+        Array(64).fill(1) as any,
+        Array(64).fill(2) as any,
+        Array(64).fill(3) as any,
+        Array(64).fill(0) as any,
+        Array(64).fill(0) as any,
+      ];
+
+      await program.methods
+        .finalizeWinner(0, winner.publicKey, signatures)
+        .accountsPartial({
+          escrow: newEscrowPda,
+          organizer: newOrganizer.publicKey,
+        })
+        .rpc();
+
+      await program.methods
+        .claimPrize(0)
+        .accountsPartial({
+          escrow: newEscrowPda,
+          vault: newVaultPda,
+          winner: winner.publicKey,
+          systemProgram: anchor.web3.SystemProgram.programId,
+        })
+        .signers([winner])
+        .rpc();
+
+      // Wait for deadline
+      await new Promise((resolve) => setTimeout(resolve, 2000));
+
+      // Refund should be tier 1 (20) + tier 2 (10) = 30 SOL
+      const vaultBalanceBefore = await provider.connection.getBalance(
+        newVaultPda,
+      );
+
+      await program.methods
+        .refundUnclaimed()
+        .accountsPartial({
+          escrow: newEscrowPda,
+          vault: newVaultPda,
+          organizer: newOrganizer.publicKey,
+          systemProgram: anchor.web3.SystemProgram.programId,
+        })
+        .signers([newOrganizer])
+        .rpc();
+
+      const vaultBalanceAfter = await provider.connection.getBalance(
+        newVaultPda,
+      );
+      const refunded = vaultBalanceBefore - vaultBalanceAfter;
+
+      assert.equal(
+        refunded,
+        30 * LAMPORTS_PER_SOL,
+        "Should refund exactly 30 SOL (tier 1 + tier 2)",
+      );
+
+      console.log("Partial refund successful");
+      console.log("Tier 0: Claimed (30 SOL)");
+      console.log("Tier 1 + 2: Refunded (30 SOL)");
     });
   });
 });
