@@ -2096,19 +2096,18 @@ import { OpenbountyV2 } from "../target/types/openbounty_v2";
 import { PublicKey, Keypair, LAMPORTS_PER_SOL, Transaction, SystemProgram } from "@solana/web3.js";
 import { assert } from "chai";
 
-// ─────────────────────────────────────────────
 // HELPER — replaces ALL airdrops throughout the file
 // Transfers SOL from a funded payer to any wallet
-// ─────────────────────────────────────────────
 async function fund(
   provider: anchor.AnchorProvider,
-  payer: anchor.Wallet | Keypair,
   to: PublicKey,
   lamports: number,
-  extraSigners: Keypair[] = []
+  payer?: anchor.Wallet | Keypair,
 ) {
-  const fromPubkey =
-    "publicKey" in payer ? payer.publicKey : (payer as Keypair).publicKey;
+
+  const fromPubkey = payer ? payer.publicKey : provider.wallet.publicKey;
+
+  const signers = payer ? [payer] : [];
 
   const tx = new Transaction().add(
     SystemProgram.transfer({
@@ -2118,12 +2117,9 @@ async function fund(
     })
   );
 
-  await provider.sendAndConfirm(tx, extraSigners);
+  await provider.sendAndConfirm(tx, signers as any);
 }
 
-// ─────────────────────────────────────────────
-// HELPER — reusable mock signatures
-// ─────────────────────────────────────────────
 type Sig64 = [
   number, number, number, number, number, number, number, number,
   number, number, number, number, number, number, number, number,
@@ -2162,13 +2158,11 @@ describe("openbounty_v2", () => {
     judge4    = Keypair.generate();
     judge5    = Keypair.generate();
 
-    // ✅ Fund organizer from provider wallet — no airdrop needed
-    await fund(provider, provider.wallet, organizer.publicKey, 100 * LAMPORTS_PER_SOL);
+    // Fund organizer from provider wallet — no airdrop needed
+    await fund(provider, organizer.publicKey, 100 * LAMPORTS_PER_SOL);
   });
 
-  // ─────────────────────────────────────────────
   describe("initialize_escrow", () => {
-  // ─────────────────────────────────────────────
 
     it("Successfully initializes an escrow with valid parameters", async () => {
       const [escrowPda] = PublicKey.findProgramAddressSync(
@@ -2248,8 +2242,8 @@ describe("openbounty_v2", () => {
     it("Fails to initialize with invalid threshold (too high)", async () => {
       const organizer2 = Keypair.generate();
 
-      // ✅ Transfer from organizer instead of airdrop
-      await fund(provider, organizer, organizer2.publicKey, 10 * LAMPORTS_PER_SOL, [organizer]);
+      // Transfer from organizer instead of airdrop
+      await fund(provider, organizer2.publicKey, 10 * LAMPORTS_PER_SOL, organizer);
 
       const [escrowPda] = PublicKey.findProgramAddressSync(
         [Buffer.from("escrow"), organizer2.publicKey.toBuffer()],
@@ -2287,8 +2281,8 @@ describe("openbounty_v2", () => {
     it("Fails to initialize with past deadline", async () => {
       const organizer3 = Keypair.generate();
 
-      // ✅ Transfer from organizer instead of airdrop
-      await fund(provider, organizer, organizer3.publicKey, 10 * LAMPORTS_PER_SOL, [organizer]);
+      // Transfer from organizer instead of airdrop
+      await fund(provider, organizer3.publicKey, 10 * LAMPORTS_PER_SOL, organizer);
 
       const [escrowPda] = PublicKey.findProgramAddressSync(
         [Buffer.from("escrow"), organizer3.publicKey.toBuffer()],
@@ -2326,8 +2320,8 @@ describe("openbounty_v2", () => {
     it("Fails to initialize with no judges", async () => {
       const organizer4 = Keypair.generate();
 
-      // ✅ Transfer from organizer instead of airdrop
-      await fund(provider, organizer, organizer4.publicKey, 10 * LAMPORTS_PER_SOL, [organizer]);
+      // Transfer from organizer instead of airdrop
+      await fund(provider, organizer4.publicKey, 10 * LAMPORTS_PER_SOL, organizer);
 
       const [escrowPda] = PublicKey.findProgramAddressSync(
         [Buffer.from("escrow"), organizer4.publicKey.toBuffer()],
@@ -2363,9 +2357,7 @@ describe("openbounty_v2", () => {
     });
   });
 
-  // ─────────────────────────────────────────────
   describe("finalize_winner", () => {
-  // ─────────────────────────────────────────────
 
     let escrowPda:           PublicKey;
     let vaultPda:            PublicKey;
@@ -2376,8 +2368,8 @@ describe("openbounty_v2", () => {
       organizerForFinalize = Keypair.generate();
       judgesForFinalize = Array.from({ length: 5 }, () => Keypair.generate());
 
-      // ✅ Transfer from provider wallet instead of airdrop
-      await fund(provider, provider.wallet, organizerForFinalize.publicKey, 100 * LAMPORTS_PER_SOL);
+      // Transfer from provider wallet instead of airdrop
+      await fund(provider, organizerForFinalize.publicKey, 100 * LAMPORTS_PER_SOL);
 
       [escrowPda] = PublicKey.findProgramAddressSync(
         [Buffer.from("escrow"), organizerForFinalize.publicKey.toBuffer()],
@@ -2531,9 +2523,7 @@ describe("openbounty_v2", () => {
     });
   });
 
-  // ─────────────────────────────────────────────
   describe("claim_prize", () => {
-  // ─────────────────────────────────────────────
 
     let escrowPda:         PublicKey;
     let vaultPda:          PublicKey;
@@ -2548,8 +2538,8 @@ describe("openbounty_v2", () => {
       winner1           = Keypair.generate();
       winner2           = Keypair.generate();
 
-      // ✅ Transfer from provider wallet instead of airdrop
-      await fund(provider, provider.wallet, organizerForClaim.publicKey, 100 * LAMPORTS_PER_SOL);
+      // Transfer from provider wallet instead of airdrop
+      await fund(provider, organizerForClaim.publicKey, 100 * LAMPORTS_PER_SOL);
 
       [escrowPda] = PublicKey.findProgramAddressSync(
         [Buffer.from("escrow"), organizerForClaim.publicKey.toBuffer()],
@@ -2633,8 +2623,8 @@ describe("openbounty_v2", () => {
     it("Fails to claim prize if not the winner", async () => {
       const impostor = Keypair.generate();
 
-      // ✅ Transfer from organizerForClaim instead of airdrop
-      await fund(provider, organizerForClaim, impostor.publicKey, 1 * LAMPORTS_PER_SOL, [organizerForClaim]);
+      // Transfer from organizerForClaim instead of airdrop
+      await fund(provider, impostor.publicKey, 1 * LAMPORTS_PER_SOL, organizerForClaim);
 
       try {
         await program.methods
@@ -2678,8 +2668,8 @@ describe("openbounty_v2", () => {
     it("Fails to claim prize for tier that has no winner set", async () => {
       const newOrganizer = Keypair.generate();
 
-      // ✅ Transfer from provider wallet instead of airdrop
-      await fund(provider, provider.wallet, newOrganizer.publicKey, 50 * LAMPORTS_PER_SOL);
+      // Transfer from provider wallet instead of airdrop
+      await fund(provider, newOrganizer.publicKey, 50 * LAMPORTS_PER_SOL);
 
       const [newEscrowPda] = PublicKey.findProgramAddressSync(
         [Buffer.from("escrow"), newOrganizer.publicKey.toBuffer()],
@@ -2711,8 +2701,8 @@ describe("openbounty_v2", () => {
 
       const someWinner = Keypair.generate();
 
-      // ✅ Transfer from newOrganizer instead of airdrop
-      await fund(provider, newOrganizer, someWinner.publicKey, 1 * LAMPORTS_PER_SOL, [newOrganizer]);
+      // Transfer from newOrganizer instead of airdrop
+      await fund(provider, someWinner.publicKey, 1 * LAMPORTS_PER_SOL);
 
       try {
         await program.methods
@@ -2766,9 +2756,7 @@ describe("openbounty_v2", () => {
     });
   });
 
-  // ─────────────────────────────────────────────
   describe("refund_unclaimed", () => {
-  // ─────────────────────────────────────────────
 
     let escrowPda:          PublicKey;
     let vaultPda:           PublicKey;
@@ -2781,8 +2769,8 @@ describe("openbounty_v2", () => {
       judgesForRefund    = Array.from({ length: 5 }, () => Keypair.generate());
       winner1            = Keypair.generate();
 
-      // ✅ Transfer from provider wallet instead of airdrop
-      await fund(provider, provider.wallet, organizerForRefund.publicKey, 100 * LAMPORTS_PER_SOL);
+      // Transfer from provider wallet instead of airdrop
+      await fund(provider, organizerForRefund.publicKey, 100 * LAMPORTS_PER_SOL);
 
       [escrowPda] = PublicKey.findProgramAddressSync(
         [Buffer.from("escrow"), organizerForRefund.publicKey.toBuffer()],
@@ -2875,8 +2863,8 @@ describe("openbounty_v2", () => {
     it("Fails to refund before deadline passes", async () => {
       const newOrganizer = Keypair.generate();
 
-      // ✅ Transfer from provider wallet instead of airdrop
-      await fund(provider, provider.wallet, newOrganizer.publicKey, 50 * LAMPORTS_PER_SOL);
+      // Transfer from provider wallet instead of airdrop
+      await fund(provider, newOrganizer.publicKey, 50 * LAMPORTS_PER_SOL);
 
       const [newEscrowPda] = PublicKey.findProgramAddressSync(
         [Buffer.from("escrow"), newOrganizer.publicKey.toBuffer()],
@@ -2924,8 +2912,8 @@ describe("openbounty_v2", () => {
     it("Fails when non-organizer tries to refund", async () => {
       const impostor = Keypair.generate();
 
-      // ✅ Transfer from organizerForRefund instead of airdrop
-      await fund(provider, organizerForRefund, impostor.publicKey, 1 * LAMPORTS_PER_SOL, [organizerForRefund]);
+      // Transfer from organizerForRefund instead of airdrop
+      await fund(provider, impostor.publicKey, 1 * LAMPORTS_PER_SOL, organizerForRefund);
 
       try {
         await program.methods
@@ -2949,8 +2937,8 @@ describe("openbounty_v2", () => {
     it("Fails when all prizes are already claimed (nothing to refund)", async () => {
       const newOrganizer = Keypair.generate();
 
-      // ✅ Transfer from provider wallet instead of airdrop
-      await fund(provider, provider.wallet, newOrganizer.publicKey, 50 * LAMPORTS_PER_SOL);
+      // Transfer from provider wallet instead of airdrop
+      await fund(provider, newOrganizer.publicKey, 50 * LAMPORTS_PER_SOL);
 
       const [newEscrowPda] = PublicKey.findProgramAddressSync(
         [Buffer.from("escrow"), newOrganizer.publicKey.toBuffer()],
@@ -3018,8 +3006,8 @@ describe("openbounty_v2", () => {
     it("Correctly calculates partial refund (some claimed, some unclaimed)", async () => {
       const newOrganizer = Keypair.generate();
 
-      // ✅ Transfer from provider wallet instead of airdrop
-      await fund(provider, provider.wallet, newOrganizer.publicKey, 100 * LAMPORTS_PER_SOL);
+      // Transfer from provider wallet instead of airdrop
+      await fund(provider, newOrganizer.publicKey, 100 * LAMPORTS_PER_SOL);
 
       const [newEscrowPda] = PublicKey.findProgramAddressSync(
         [Buffer.from("escrow"), newOrganizer.publicKey.toBuffer()],
