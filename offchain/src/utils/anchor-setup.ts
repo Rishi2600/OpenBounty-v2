@@ -1,11 +1,9 @@
 import { Connection, PublicKey } from "@solana/web3.js";
 import { AnchorProvider, Program, Wallet } from "@coral-xyz/anchor";
-import { IDL, OpenbountyV2 } from "../types/openbounty_v2";
-import { PROGRAM_ID, CLUSTER_URL } from "../constants/program";
+import { OpenbountyV2 } from "../../../onchain/target/types/openbounty_v2";
+import IDL from "../../../onchain/target/idl/openbounty_v2.json";
+import { CLUSTER_URL } from "../constants/program";
 
-// Returns a typed Program instance connected to devnet.
-// wallet: any object with publicKey + signTransaction + signAllTransactions
-// (Solana wallet adapter wallets satisfy this interface)
 export const getProgram = (
   connection: Connection,
   wallet: Wallet
@@ -13,21 +11,17 @@ export const getProgram = (
   const provider = new AnchorProvider(connection, wallet, {
     commitment: "confirmed",
   });
-  return new Program<OpenbountyV2>(IDL, provider);
+  return new Program<OpenbountyV2>(IDL as any, provider);
 };
 
-// Pre-built devnet connection — import this wherever you need read-only access
-// (no wallet required for fetching accounts)
 export const devnetConnection = new Connection(CLUSTER_URL.devnet, "confirmed");
 
-// Fetch a single escrow account by its PDA address
-// Returns null if the account doesn't exist yet
 export const fetchEscrow = async (
   program: Program<OpenbountyV2>,
   escrowPda: PublicKey
 ) => {
   try {
-    return await program.account.escrow.fetch(escrowPda);
+    return await program.account.Escrow.fetch(escrowPda);
   } catch {
     return null;
   }
