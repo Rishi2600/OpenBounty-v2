@@ -5,11 +5,13 @@
 // Run with: yarn devnet:verify
 
 import * as anchor from "@coral-xyz/anchor";
+import BN from "bn.js";
 import {
   Connection,
   Keypair,
   PublicKey,
   LAMPORTS_PER_SOL,
+  SystemProgram,
 } from "@solana/web3.js";
 import { AnchorProvider, Program } from "@coral-xyz/anchor";
 import { OpenbountyV2 } from "../target/types/openbounty_v2";
@@ -108,7 +110,7 @@ async function main(): Promise<void> {
   // 4 tiers at 0.01 SOL each = 0.04 SOL total locked
   const tierAmounts = Array.from(
     { length: 4 },
-    () => new anchor.BN(TIER_AMOUNT_LAMPORTS)
+    () => new BN(TIER_AMOUNT_LAMPORTS)
   );
 
   // Step 1: initialize_escrow
@@ -121,13 +123,13 @@ async function main(): Promise<void> {
       judgePublicKeys,
       3, // threshold: 3 of 5 judges required
       tierAmounts,
-      new anchor.BN(deadline)
+      new BN(deadline)
     )
     .accountsPartial({
       escrow: escrowPda,
       vault: vaultPda,
       organizer: organizer.publicKey,
-      systemProgram: anchor.web3.SystemProgram.programId,
+      systemProgram: SystemProgram.programId,
     })
     .signers([organizer])
     .rpc();
@@ -192,7 +194,7 @@ async function main(): Promise<void> {
       escrow: escrowPda,
       vault: vaultPda,
       winner: winner.publicKey,
-      systemProgram: anchor.web3.SystemProgram.programId,
+      systemProgram: SystemProgram.programId,
     })
     .signers([winner])
     .rpc();
@@ -230,7 +232,7 @@ async function main(): Promise<void> {
       escrow: escrowPda,
       vault: vaultPda,
       organizer: organizer.publicKey,
-      systemProgram: anchor.web3.SystemProgram.programId,
+      systemProgram: SystemProgram.programId,
     })
     .signers([organizer])
     .rpc();
