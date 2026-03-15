@@ -21,7 +21,7 @@ export const fetchEscrow = async (
   escrowPda: PublicKey
 ) => {
   try {
-    return await program.account.Escrow.fetch(escrowPda);
+    return await program.account.escrow.fetch(escrowPda);
   } catch {
     return null;
   }
