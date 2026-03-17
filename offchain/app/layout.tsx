@@ -1,6 +1,15 @@
 import type { Metadata } from "next";
-import WalletProvider from "../src/components/WalletProvider";
+import { DM_Sans } from "next/font/google";
+import WalletProvider from "@/components/WalletProvider";
+import Header from "@/components/Header";
+import Footer from "@/components/Footer";
 import "./globals.css";
+
+const dmSans = DM_Sans({
+  subsets: ["latin"],
+  weight: ["300", "400", "500", "600"],
+  variable: "--font-dm-sans",
+});
 
 export const metadata: Metadata = {
   title: "OpenBounty v2",
@@ -14,8 +23,18 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body>
-        <WalletProvider>{children}</WalletProvider>
+      <body className={dmSans.variable}>
+        <WalletProvider>
+          <Header />
+          <main style={{
+            maxWidth: "1280px",
+            margin: "0 auto",
+            padding: "2.5rem 1.5rem 4rem",
+          }}>
+            {children}
+          </main>
+          <Footer />
+        </WalletProvider>
       </body>
     </html>
   );
