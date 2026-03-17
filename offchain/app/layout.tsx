@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { DM_Sans } from "next/font/google";
+import { DM_Sans, DM_Serif_Display, Playfair_Display } from "next/font/google";
 import WalletProvider from "@/components/WalletProvider";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
@@ -8,7 +8,21 @@ import "./globals.css";
 const dmSans = DM_Sans({
   subsets: ["latin"],
   weight: ["300", "400", "500", "600"],
-  variable: "--font-dm-sans",
+  variable: "--font-body",
+});
+
+const dmSerifDisplay = DM_Serif_Display({
+  subsets: ["latin"],
+  weight: ["400"],
+  style: ["normal", "italic"],
+  variable: "--font-display",
+});
+
+const playfairDisplay = Playfair_Display({
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700"],
+  style: ["normal", "italic"],
+  variable: "--font-heading",
 });
 
 export const metadata: Metadata = {
@@ -23,7 +37,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body className={dmSans.variable}>
+      <body className={`${dmSans.variable} ${dmSerifDisplay.variable} ${playfairDisplay.variable}`}>
         <WalletProvider>
           <Header />
           <main style={{
