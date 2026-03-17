@@ -2,11 +2,12 @@ import { Connection, PublicKey } from "@solana/web3.js";
 import { AnchorProvider, Program, Wallet } from "@coral-xyz/anchor";
 import { OpenbountyV2 } from "../../../onchain/target/types/openbounty_v2";
 import IDL from "../../../onchain/target/idl/openbounty_v2.json";
+import { AnchorWallet } from "@solana/wallet-adapter-react";
 import { CLUSTER_URL } from "../constants/program";
 
 export const getProgram = (
   connection: Connection,
-  wallet: Wallet
+  wallet: AnchorWallet
 ): Program<OpenbountyV2> => {
   const provider = new AnchorProvider(connection, wallet, {
     commitment: "confirmed",
