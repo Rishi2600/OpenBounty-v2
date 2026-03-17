@@ -1,0 +1,543 @@
+/**
+ * Program IDL in camelCase format in order to be used in JS/TS.
+ *
+ * Note that this is only a type helper and is not the actual IDL. The original
+ * IDL can be found at `target/idl/openbounty_v2.json`.
+ */
+export type OpenbountyV2 = {
+  "address": "CdWRw7fqNCBpz34qHoFjua9Nry6pbhnVrsfpgMemKKrL",
+  "metadata": {
+    "name": "openbountyV2",
+    "version": "0.1.0",
+    "spec": "0.1.0",
+    "description": "Created with Anchor"
+  },
+  "instructions": [
+    {
+      "name": "claimPrize",
+      "docs": [
+        "Claim prize for a specific tier",
+        "",
+        "Winner calls this after being finalized by judges.",
+        "Transfers funds from vault to winner's wallet."
+      ],
+      "discriminator": [
+        157,
+        233,
+        139,
+        121,
+        246,
+        62,
+        234,
+        235
+      ],
+      "accounts": [
+        {
+          "name": "escrow",
+          "docs": [
+            "Escrow account containing prize tier information"
+          ],
+          "writable": true
+        },
+        {
+          "name": "vault",
+          "docs": [
+            "Vault PDA that holds the locked SOL",
+            "This account will have SOL deducted when prize is claimed"
+          ],
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  118,
+                  97,
+                  117,
+                  108,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "escrow.organizer",
+                "account": "escrow"
+              }
+            ]
+          }
+        },
+        {
+          "name": "winner",
+          "docs": [
+            "Winner claiming the prize (must be a signer)",
+            "This must match the winner recorded in the escrow tier"
+          ],
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "systemProgram",
+          "docs": [
+            "System program for transferring SOL"
+          ],
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "tier",
+          "type": "u8"
+        }
+      ]
+    },
+    {
+      "name": "finalizeWinner",
+      "docs": [
+        "Finalize winner for a specific tier",
+        "",
+        "Judges sign off-chain, signatures are verified on-chain.",
+        "When threshold is met, winner is recorded for the tier."
+      ],
+      "discriminator": [
+        146,
+        228,
+        187,
+        253,
+        58,
+        192,
+        194,
+        177
+      ],
+      "accounts": [
+        {
+          "name": "escrow",
+          "docs": [
+            "Escrow account containing judge list and prize tiers"
+          ],
+          "writable": true
+        },
+        {
+          "name": "organizer",
+          "docs": [
+            "The organizer account (optional, for future use)",
+            "We don't strictly need the organizer to call this -",
+            "anyone can submit valid signatures (permissionless!)"
+          ]
+        }
+      ],
+      "args": [
+        {
+          "name": "tier",
+          "type": "u8"
+        },
+        {
+          "name": "winner",
+          "type": "pubkey"
+        },
+        {
+          "name": "judgeSignatures",
+          "type": {
+            "vec": {
+              "array": [
+                "u8",
+                64
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "initializeEscrow",
+      "docs": [
+        "Initialize a new bounty escrow",
+        "",
+        "Creates an escrow account and locks funds in a vault PDA.",
+        "Organizer specifies judges, voting threshold, prize tiers, and deadline."
+      ],
+      "discriminator": [
+        243,
+        160,
+        77,
+        153,
+        11,
+        92,
+        48,
+        209
+      ],
+      "accounts": [
+        {
+          "name": "escrow",
+          "docs": [
+            "Escrow account that stores all metadata"
+          ],
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  101,
+                  115,
+                  99,
+                  114,
+                  111,
+                  119
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "organizer"
+              }
+            ]
+          }
+        },
+        {
+          "name": "vault",
+          "docs": [
+            "Vault account that holds the locked SOL"
+          ],
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  118,
+                  97,
+                  117,
+                  108,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "organizer"
+              }
+            ]
+          }
+        },
+        {
+          "name": "organizer",
+          "docs": [
+            "Organizer who is creating the bounty"
+          ],
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "systemProgram",
+          "docs": [
+            "System program for account creation and transfers"
+          ],
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "judges",
+          "type": {
+            "vec": "pubkey"
+          }
+        },
+        {
+          "name": "threshold",
+          "type": "u8"
+        },
+        {
+          "name": "tierAmounts",
+          "type": {
+            "vec": "u64"
+          }
+        },
+        {
+          "name": "deadline",
+          "type": "i64"
+        }
+      ]
+    },
+    {
+      "name": "refundUnclaimed",
+      "docs": [
+        "Refund unclaimed prizes to organizer after deadline",
+        "",
+        "Organizer calls this after deadline passes to reclaim",
+        "funds for prizes that were never claimed."
+      ],
+      "discriminator": [
+        126,
+        143,
+        204,
+        210,
+        179,
+        143,
+        2,
+        231
+      ],
+      "accounts": [
+        {
+          "name": "escrow",
+          "docs": [
+            "Escrow account containing prize tier information"
+          ],
+          "writable": true
+        },
+        {
+          "name": "vault",
+          "docs": [
+            "Vault PDA that holds the locked SOL",
+            "This account will have unclaimed SOL transferred back to organizer"
+          ],
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  118,
+                  97,
+                  117,
+                  108,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "escrow.organizer",
+                "account": "escrow"
+              }
+            ]
+          }
+        },
+        {
+          "name": "organizer",
+          "docs": [
+            "Organizer receiving the refund (must be a signer)",
+            "This must match the organizer recorded in the escrow"
+          ],
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "systemProgram",
+          "docs": [
+            "System program for transferring SOL"
+          ],
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": []
+    }
+  ],
+  "accounts": [
+    {
+      "name": "escrow",
+      "discriminator": [
+        31,
+        213,
+        123,
+        187,
+        186,
+        22,
+        218,
+        155
+      ]
+    }
+  ],
+  "errors": [
+    {
+      "code": 6000,
+      "name": "invalidSignature",
+      "msg": "Signature verification failed"
+    },
+    {
+      "code": 6001,
+      "name": "insufficientSignatures",
+      "msg": "Insufficient signatures - need more judge approvals"
+    },
+    {
+      "code": 6002,
+      "name": "tierAlreadyClaimed",
+      "msg": "This tier has already been claimed"
+    },
+    {
+      "code": 6003,
+      "name": "deadlineNotReached",
+      "msg": "Deadline has not been reached yet"
+    },
+    {
+      "code": 6004,
+      "name": "escrowExpired",
+      "msg": "Escrow has expired - claiming period is over"
+    },
+    {
+      "code": 6005,
+      "name": "invalidJudge",
+      "msg": "Invalid judge - not in authorized judge list"
+    },
+    {
+      "code": 6006,
+      "name": "invalidTier",
+      "msg": "Invalid tier index - tier does not exist"
+    },
+    {
+      "code": 6007,
+      "name": "invalidThreshold",
+      "msg": "Threshold must be less than or equal to number of judges"
+    },
+    {
+      "code": 6008,
+      "name": "noJudges",
+      "msg": "Must have at least one judge"
+    },
+    {
+      "code": 6009,
+      "name": "noTiers",
+      "msg": "Must have at least one prize tier"
+    },
+    {
+      "code": 6010,
+      "name": "invalidAmount",
+      "msg": "Amount must be greater than zero"
+    },
+    {
+      "code": 6011,
+      "name": "invalidDeadline",
+      "msg": "Deadline must be in the future"
+    },
+    {
+      "code": 6012,
+      "name": "unauthorized",
+      "msg": "Unauthorized - you are not the organizer"
+    },
+    {
+      "code": 6013,
+      "name": "alreadyFinalized",
+      "msg": "Winner already finalized for this tier"
+    },
+    {
+      "code": 6014,
+      "name": "notFinalized",
+      "msg": "Cannot claim - winner not yet finalized"
+    },
+    {
+      "code": 6015,
+      "name": "invalidMessage",
+      "msg": "Message format invalid for signature verification"
+    },
+    {
+      "code": 6016,
+      "name": "deadlineNotPassed",
+      "msg": "Deadline has not passed yet - cannot refund"
+    },
+    {
+      "code": 6017,
+      "name": "noUnclaimedFunds",
+      "msg": "No unclaimed funds available to refund"
+    }
+  ],
+  "types": [
+    {
+      "name": "escrow",
+      "docs": [
+        "Main escrow account that holds all bounty metadata"
+      ],
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "organizer",
+            "docs": [
+              "Organizer's public key (who created the escrow)"
+            ],
+            "type": "pubkey"
+          },
+          {
+            "name": "judges",
+            "docs": [
+              "List of judge public keys (e.g., 5 judges)"
+            ],
+            "type": {
+              "vec": "pubkey"
+            }
+          },
+          {
+            "name": "threshold",
+            "docs": [
+              "Minimum number of judges required to approve a winner (e.g., 3 out of 5)"
+            ],
+            "type": "u8"
+          },
+          {
+            "name": "tiers",
+            "docs": [
+              "Prize tiers in lamports (e.g., [20 SOL, 15 SOL, 10 SOL, 5 SOL])"
+            ],
+            "type": {
+              "vec": {
+                "defined": {
+                  "name": "prizeTier"
+                }
+              }
+            }
+          },
+          {
+            "name": "deadline",
+            "docs": [
+              "Unix timestamp for when unclaimed funds can be refunded"
+            ],
+            "type": "i64"
+          },
+          {
+            "name": "bump",
+            "docs": [
+              "Bump seed for the escrow PDA"
+            ],
+            "type": "u8"
+          },
+          {
+            "name": "vaultBump",
+            "docs": [
+              "Bump seed for the vault PDA (holds the actual SOL)"
+            ],
+            "type": "u8"
+          }
+        ]
+      }
+    },
+    {
+      "name": "prizeTier",
+      "docs": [
+        "Individual prize tier with winner and claim status"
+      ],
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "amount",
+            "docs": [
+              "Amount of SOL for this tier (in lamports)"
+            ],
+            "type": "u64"
+          },
+          {
+            "name": "winner",
+            "docs": [
+              "Winner's public key (None if not yet assigned)"
+            ],
+            "type": {
+              "option": "pubkey"
+            }
+          },
+          {
+            "name": "claimed",
+            "docs": [
+              "Whether this tier has been claimed"
+            ],
+            "type": "bool"
+          }
+        ]
+      }
+    }
+  ]
+};

@@ -1,7 +1,7 @@
 import { Connection, PublicKey } from "@solana/web3.js";
 import { AnchorProvider, Program, Wallet } from "@coral-xyz/anchor";
-import { OpenbountyV2 } from "../../../onchain/target/types/openbounty_v2";
-import IDL from "../../../onchain/target/idl/openbounty_v2.json";
+import { OpenbountyV2 } from "@/types/onchain/openbounty_v2";
+import IDL from "@/idl/openbounty_v2.json";
 import { AnchorWallet } from "@solana/wallet-adapter-react";
 import { CLUSTER_URL } from "../constants/program";
 
