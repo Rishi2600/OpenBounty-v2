@@ -4,8 +4,9 @@ import Link from "next/link";
 import Image from "next/image";
 import { useState, useRef, useEffect } from "react";
 import { usePathname } from "next/navigation";
-import { useWallet } from "@solana/wallet-adapter-react";
+import { useWallet, useConnection } from "@solana/wallet-adapter-react";
 import { useWalletModal } from "@solana/wallet-adapter-react-ui";
+import { LAMPORTS_PER_SOL } from "@solana/web3.js";
 
 const NAV_LINKS = [
   { label: "Dashboard", href: "/" },
@@ -18,10 +19,23 @@ const truncate = (address: string) =>
 
 export default function Header() {
   const pathname = usePathname();
-  const { publicKey, disconnect, connected } = useWallet();
+  const { publicKey, disconnect, connected, connecting, wallet } = useWallet();
   const { setVisible } = useWalletModal();
+  const { connection } = useConnection();
   const [dropdownOpen, setDropdownOpen] = useState(false);
+  const [balance, setBalance] = useState<number | null>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
+
+  // Fetch balance whenever wallet connects or changes
+  useEffect(() => {
+    if (!publicKey) {
+      setBalance(null);
+      return;
+    }
+    connection.getBalance(publicKey).then((lamports) => {
+      setBalance(lamports / LAMPORTS_PER_SOL);
+    });
+  }, [publicKey, connection]);
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -140,6 +154,7 @@ export default function Header() {
         <div ref={dropdownRef} style={{ position: "relative", flexShrink: 0 }}>
           <button
             onClick={handleWalletClick}
+            disabled={connecting}
             style={{
               display: "flex",
               alignItems: "center",
@@ -152,31 +167,45 @@ export default function Header() {
               background: connected ? "var(--success)" : "var(--ochre)",
               border: "none",
               borderRadius: 5,
-              cursor: "pointer",
+              cursor: connecting ? "not-allowed" : "pointer",
+              opacity: connecting ? 0.7 : 1,
               letterSpacing: "0.03em",
-              transition: "background 0.2s, transform 0.15s",
+              transition: "background 0.2s",
               whiteSpace: "nowrap",
             }}
           >
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none"
-              stroke="currentColor" strokeWidth="2">
-              <rect x="2" y="7" width="20" height="14" rx="2" ry="2"/>
-              <path d="M16 21V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v16"/>
-            </svg>
+            {/* Show wallet's own icon when connected, fallback to generic icon */}
+            {connected && wallet?.adapter.icon ? (
+              <img
+                src={wallet.adapter.icon}
+                alt={wallet.adapter.name}
+                width={18}
+                height={18}
+                style={{ borderRadius: 3 }}
+              />
+            ) : (
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none"
+                stroke="currentColor" strokeWidth="2">
+                <rect x="2" y="7" width="20" height="14" rx="2" ry="2"/>
+                <path d="M16 21V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v16"/>
+              </svg>
+            )}
             <span>
-              {connected && publicKey
+              {connecting
+                ? "Connecting..."
+                : connected && publicKey
                 ? truncate(publicKey.toBase58())
                 : "Connect Wallet"}
             </span>
           </button>
 
-          {/* Dropdown — only visible when connected and toggled */}
+          {/* Dropdown — only when connected and toggled */}
           {connected && dropdownOpen && (
             <div style={{
               position: "absolute",
               top: "calc(100% + 0.5rem)",
               right: 0,
-              minWidth: "200px",
+              minWidth: "260px",
               background: "var(--brown-dark)",
               border: "1px solid var(--border-bright)",
               borderRadius: 8,
@@ -184,29 +213,88 @@ export default function Header() {
               overflow: "hidden",
               zIndex: 200,
             }}>
-              {/* Full address display */}
+
+              {/* Wallet name + icon + connected badge */}
               <div style={{
                 padding: "0.75rem 1rem",
                 borderBottom: "1px solid var(--border)",
               }}>
-                <p style={{
-                  fontSize: "0.7rem",
-                  color: "var(--offwhite-muted)",
-                  fontFamily: "var(--font-body)",
-                  marginBottom: "0.25rem",
-                  textTransform: "uppercase",
-                  letterSpacing: "0.08em",
+                <div style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "0.5rem",
+                  marginBottom: "0.75rem",
                 }}>
-                  Connected
-                </p>
+                  {wallet?.adapter.icon && (
+                    <img
+                      src={wallet.adapter.icon}
+                      alt={wallet.adapter.name}
+                      width={20}
+                      height={20}
+                      style={{ borderRadius: 4 }}
+                    />
+                  )}
+                  <span style={{
+                    fontSize: "0.85rem",
+                    fontFamily: "var(--font-body)",
+                    fontWeight: 600,
+                    color: "var(--offwhite)",
+                  }}>
+                    {wallet?.adapter.name}
+                  </span>
+                  <span style={{
+                    marginLeft: "auto",
+                    fontSize: "0.65rem",
+                    padding: "0.15rem 0.4rem",
+                    background: "rgba(125, 154, 92, 0.2)",
+                    color: "#9DBD72",
+                    borderRadius: 3,
+                    fontFamily: "var(--font-body)",
+                    fontWeight: 600,
+                    textTransform: "uppercase",
+                    letterSpacing: "0.06em",
+                  }}>
+                    Connected
+                  </span>
+                </div>
+
+                {/* Full address */}
                 <p style={{
-                  fontSize: "0.8rem",
+                  fontSize: "0.75rem",
                   color: "var(--ochre-light)",
                   fontFamily: "var(--font-mono)",
                   wordBreak: "break-all",
+                  marginBottom: "0.75rem",
                 }}>
                   {publicKey?.toBase58()}
                 </p>
+
+                {/* Balance */}
+                <div style={{
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                  paddingTop: "0.5rem",
+                  borderTop: "1px solid var(--border)",
+                }}>
+                  <span style={{
+                    fontSize: "0.7rem",
+                    color: "var(--offwhite-muted)",
+                    fontFamily: "var(--font-body)",
+                    textTransform: "uppercase",
+                    letterSpacing: "0.08em",
+                  }}>
+                    Devnet Balance
+                  </span>
+                  <span style={{
+                    fontSize: "0.95rem",
+                    color: "var(--offwhite)",
+                    fontFamily: "var(--font-heading)",
+                    fontWeight: 600,
+                  }}>
+                    {balance !== null ? `${balance.toFixed(4)} SOL` : "—"}
+                  </span>
+                </div>
               </div>
 
               {/* Copy address */}
@@ -268,6 +356,7 @@ export default function Header() {
                 </svg>
                 Disconnect
               </button>
+
             </div>
           )}
         </div>
