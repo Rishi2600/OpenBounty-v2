@@ -55,4 +55,11 @@ pub enum EscrowError {
     
     #[msg("No unclaimed funds available to refund")]
     NoUnclaimedFunds,
+
+    // NEW — metadata validation errors
+    #[msg("Title must be between 1 and 50 characters")]
+    InvalidTitle,
+
+    #[msg("Metadata URI must be 100 characters or fewer")]
+    InvalidMetadataUri,
 }
