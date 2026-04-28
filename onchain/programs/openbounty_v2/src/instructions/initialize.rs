@@ -4,14 +4,17 @@ use crate::error::EscrowError;
 use crate::state::{Escrow, PrizeTier};
 
 /// Initialize a new bounty escrow
-/// 
+///
 /// This instruction:
-/// 1. Creates the escrow account with metadata
-/// 2. Creates a vault PDA to hold the locked funds
-/// 3. Transfers the total bounty amount from organizer to vault
-/// 4. Stores judges, threshold, tiers, and deadline
+/// 1. Validates title and metadata_uri
+/// 2. Creates the escrow account with metadata
+/// 3. Creates a vault PDA to hold the locked funds
+/// 4. Transfers the total bounty amount from organizer to vault
+/// 5. Stores title, metadata_uri, judges, threshold, tiers, and deadline
 pub fn initialize_escrow(
     ctx: Context<InitializeEscrow>,
+    title: String,
+    metadata_uri: String,
     judges: Vec<Pubkey>,
     threshold: u8,
     tier_amounts: Vec<u64>,
@@ -20,7 +23,20 @@ pub fn initialize_escrow(
     let escrow = &mut ctx.accounts.escrow;
     let clock = Clock::get()?;
 
-    // Validations
+    // Validate title — required, max 50 chars
+    require!(
+        !title.is_empty() && title.len() <= 50,
+        EscrowError::InvalidTitle
+    );
+
+    // Validate metadata_uri — optional, max 100 chars
+    // Empty string is valid (organizer may not provide metadata)
+    require!(
+        metadata_uri.len() <= 100,
+        EscrowError::InvalidMetadataUri
+    );
+
+    // Existing validations — unchanged
     require!(!judges.is_empty(), EscrowError::NoJudges);
     require!(!tier_amounts.is_empty(), EscrowError::NoTiers);
     require!(
@@ -55,6 +71,8 @@ pub fn initialize_escrow(
         .collect();
 
     // Store escrow data
+    escrow.title = title;
+    escrow.metadata_uri = metadata_uri;
     escrow.organizer = ctx.accounts.organizer.key();
     escrow.judges = judges;
     escrow.threshold = threshold;
@@ -64,6 +82,8 @@ pub fn initialize_escrow(
     escrow.vault_bump = ctx.bumps.vault;
 
     msg!("Escrow initialized!");
+    msg!("Title: {}", escrow.title);
+    msg!("Metadata URI: {}", escrow.metadata_uri);
     msg!("Organizer: {}", escrow.organizer);
     msg!("Total amount locked: {} lamports", total_amount);
     msg!("Number of judges: {}", escrow.judges.len());
@@ -75,6 +95,7 @@ pub fn initialize_escrow(
 }
 
 #[derive(Accounts)]
+#[instruction(title: String, metadata_uri: String)]
 pub struct InitializeEscrow<'info> {
     /// Escrow account that stores all metadata
     #[account(
