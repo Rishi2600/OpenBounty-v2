@@ -19,11 +19,13 @@ pub mod openbounty_v2 {
     pub fn initialize_escrow(
         ctx: Context<InitializeEscrow>,
         judges: Vec<Pubkey>,
+        title: String,
+        metadata_uri: String,
         threshold: u8,
         tier_amounts: Vec<u64>,
         deadline: i64,
     ) -> Result<()> {
-        instructions::initialize_escrow(ctx, judges, threshold, tier_amounts, deadline)
+        instructions::initialize_escrow(ctx, title, metadata_uri, judges, threshold, tier_amounts, deadline)
     }
 
     /// Finalize winner for a specific tier
