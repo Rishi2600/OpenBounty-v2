@@ -12,17 +12,11 @@ async function fund(
   lamports: number,
   payer?: anchor.Wallet | Keypair,
 ) {
-
   const fromPubkey = payer ? payer.publicKey : provider.wallet.publicKey;
-
-  const signers = payer ? [payer] : [];
+  const signers    = payer ? [payer] : [];
 
   const tx = new Transaction().add(
-    SystemProgram.transfer({
-      fromPubkey,
-      toPubkey: to,
-      lamports,
-    })
+    SystemProgram.transfer({ fromPubkey, toPubkey: to, lamports })
   );
 
   await provider.sendAndConfirm(tx, signers as any);
@@ -58,7 +52,6 @@ describe("openbounty_v2", () => {
   let judge5: Keypair;
 
   before(async () => {
-    // Create keypairs
     organizer = Keypair.generate();
     judge1    = Keypair.generate();
     judge2    = Keypair.generate();
@@ -66,10 +59,10 @@ describe("openbounty_v2", () => {
     judge4    = Keypair.generate();
     judge5    = Keypair.generate();
 
-    // Fund organizer from provider wallet — no airdrop needed
     await fund(provider, organizer.publicKey, 100 * LAMPORTS_PER_SOL);
   });
 
+  // initialize_escrow — 8 tests
   describe("initialize_escrow", () => {
 
     it("Successfully initializes an escrow with valid parameters", async () => {
@@ -86,7 +79,7 @@ describe("openbounty_v2", () => {
         judge1.publicKey, judge2.publicKey, judge3.publicKey,
         judge4.publicKey, judge5.publicKey,
       ];
-      const threshold  = 3;
+      const threshold   = 3;
       const tierAmounts = [
         new anchor.BN(20 * LAMPORTS_PER_SOL),
         new anchor.BN(15 * LAMPORTS_PER_SOL),
@@ -98,7 +91,14 @@ describe("openbounty_v2", () => {
       const balanceBefore = await provider.connection.getBalance(organizer.publicKey);
 
       const tx = await program.methods
-        .initializeEscrow(judges, threshold, tierAmounts, deadline)
+        .initializeEscrow(
+          "ETHIndia 2024",
+          "ipfs://QmExampleMetadataHash",
+          judges,
+          threshold,
+          tierAmounts,
+          deadline,
+        )
         .accountsPartial({
           escrow:        escrowPda,
           vault:         vaultPda,
@@ -112,10 +112,12 @@ describe("openbounty_v2", () => {
 
       const escrowAccount = await program.account.escrow.fetch(escrowPda);
 
+      assert.equal(escrowAccount.title,       "ETHIndia 2024",               "Title should match");
+      assert.equal(escrowAccount.metadataUri, "ipfs://QmExampleMetadataHash", "Metadata URI should match");
       assert.equal(escrowAccount.organizer.toBase58(), organizer.publicKey.toBase58(), "Organizer should match");
-      assert.equal(escrowAccount.judges.length, 5,    "Should have 5 judges");
-      assert.equal(escrowAccount.threshold,     3,    "Threshold should be 3");
-      assert.equal(escrowAccount.tiers.length,  4,    "Should have 4 prize tiers");
+      assert.equal(escrowAccount.judges.length, 5, "Should have 5 judges");
+      assert.equal(escrowAccount.threshold,     3, "Threshold should be 3");
+      assert.equal(escrowAccount.tiers.length,  4, "Should have 4 prize tiers");
       assert.equal(escrowAccount.deadline.toNumber(), deadline.toNumber(), "Deadline should match");
 
       for (let i = 0; i < judges.length; i++) {
@@ -128,18 +130,20 @@ describe("openbounty_v2", () => {
       assert.equal(escrowAccount.tiers[3].amount.toNumber(),  5 * LAMPORTS_PER_SOL, "Tier 3 should be 5 SOL");
 
       escrowAccount.tiers.forEach((tier, index) => {
-        assert.isNull(tier.winner,  `Tier ${index} should have no winner yet`);
+        assert.isNull(tier.winner,   `Tier ${index} should have no winner yet`);
         assert.isFalse(tier.claimed, `Tier ${index} should be unclaimed`);
       });
 
-      const vaultBalance    = await provider.connection.getBalance(vaultPda);
-      const expectedTotal   = 50 * LAMPORTS_PER_SOL;
+      const vaultBalance  = await provider.connection.getBalance(vaultPda);
+      const expectedTotal = 50 * LAMPORTS_PER_SOL;
       assert.equal(vaultBalance, expectedTotal, "Vault should have 50 SOL locked");
 
       const balanceAfter = await provider.connection.getBalance(organizer.publicKey);
       assert.isAbove(balanceBefore - balanceAfter, expectedTotal, "Organizer should have transferred at least 50 SOL");
 
       console.log("Escrow initialized successfully!");
+      console.log(`   Title: ${escrowAccount.title}`);
+      console.log(`   Metadata URI: ${escrowAccount.metadataUri}`);
       console.log(`   Organizer: ${escrowAccount.organizer.toBase58()}`);
       console.log(`   Judges: ${escrowAccount.judges.length}`);
       console.log(`   Threshold: ${escrowAccount.threshold}`);
@@ -147,10 +151,164 @@ describe("openbounty_v2", () => {
       console.log(`   Total locked: ${vaultBalance / LAMPORTS_PER_SOL} SOL`);
     });
 
+    it("Succeeds with an empty metadata_uri (field is optional)", async () => {
+      const org = Keypair.generate();
+      await fund(provider, org.publicKey, 10 * LAMPORTS_PER_SOL, organizer);
+
+      const [escrowPda] = PublicKey.findProgramAddressSync(
+        [Buffer.from("escrow"), org.publicKey.toBuffer()],
+        program.programId,
+      );
+      const [vaultPda] = PublicKey.findProgramAddressSync(
+        [Buffer.from("vault"), org.publicKey.toBuffer()],
+        program.programId,
+      );
+
+      await program.methods
+        .initializeEscrow(
+          "Solo Bounty",
+          "",   // empty metadata_uri — should be accepted
+          [judge1.publicKey, judge2.publicKey],
+          2,
+          [new anchor.BN(1 * LAMPORTS_PER_SOL)],
+          new anchor.BN(Math.floor(Date.now() / 1000) + 86400),
+        )
+        .accountsPartial({
+          escrow:        escrowPda,
+          vault:         vaultPda,
+          organizer:     org.publicKey,
+          systemProgram: anchor.web3.SystemProgram.programId,
+        })
+        .signers([org])
+        .rpc();
+
+      const escrowAccount = await program.account.escrow.fetch(escrowPda);
+
+      assert.equal(escrowAccount.title,       "Solo Bounty", "Title should match");
+      assert.equal(escrowAccount.metadataUri, "",            "Metadata URI should be empty string");
+
+      console.log("Correctly accepted empty metadata_uri");
+    });
+
+    it("Fails to initialize with an empty title", async () => {
+      const org = Keypair.generate();
+      await fund(provider, org.publicKey, 10 * LAMPORTS_PER_SOL, organizer);
+
+      const [escrowPda] = PublicKey.findProgramAddressSync(
+        [Buffer.from("escrow"), org.publicKey.toBuffer()],
+        program.programId,
+      );
+      const [vaultPda] = PublicKey.findProgramAddressSync(
+        [Buffer.from("vault"), org.publicKey.toBuffer()],
+        program.programId,
+      );
+
+      try {
+        await program.methods
+          .initializeEscrow(
+            "",   // empty title — should be rejected
+            "",
+            [judge1.publicKey],
+            1,
+            [new anchor.BN(1 * LAMPORTS_PER_SOL)],
+            new anchor.BN(Math.floor(Date.now() / 1000) + 86400),
+          )
+          .accountsPartial({
+            escrow:        escrowPda,
+            vault:         vaultPda,
+            organizer:     org.publicKey,
+            systemProgram: anchor.web3.SystemProgram.programId,
+          })
+          .signers([org])
+          .rpc();
+
+        assert.fail("Should have failed with empty title");
+      } catch (error) {
+        assert.include(error.message, "InvalidTitle", "Should fail with InvalidTitle error");
+        console.log("Correctly rejected empty title");
+      }
+    });
+
+    it("Fails to initialize with a title exceeding 50 characters", async () => {
+      const org = Keypair.generate();
+      await fund(provider, org.publicKey, 10 * LAMPORTS_PER_SOL, organizer);
+
+      const [escrowPda] = PublicKey.findProgramAddressSync(
+        [Buffer.from("escrow"), org.publicKey.toBuffer()],
+        program.programId,
+      );
+      const [vaultPda] = PublicKey.findProgramAddressSync(
+        [Buffer.from("vault"), org.publicKey.toBuffer()],
+        program.programId,
+      );
+
+      try {
+        await program.methods
+          .initializeEscrow(
+            "A".repeat(51),   // 51 chars — should be rejected
+            "",
+            [judge1.publicKey],
+            1,
+            [new anchor.BN(1 * LAMPORTS_PER_SOL)],
+            new anchor.BN(Math.floor(Date.now() / 1000) + 86400),
+          )
+          .accountsPartial({
+            escrow:        escrowPda,
+            vault:         vaultPda,
+            organizer:     org.publicKey,
+            systemProgram: anchor.web3.SystemProgram.programId,
+          })
+          .signers([org])
+          .rpc();
+
+        assert.fail("Should have failed with title too long");
+      } catch (error) {
+        assert.include(error.message, "InvalidTitle", "Should fail with InvalidTitle error");
+        console.log("Correctly rejected title exceeding 50 characters");
+      }
+    });
+
+    it("Fails to initialize with a metadata_uri exceeding 100 characters", async () => {
+      const org = Keypair.generate();
+      await fund(provider, org.publicKey, 10 * LAMPORTS_PER_SOL, organizer);
+
+      const [escrowPda] = PublicKey.findProgramAddressSync(
+        [Buffer.from("escrow"), org.publicKey.toBuffer()],
+        program.programId,
+      );
+      const [vaultPda] = PublicKey.findProgramAddressSync(
+        [Buffer.from("vault"), org.publicKey.toBuffer()],
+        program.programId,
+      );
+
+      try {
+        await program.methods
+          .initializeEscrow(
+            "Valid Title",
+            "x".repeat(101),   // 101 chars — should be rejected
+            [judge1.publicKey],
+            1,
+            [new anchor.BN(1 * LAMPORTS_PER_SOL)],
+            new anchor.BN(Math.floor(Date.now() / 1000) + 86400),
+          )
+          .accountsPartial({
+            escrow:        escrowPda,
+            vault:         vaultPda,
+            organizer:     org.publicKey,
+            systemProgram: anchor.web3.SystemProgram.programId,
+          })
+          .signers([org])
+          .rpc();
+
+        assert.fail("Should have failed with metadata_uri too long");
+      } catch (error) {
+        assert.include(error.message, "InvalidMetadataUri", "Should fail with InvalidMetadataUri error");
+        console.log("Correctly rejected metadata_uri exceeding 100 characters");
+      }
+    });
+
     it("Fails to initialize with invalid threshold (too high)", async () => {
       const organizer2 = Keypair.generate();
-
-      // Transfer from organizer instead of airdrop
       await fund(provider, organizer2.publicKey, 10 * LAMPORTS_PER_SOL, organizer);
 
       const [escrowPda] = PublicKey.findProgramAddressSync(
@@ -169,7 +327,7 @@ describe("openbounty_v2", () => {
 
       try {
         await program.methods
-          .initializeEscrow(judges, invalidThreshold, tierAmounts, deadline)
+          .initializeEscrow("Threshold Test", "", judges, invalidThreshold, tierAmounts, deadline)
           .accountsPartial({
             escrow:        escrowPda,
             vault:         vaultPda,
@@ -188,8 +346,6 @@ describe("openbounty_v2", () => {
 
     it("Fails to initialize with past deadline", async () => {
       const organizer3 = Keypair.generate();
-
-      // Transfer from organizer instead of airdrop
       await fund(provider, organizer3.publicKey, 10 * LAMPORTS_PER_SOL, organizer);
 
       const [escrowPda] = PublicKey.findProgramAddressSync(
@@ -208,7 +364,7 @@ describe("openbounty_v2", () => {
 
       try {
         await program.methods
-          .initializeEscrow(judges, threshold, tierAmounts, pastDeadline)
+          .initializeEscrow("Deadline Test", "", judges, threshold, tierAmounts, pastDeadline)
           .accountsPartial({
             escrow:        escrowPda,
             vault:         vaultPda,
@@ -227,8 +383,6 @@ describe("openbounty_v2", () => {
 
     it("Fails to initialize with no judges", async () => {
       const organizer4 = Keypair.generate();
-
-      // Transfer from organizer instead of airdrop
       await fund(provider, organizer4.publicKey, 10 * LAMPORTS_PER_SOL, organizer);
 
       const [escrowPda] = PublicKey.findProgramAddressSync(
@@ -247,7 +401,7 @@ describe("openbounty_v2", () => {
 
       try {
         await program.methods
-          .initializeEscrow(emptyJudges, threshold, tierAmounts, deadline)
+          .initializeEscrow("No Judges Test", "", emptyJudges, threshold, tierAmounts, deadline)
           .accountsPartial({
             escrow:        escrowPda,
             vault:         vaultPda,
@@ -265,18 +419,18 @@ describe("openbounty_v2", () => {
     });
   });
 
+  // finalize_winner — 5 tests
   describe("finalize_winner", () => {
 
-    let escrowPda:           PublicKey;
-    let vaultPda:            PublicKey;
+    let escrowPda:            PublicKey;
+    let vaultPda:             PublicKey;
     let organizerForFinalize: Keypair;
     let judgesForFinalize:    Keypair[];
 
     before(async () => {
       organizerForFinalize = Keypair.generate();
-      judgesForFinalize = Array.from({ length: 5 }, () => Keypair.generate());
+      judgesForFinalize    = Array.from({ length: 5 }, () => Keypair.generate());
 
-      // Transfer from provider wallet instead of airdrop
       await fund(provider, organizerForFinalize.publicKey, 100 * LAMPORTS_PER_SOL);
 
       [escrowPda] = PublicKey.findProgramAddressSync(
@@ -299,7 +453,14 @@ describe("openbounty_v2", () => {
       const deadline = new anchor.BN(Math.floor(Date.now() / 1000) + 60 * 60 * 24 * 30);
 
       await program.methods
-        .initializeEscrow(judges, threshold, tierAmounts, deadline)
+        .initializeEscrow(
+          "Finalize Test Bounty",
+          "",
+          judges,
+          threshold,
+          tierAmounts,
+          deadline,
+        )
         .accountsPartial({
           escrow:        escrowPda,
           vault:         vaultPda,
@@ -431,6 +592,7 @@ describe("openbounty_v2", () => {
     });
   });
 
+  // claim_prize — 5 tests
   describe("claim_prize", () => {
 
     let escrowPda:         PublicKey;
@@ -446,7 +608,6 @@ describe("openbounty_v2", () => {
       winner1           = Keypair.generate();
       winner2           = Keypair.generate();
 
-      // Transfer from provider wallet instead of airdrop
       await fund(provider, organizerForClaim.publicKey, 100 * LAMPORTS_PER_SOL);
 
       [escrowPda] = PublicKey.findProgramAddressSync(
@@ -467,7 +628,14 @@ describe("openbounty_v2", () => {
       const deadline = new anchor.BN(Math.floor(Date.now() / 1000) + 60 * 60 * 24 * 30);
 
       await program.methods
-        .initializeEscrow(judges, threshold, tierAmounts, deadline)
+        .initializeEscrow(
+          "Claim Test Bounty",
+          "",
+          judges,
+          threshold,
+          tierAmounts,
+          deadline,
+        )
         .accountsPartial({
           escrow:        escrowPda,
           vault:         vaultPda,
@@ -477,13 +645,11 @@ describe("openbounty_v2", () => {
         .signers([organizerForClaim])
         .rpc();
 
-      // Finalize winner for tier 0
       await program.methods
         .finalizeWinner(0, winner1.publicKey, mockSigs([1, 2, 3, 0, 0]))
         .accountsPartial({ escrow: escrowPda, organizer: organizerForClaim.publicKey })
         .rpc();
 
-      // Finalize winner for tier 1
       await program.methods
         .finalizeWinner(1, winner2.publicKey, mockSigs([4, 5, 6, 0, 0]))
         .accountsPartial({ escrow: escrowPda, organizer: organizerForClaim.publicKey })
@@ -530,8 +696,6 @@ describe("openbounty_v2", () => {
 
     it("Fails to claim prize if not the winner", async () => {
       const impostor = Keypair.generate();
-
-      // Transfer from organizerForClaim instead of airdrop
       await fund(provider, impostor.publicKey, 1 * LAMPORTS_PER_SOL, organizerForClaim);
 
       try {
@@ -575,8 +739,6 @@ describe("openbounty_v2", () => {
 
     it("Fails to claim prize for tier that has no winner set", async () => {
       const newOrganizer = Keypair.generate();
-
-      // Transfer from provider wallet instead of airdrop
       await fund(provider, newOrganizer.publicKey, 50 * LAMPORTS_PER_SOL);
 
       const [newEscrowPda] = PublicKey.findProgramAddressSync(
@@ -597,7 +759,14 @@ describe("openbounty_v2", () => {
       const deadline = new anchor.BN(Math.floor(Date.now() / 1000) + 60 * 60 * 24 * 30);
 
       await program.methods
-        .initializeEscrow(judges, 3, tierAmounts, deadline)
+        .initializeEscrow(
+          "Unfinalized Test",
+          "",
+          judges,
+          3,
+          tierAmounts,
+          deadline,
+        )
         .accountsPartial({
           escrow:        newEscrowPda,
           vault:         newVaultPda,
@@ -608,8 +777,6 @@ describe("openbounty_v2", () => {
         .rpc();
 
       const someWinner = Keypair.generate();
-
-      // Transfer from newOrganizer instead of airdrop
       await fund(provider, someWinner.publicKey, 1 * LAMPORTS_PER_SOL);
 
       try {
@@ -664,6 +831,7 @@ describe("openbounty_v2", () => {
     });
   });
 
+  // refund_unclaimed — 5 tests
   describe("refund_unclaimed", () => {
 
     let escrowPda:          PublicKey;
@@ -677,7 +845,6 @@ describe("openbounty_v2", () => {
       judgesForRefund    = Array.from({ length: 5 }, () => Keypair.generate());
       winner1            = Keypair.generate();
 
-      // Transfer from provider wallet instead of airdrop
       await fund(provider, organizerForRefund.publicKey, 100 * LAMPORTS_PER_SOL);
 
       [escrowPda] = PublicKey.findProgramAddressSync(
@@ -699,7 +866,14 @@ describe("openbounty_v2", () => {
       const deadline = new anchor.BN(Math.floor(Date.now() / 1000) + 1); // 1 second
 
       await program.methods
-        .initializeEscrow(judges, threshold, tierAmounts, deadline)
+        .initializeEscrow(
+          "Refund Test Bounty",
+          "",
+          judges,
+          threshold,
+          tierAmounts,
+          deadline,
+        )
         .accountsPartial({
           escrow:        escrowPda,
           vault:         vaultPda,
@@ -709,7 +883,7 @@ describe("openbounty_v2", () => {
         .signers([organizerForRefund])
         .rpc();
 
-      // Finalize and claim tier 0 only
+      // Finalize and claim tier 0 only — tiers 1 and 2 remain unclaimed
       await program.methods
         .finalizeWinner(0, winner1.publicKey, mockSigs([1, 2, 3, 0, 0]))
         .accountsPartial({ escrow: escrowPda, organizer: organizerForRefund.publicKey })
@@ -770,8 +944,6 @@ describe("openbounty_v2", () => {
 
     it("Fails to refund before deadline passes", async () => {
       const newOrganizer = Keypair.generate();
-
-      // Transfer from provider wallet instead of airdrop
       await fund(provider, newOrganizer.publicKey, 50 * LAMPORTS_PER_SOL);
 
       const [newEscrowPda] = PublicKey.findProgramAddressSync(
@@ -783,12 +955,19 @@ describe("openbounty_v2", () => {
         program.programId,
       );
 
-      const judges        = judgesForRefund.map((j) => j.publicKey);
-      const tierAmounts   = [new anchor.BN(10 * LAMPORTS_PER_SOL)];
+      const judges         = judgesForRefund.map((j) => j.publicKey);
+      const tierAmounts    = [new anchor.BN(10 * LAMPORTS_PER_SOL)];
       const futureDeadline = new anchor.BN(Math.floor(Date.now() / 1000) + 60 * 60 * 24 * 30);
 
       await program.methods
-        .initializeEscrow(judges, 3, tierAmounts, futureDeadline)
+        .initializeEscrow(
+          "Pre-Deadline Test",
+          "",
+          judges,
+          3,
+          tierAmounts,
+          futureDeadline,
+        )
         .accountsPartial({
           escrow:        newEscrowPda,
           vault:         newVaultPda,
@@ -819,8 +998,6 @@ describe("openbounty_v2", () => {
 
     it("Fails when non-organizer tries to refund", async () => {
       const impostor = Keypair.generate();
-
-      // Transfer from organizerForRefund instead of airdrop
       await fund(provider, impostor.publicKey, 1 * LAMPORTS_PER_SOL, organizerForRefund);
 
       try {
@@ -844,8 +1021,6 @@ describe("openbounty_v2", () => {
 
     it("Fails when all prizes are already claimed (nothing to refund)", async () => {
       const newOrganizer = Keypair.generate();
-
-      // Transfer from provider wallet instead of airdrop
       await fund(provider, newOrganizer.publicKey, 50 * LAMPORTS_PER_SOL);
 
       const [newEscrowPda] = PublicKey.findProgramAddressSync(
@@ -862,7 +1037,14 @@ describe("openbounty_v2", () => {
       const shortDeadline = new anchor.BN(Math.floor(Date.now() / 1000) + 1);
 
       await program.methods
-        .initializeEscrow(judges, 3, tierAmounts, shortDeadline)
+        .initializeEscrow(
+          "All Claimed Test",
+          "",
+          judges,
+          3,
+          tierAmounts,
+          shortDeadline,
+        )
         .accountsPartial({
           escrow:        newEscrowPda,
           vault:         newVaultPda,
@@ -913,8 +1095,6 @@ describe("openbounty_v2", () => {
 
     it("Correctly calculates partial refund (some claimed, some unclaimed)", async () => {
       const newOrganizer = Keypair.generate();
-
-      // Transfer from provider wallet instead of airdrop
       await fund(provider, newOrganizer.publicKey, 100 * LAMPORTS_PER_SOL);
 
       const [newEscrowPda] = PublicKey.findProgramAddressSync(
@@ -935,7 +1115,14 @@ describe("openbounty_v2", () => {
       const shortDeadline = new anchor.BN(Math.floor(Date.now() / 1000) + 1);
 
       await program.methods
-        .initializeEscrow(judges, 3, tierAmounts, shortDeadline)
+        .initializeEscrow(
+          "Partial Refund Test",
+          "",
+          judges,
+          3,
+          tierAmounts,
+          shortDeadline,
+        )
         .accountsPartial({
           escrow:        newEscrowPda,
           vault:         newVaultPda,
