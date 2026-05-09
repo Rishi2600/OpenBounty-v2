@@ -235,6 +235,14 @@ export type OpenbountyV2 = {
       ],
       "args": [
         {
+          "name": "title",
+          "type": "string"
+        },
+        {
+          "name": "metadataUri",
+          "type": "string"
+        },
+        {
           "name": "judges",
           "type": {
             "vec": "pubkey"
@@ -434,6 +442,16 @@ export type OpenbountyV2 = {
       "code": 6017,
       "name": "noUnclaimedFunds",
       "msg": "No unclaimed funds available to refund"
+    },
+    {
+      "code": 6018,
+      "name": "invalidTitle",
+      "msg": "Title must be between 1 and 50 characters"
+    },
+    {
+      "code": 6019,
+      "name": "invalidMetadataUri",
+      "msg": "Metadata URI must be 100 characters or fewer"
     }
   ],
   "types": [
@@ -445,6 +463,23 @@ export type OpenbountyV2 = {
       "type": {
         "kind": "struct",
         "fields": [
+          {
+            "name": "title",
+            "docs": [
+              "Human-readable title for the bounty (max 50 characters)"
+            ],
+            "type": "string"
+          },
+          {
+            "name": "metadataUri",
+            "docs": [
+              "URI pointing to off-chain metadata JSON (max 100 characters)",
+              "Follows Metaplex convention — can be IPFS or Arweave URI",
+              "e.g. \"ipfs://QmXyz...\" or \"https://arweave.net/abc...\"",
+              "Empty string if organizer chooses not to provide metadata"
+            ],
+            "type": "string"
+          },
           {
             "name": "organizer",
             "docs": [
