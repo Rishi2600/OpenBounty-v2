@@ -18,9 +18,9 @@ pub mod openbounty_v2 {
     /// Organizer specifies judges, voting threshold, prize tiers, and deadline.
     pub fn initialize_escrow(
         ctx: Context<InitializeEscrow>,
-        judges: Vec<Pubkey>,
         title: String,
         metadata_uri: String,
+        judges: Vec<Pubkey>,
         threshold: u8,
         tier_amounts: Vec<u64>,
         deadline: i64,

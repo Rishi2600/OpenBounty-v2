@@ -309,7 +309,7 @@ describe("openbounty_v2", () => {
 
     it("Fails to initialize with invalid threshold (too high)", async () => {
       const organizer2 = Keypair.generate();
-      await fund(provider, organizer2.publicKey, 10 * LAMPORTS_PER_SOL, organizer);
+      await fund(provider, organizer2.publicKey, 1 * LAMPORTS_PER_SOL, organizer);
 
       const [escrowPda] = PublicKey.findProgramAddressSync(
         [Buffer.from("escrow"), organizer2.publicKey.toBuffer()],
@@ -346,7 +346,7 @@ describe("openbounty_v2", () => {
 
     it("Fails to initialize with past deadline", async () => {
       const organizer3 = Keypair.generate();
-      await fund(provider, organizer3.publicKey, 10 * LAMPORTS_PER_SOL, organizer);
+      await fund(provider, organizer3.publicKey, 1 * LAMPORTS_PER_SOL, organizer);
 
       const [escrowPda] = PublicKey.findProgramAddressSync(
         [Buffer.from("escrow"), organizer3.publicKey.toBuffer()],
@@ -383,7 +383,7 @@ describe("openbounty_v2", () => {
 
     it("Fails to initialize with no judges", async () => {
       const organizer4 = Keypair.generate();
-      await fund(provider, organizer4.publicKey, 10 * LAMPORTS_PER_SOL, organizer);
+      await fund(provider, organizer4.publicKey, 1 * LAMPORTS_PER_SOL, organizer);
 
       const [escrowPda] = PublicKey.findProgramAddressSync(
         [Buffer.from("escrow"), organizer4.publicKey.toBuffer()],
