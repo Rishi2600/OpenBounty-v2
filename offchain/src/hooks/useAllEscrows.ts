@@ -87,6 +87,7 @@ export function useAllEscrows(): UseAllEscrowsResult {
 
         setEscrows(parsed);
       } catch (err: any) {
+        // console.error("useAllEscrows error:", err);
         if (!cancelled) setError(err.message ?? "Failed to fetch escrows");
       } finally {
         if (!cancelled) setLoading(false);
