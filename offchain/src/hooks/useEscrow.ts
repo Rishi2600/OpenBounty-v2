@@ -14,6 +14,7 @@ export interface PrizeTier {
 }
 
 export interface EscrowAccount {
+  title: ReactNode;
   organizer: PublicKey;
   judges: PublicKey[];
   threshold: number;

@@ -2,12 +2,11 @@
 
 import { useEffect, useState, useCallback } from "react";
 import { Program, AnchorProvider } from "@coral-xyz/anchor";
-import { Keypair, PublicKey } from "@solana/web3.js";
+import { PublicKey, Keypair } from "@solana/web3.js";
 import { BN } from "@coral-xyz/anchor";
 import { OpenbountyV2 } from "@/types/onchain/openbounty_v2";
 import IDL from "@/idl/openbounty_v2.json";
 import { devnetConnection } from "@/utils/anchor-setup";
-import { PROGRAM_ID } from "@/constants/program";
 
 export interface PrizeTier {
   amount: BN;
@@ -35,14 +34,12 @@ interface UseAllEscrowsResult {
   refetch: () => void;
 }
 
-// Build a read-only program instance that works without a wallet
 function getReadOnlyProgram(): Program<OpenbountyV2> {
-//   const dummyKeypair = Keypair.generate();
+  const dummy = Keypair.generate();
   const provider = new AnchorProvider(
     devnetConnection,
-    // Dummy wallet — read-only, never signs
     {
-      publicKey: new PublicKey("D6TRWQntWAJVZJXU7ceY98Nka98XRWKbPLU5sKRghZY2"),
+      publicKey: dummy.publicKey,
       signTransaction: async (tx) => tx,
       signAllTransactions: async (txs) => txs,
     },
@@ -51,11 +48,13 @@ function getReadOnlyProgram(): Program<OpenbountyV2> {
   return new Program<OpenbountyV2>(IDL as any, provider);
 }
 
-export function useAllEscrows(): UseAllEscrowsResult {
+export function useAllEscrows(
+  connectedProgram?: Program<OpenbountyV2> | null
+): UseAllEscrowsResult {
   const [escrows, setEscrows] = useState<EscrowAccount[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError]   = useState<string | null>(null);
-  const [tick, setTick]     = useState(0);
+  const [error,   setError]   = useState<string | null>(null);
+  const [tick,    setTick]    = useState(0);
 
   const refetch = useCallback(() => setTick((t) => t + 1), []);
 
@@ -67,7 +66,7 @@ export function useAllEscrows(): UseAllEscrowsResult {
       setError(null);
 
       try {
-        const program = getReadOnlyProgram();
+        const program = connectedProgram ?? getReadOnlyProgram();
         const raw = await program.account.escrow.all();
 
         if (cancelled) return;
@@ -86,8 +85,8 @@ export function useAllEscrows(): UseAllEscrowsResult {
         }));
 
         setEscrows(parsed);
+        setError(null);
       } catch (err: any) {
-        // console.error("useAllEscrows error:", err);
         if (!cancelled) setError(err.message ?? "Failed to fetch escrows");
       } finally {
         if (!cancelled) setLoading(false);
@@ -96,7 +95,7 @@ export function useAllEscrows(): UseAllEscrowsResult {
 
     load();
     return () => { cancelled = true; };
-  }, [tick]);
+  }, [connectedProgram, tick]);
 
   return { escrows, loading, error, refetch };
 }
