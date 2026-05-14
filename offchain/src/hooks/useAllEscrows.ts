@@ -71,18 +71,27 @@ export function useAllEscrows(
 
         if (cancelled) return;
 
-        const parsed: EscrowAccount[] = raw.map((item) => ({
-          publicKey:   item.publicKey,
-          title:       item.account.title,
-          metadataUri: item.account.metadataUri,
-          organizer:   item.account.organizer,
-          judges:      item.account.judges,
-          threshold:   item.account.threshold,
-          tiers:       item.account.tiers as PrizeTier[],
-          deadline:    item.account.deadline,
-          bump:        item.account.bump,
-          vaultBump:   item.account.vaultBump,
-        }));
+        const parsed: EscrowAccount[] = raw
+          .filter((item) => {
+            try {
+              // Verify the account has minimum expected data
+              return item.account.title !== undefined;
+            } catch {
+              return false;
+            }
+          })
+          .map((item) => ({
+            publicKey:   item.publicKey,
+            title:       item.account.title,
+            metadataUri: item.account.metadataUri,
+            organizer:   item.account.organizer,
+            judges:      item.account.judges,
+            threshold:   item.account.threshold,
+            tiers:       item.account.tiers as PrizeTier[],
+            deadline:    item.account.deadline,
+            bump:        item.account.bump,
+            vaultBump:   item.account.vaultBump,
+          }));
 
         setEscrows(parsed);
         setError(null);
