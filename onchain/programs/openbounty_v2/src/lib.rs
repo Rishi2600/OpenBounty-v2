@@ -1,21 +1,21 @@
+#![allow(unexpected_cfgs)]
+
 use anchor_lang::prelude::*;
 
-declare_id!("CdWRw7fqNCBpz34qHoFjua9Nry6pbhnVrsfpgMemKKrL");
-
 pub mod error;
-pub mod instructions;
 pub mod state;
+pub mod instructions;
 
 use instructions::*;
+
+declare_id!("CdWRw7fqNCBpz34qHoFjua9Nry6pbhnVrsfpgMemKKrL");
 
 #[program]
 pub mod openbounty_v2 {
     use super::*;
 
-    /// Initialize a new bounty escrow
-    /// 
-    /// Creates an escrow account and locks funds in a vault PDA.
-    /// Organizer specifies judges, voting threshold, prize tiers, and deadline.
+    /// Create a new bounty escrow and lock funds
+    /// nonce allows the same wallet to create multiple escrows
     pub fn initialize_escrow(
         ctx: Context<InitializeEscrow>,
         title: String,
@@ -24,36 +24,47 @@ pub mod openbounty_v2 {
         threshold: u8,
         tier_amounts: Vec<u64>,
         deadline: i64,
+        nonce: u8,
     ) -> Result<()> {
-        instructions::initialize_escrow(ctx, title, metadata_uri, judges, threshold, tier_amounts, deadline)
+        instructions::initialize_escrow(
+            ctx,
+            title,
+            metadata_uri,
+            judges,
+            threshold,
+            tier_amounts,
+            deadline,
+            nonce,
+        )
     }
 
-    /// Finalize winner for a specific tier
-    /// 
-    /// Judges sign off-chain, signatures are verified on-chain.
-    /// When threshold is met, winner is recorded for the tier.
-    pub fn finalize_winner(
-        ctx: Context<FinalizeWinner>,
+    /// Judge casts a vote for a winner on a specific tier
+    /// Auto-finalizes when vote count reaches threshold
+    pub fn vote_winner(
+        ctx: Context<VoteWinner>,
+        nonce: u8,
         tier: u8,
-        winner: Pubkey,
-        judge_signatures: Vec<[u8; 64]>,
+        candidate: Pubkey,
     ) -> Result<()> {
-        instructions::finalize_winner(ctx, tier, winner, judge_signatures)
+        instructions::vote_winner(ctx, nonce, tier, candidate)
     }
 
-    /// Claim prize for a specific tier
-    /// 
-    /// Winner calls this after being finalized by judges.
-    /// Transfers funds from vault to winner's wallet.
-    pub fn claim_prize(ctx: Context<ClaimPrize>, tier: u8) -> Result<()> {
-        instructions::claim_prize(ctx, tier)
+    /// Winner claims their prize for a finalized tier
+    /// Closes escrow when all tiers are claimed
+    pub fn claim_prize(
+        ctx: Context<ClaimPrize>,
+        nonce: u8,
+        tier: u8,
+    ) -> Result<()> {
+        instructions::claim_prize(ctx, nonce, tier)
     }
 
-    /// Refund unclaimed prizes to organizer after deadline
-    /// 
-    /// Organizer calls this after deadline passes to reclaim
-    /// funds for prizes that were never claimed.
-    pub fn refund_unclaimed(ctx: Context<RefundUnclaimed>) -> Result<()> {
-        instructions::refund_unclaimed(ctx)
+    /// Organizer refunds unclaimed prizes after deadline
+    /// Closes escrow after refunding
+    pub fn refund_unclaimed(
+        ctx: Context<RefundUnclaimed>,
+        nonce: u8,
+    ) -> Result<()> {
+        instructions::refund_unclaimed(ctx, nonce)
     }
 }

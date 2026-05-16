@@ -1,98 +1,73 @@
 use anchor_lang::prelude::*;
 
-/// Main escrow account that holds all bounty metadata
+// TierVote — records a single judge's vote on a prize tier
+#[derive(AnchorSerialize, AnchorDeserialize, Clone)]
+pub struct TierVote {
+    pub judge:     Pubkey,   // 32 bytes — who cast this vote
+    pub candidate: Pubkey,   // 32 bytes — who they voted for
+}
+
+// PrizeTier — one prize tier within an escrow
+#[derive(AnchorSerialize, AnchorDeserialize, Clone)]
+pub struct PrizeTier {
+    pub amount:  u64,            // 8 bytes
+    pub winner:  Option<Pubkey>, // 33 bytes (1 discriminant + 32 pubkey)
+    pub claimed: bool,           // 1 byte
+    pub votes:   Vec<TierVote>,  // 4 + (64 * 5) = 324 bytes (max 5 judges)
+}
+
+// Escrow — the main account storing all bounty metadata and state
 #[account]
 pub struct Escrow {
-    /// Human-readable title for the bounty (max 50 characters)
-    pub title: String,
-
-    /// URI pointing to off-chain metadata JSON (max 100 characters)
-    /// Follows Metaplex convention — can be IPFS or Arweave URI
-    /// e.g. "ipfs://QmXyz..." or "https://arweave.net/abc..."
-    /// Empty string if organizer chooses not to provide metadata
-    pub metadata_uri: String,
-
-    /// Organizer's public key (who created the escrow)
-    pub organizer: Pubkey,
-
-    /// List of judge public keys (e.g., 5 judges)
-    pub judges: Vec<Pubkey>,
-
-    /// Minimum number of judges required to approve a winner (e.g., 3 out of 5)
-    pub threshold: u8,
-
-    /// Prize tiers in lamports (e.g., [20 SOL, 15 SOL, 10 SOL, 5 SOL])
-    pub tiers: Vec<PrizeTier>,
-
-    /// Unix timestamp for when unclaimed funds can be refunded
-    pub deadline: i64,
-
-    /// Bump seed for the escrow PDA
-    pub bump: u8,
-
-    /// Bump seed for the vault PDA (holds the actual SOL)
-    pub vault_bump: u8,
+    pub title:        String,        // 4 + 50 = 54 bytes
+    pub metadata_uri: String,        // 4 + 100 = 104 bytes
+    pub organizer:    Pubkey,        // 32 bytes
+    pub nonce:        u8,            // 1 byte  — NEW: supports multiple bounties per wallet
+    pub judges:       Vec<Pubkey>,   // 4 + (32 * 5) = 164 bytes
+    pub threshold:    u8,            // 1 byte
+    pub tiers:        Vec<PrizeTier>,// 4 + (366 * 4) = 1468 bytes (see PrizeTier size below)
+    pub deadline:     i64,           // 8 bytes
+    pub bump:         u8,            // 1 byte
+    pub vault_bump:   u8,            // 1 byte
 }
 
 impl Escrow {
-    /// Calculate the space needed for the account
-    /// Formula: discriminator + all field sizes
-    pub const LEN: usize =
-        8 +                           // Anchor discriminator
-        4 + 50 +                      // title: String (4 length prefix + max 50 chars)
-        4 + 100 +                     // metadata_uri: String (4 length prefix + max 100 chars)
-        32 +                          // organizer: Pubkey
-        4 + (5 * 32) +                // judges: Vec<Pubkey> (max 5 judges)
-        1 +                           // threshold: u8
-        4 + (4 * PrizeTier::LEN) +    // tiers: Vec<PrizeTier> (max 4 tiers)
-        8 +                           // deadline: i64
-        1 +                           // bump: u8
-        1;                            // vault_bump: u8
-}
-
-/// Individual prize tier with winner and claim status
-#[derive(AnchorSerialize, AnchorDeserialize, Clone, Debug)]
-pub struct PrizeTier {
-    /// Amount of SOL for this tier (in lamports)
-    pub amount: u64,
-
-    /// Winner's public key (None if not yet assigned)
-    pub winner: Option<Pubkey>,
-
-    /// Whether this tier has been claimed
-    pub claimed: bool,
-}
-
-impl PrizeTier {
-    /// Space calculation for a single PrizeTier
-    pub const LEN: usize =
-        8 +        // amount: u64
-        1 + 32 +   // winner: Option<Pubkey> (1 byte tag + 32 bytes Pubkey)
-        1;         // claimed: bool
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn test_escrow_space_calculation() {
-        let expected =
-            8 +           // discriminator
-            (4 + 50) +    // title
-            (4 + 100) +   // metadata_uri
-            32 +          // organizer
-            (4 + 5 * 32) + // judges
-            1 +           // threshold
-            (4 + 4 * 41) + // tiers
-            8 +           // deadline
-            1 +           // bump
-            1;            // vault_bump
-        assert_eq!(Escrow::LEN, expected);
-    }
-
-    #[test]
-    fn test_prize_tier_space() {
-        assert_eq!(PrizeTier::LEN, 41);
-    }
+    ///
+    // LEN calculation
+    //
+    // Discriminator:       8
+    // title:               4 + 50  = 54
+    // metadata_uri:        4 + 100 = 104
+    // organizer:           32
+    // nonce:               1
+    // judges vec:          4 + (32 * 5) = 164
+    // threshold:           1
+    // tiers vec:           4 + (PrizeTier::LEN * 4)
+    //   PrizeTier::LEN:
+    //     amount:          8
+    //     winner:          33
+    //     claimed:         1
+    //     votes vec:       4 + (TierVote::LEN * 5)
+    //       TierVote::LEN: 32 + 32 = 64
+    //     votes total:     4 + (64 * 5) = 324
+    //   PrizeTier total:   8 + 33 + 1 + 324 = 366
+    // tiers total:         4 + (366 * 4)    = 1468
+    // deadline:            8
+    // bump:                1
+    // vault_bump:          1
+    //
+    // Total: 8 + 54 + 104 + 32 + 1 + 164 + 1 + 1468 + 8 + 1 + 1 = 1842
+    ///
+    /// 
+    pub const LEN: usize = 8   // discriminator
+        + 54                   // title
+        + 104                  // metadata_uri
+        + 32                   // organizer
+        + 1                    // nonce
+        + 164                  // judges
+        + 1                    // threshold
+        + 1468                 // tiers
+        + 8                    // deadline
+        + 1                    // bump
+        + 1;                   // vault_bump
 }

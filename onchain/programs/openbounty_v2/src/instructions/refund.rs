@@ -3,137 +3,119 @@ use anchor_lang::system_program::{transfer, Transfer};
 use crate::error::EscrowError;
 use crate::state::Escrow;
 
-/// Refund unclaimed prizes to organizer after deadline
+/// Refund unclaimed prizes after deadline
 ///
-/// This instruction allows the organizer to reclaim funds for prizes
-/// that were not claimed by winners before the deadline.
-///
-/// ## How It Works:
-///
-/// 1. **Verify Deadline**: Check that the claim deadline has passed
-/// 2. **Verify Organizer**: Ensure caller is the original organizer
-/// 3. **Calculate Unclaimed**: Sum up all unclaimed prize amounts
-/// 4. **Transfer Funds**: Move SOL from vault back to organizer
-///
-/// ## Security:
-/// - Only organizer can call this
-/// - Only works after deadline has passed
-/// - Only refunds unclaimed prizes (claimed prizes are excluded)
-/// - Uses PDA signer to transfer from vault
-///
-/// ## Use Cases:
-/// - Winner never claimed their prize
-/// - Hackathon had no submissions for some tiers
-/// - Organizer wants to recover unclaimed funds
-///
-pub fn refund_unclaimed(ctx: Context<RefundUnclaimed>) -> Result<()> {
-    let escrow = &ctx.accounts.escrow;
-    
-    // Get current Unix timestamp
-    let clock = Clock::get()?;
-    let current_time = clock.unix_timestamp;
+/// Changes from v1:
+/// - PDA seeds now include nonce
+/// - After refunding, closes escrow and vault accounts
+///   returning rent to the organizer
+pub fn refund_unclaimed(
+    ctx: Context<RefundUnclaimed>,
+    nonce: u8,
+) -> Result<()> {
+    let escrow   = &mut ctx.accounts.escrow;
+    let clock    = Clock::get()?;
+    let organizer = escrow.organizer;
+    let vault_bump = escrow.vault_bump;
 
-    msg!("Current time: {}", current_time);
-    msg!("Deadline: {}", escrow.deadline);
-
-    // Validation: Check that deadline has passed
+    // Only organizer can refund
     require!(
-        current_time > escrow.deadline,
-        EscrowError::DeadlineNotPassed
-    );
-
-    // Validation: Check that caller is the organizer
-    require!(
-        ctx.accounts.organizer.key() == escrow.organizer,
+        ctx.accounts.organizer.key() == organizer,
         EscrowError::Unauthorized
     );
 
-    // Calculate total unclaimed amount
-    let mut unclaimed_amount: u64 = 0;
-    let mut claimed_count = 0;
-    let mut unclaimed_count = 0;
+    // Deadline must have passed
+    require!(
+        clock.unix_timestamp > escrow.deadline,
+        EscrowError::DeadlineNotPassed
+    );
 
-    for (index, tier) in escrow.tiers.iter().enumerate() {
-        if tier.winner.is_some() && !tier.claimed {
-            // Winner was set but never claimed
-            unclaimed_amount += tier.amount;
-            unclaimed_count += 1;
-            msg!("Tier {} unclaimed: {} lamports", index, tier.amount);
-        } else if tier.winner.is_some() && tier.claimed {
-            // Winner claimed successfully
-            claimed_count += 1;
-            msg!("Tier {} already claimed", index);
-        } else {
-            // No winner was ever set (also unclaimed)
-            unclaimed_amount += tier.amount;
-            unclaimed_count += 1;
-            msg!("Tier {} had no winner: {} lamports", index, tier.amount);
+    // Calculate total unclaimed amount
+    let unclaimed_total: u64 = escrow
+        .tiers
+        .iter()
+        .filter(|t| !t.claimed)
+        .map(|t| t.amount)
+        .sum();
+
+    require!(unclaimed_total > 0, EscrowError::NoUnclaimedFunds);
+
+    // Mark all unclaimed tiers as claimed (prevents double refund)
+    for tier in escrow.tiers.iter_mut() {
+        if !tier.claimed {
+            tier.claimed = true;
         }
     }
 
-    msg!("Total tiers: {}", escrow.tiers.len());
-    msg!("Claimed tiers: {}", claimed_count);
-    msg!("Unclaimed tiers: {}", unclaimed_count);
-    msg!("Total unclaimed amount: {} lamports", unclaimed_amount);
-
-    // Check if there's anything to refund
-    require!(
-        unclaimed_amount > 0,
-        EscrowError::NoUnclaimedFunds
-    );
-
-    // Transfer unclaimed funds from vault to organizer
-    let organizer_key = escrow.organizer.key();
-    let vault_seeds = &[
+    // Transfer unclaimed SOL from vault back to organizer
+    let signer_seeds: &[&[&[u8]]] = &[&[
         b"vault",
-        organizer_key.as_ref(),
-        &[escrow.vault_bump],
-    ];
-    let vault_signer = &[&vault_seeds[..]];
+        organizer.as_ref(),
+        &[nonce],
+        &[vault_bump],
+    ]];
 
-    // Create transfer instruction from vault to organizer
     let transfer_accounts = Transfer {
         from: ctx.accounts.vault.to_account_info(),
-        to: ctx.accounts.organizer.to_account_info(),
+        to:   ctx.accounts.organizer.to_account_info(),
     };
-    
     let cpi_context = CpiContext::new_with_signer(
         ctx.accounts.system_program.to_account_info(),
         transfer_accounts,
-        vault_signer, // PDA signer - only program can sign for vault
+        signer_seeds,
+    );
+    transfer(cpi_context, unclaimed_total)?;
+
+    msg!(
+        "Refunded {} lamports to organizer: {}",
+        unclaimed_total, organizer
     );
 
-    // Execute the transfer
-    transfer(cpi_context, unclaimed_amount)?;
+    // Close vault — transfer any remaining dust lamports to organizer
+    let vault_remaining = ctx.accounts.vault.lamports();
+    if vault_remaining > 0 {
+        let transfer_accounts = Transfer {
+            from: ctx.accounts.vault.to_account_info(),
+            to:   ctx.accounts.organizer.to_account_info(),
+        };
+        let cpi_context = CpiContext::new_with_signer(
+            ctx.accounts.system_program.to_account_info(),
+            transfer_accounts,
+            signer_seeds,
+        );
+        transfer(cpi_context, vault_remaining)?;
+    }
 
-    msg!("Refund successful!");
-    msg!("Transferred {} lamports to organizer {}", unclaimed_amount, escrow.organizer);
+    // Close escrow — move lamports to organizer
+    let escrow_lamports = ctx.accounts.escrow.to_account_info().lamports();
+    **ctx.accounts.escrow.to_account_info().lamports.borrow_mut() = 0;
+    **ctx.accounts.organizer.to_account_info().lamports.borrow_mut() += escrow_lamports;
+
+    msg!("Escrow closed after refund — rent returned to organizer");
 
     Ok(())
 }
 
-/// Account validation for refund_unclaimed instruction
 #[derive(Accounts)]
+#[instruction(nonce: u8)]
 pub struct RefundUnclaimed<'info> {
-    /// Escrow account containing prize tier information
-    #[account(mut)]
-    pub escrow: Account<'info, Escrow>,
-
-    /// Vault PDA that holds the locked SOL
-    /// This account will have unclaimed SOL transferred back to organizer
-    /// CHECK: Vault PDA is validated by seeds
     #[account(
         mut,
-        seeds = [b"vault", escrow.organizer.as_ref()],
+        seeds = [b"escrow", organizer.key().as_ref(), &[nonce]],
+        bump = escrow.bump,
+    )]
+    pub escrow: Account<'info, Escrow>,
+
+    /// CHECK: Vault PDA holding the SOL
+    #[account(
+        mut,
+        seeds = [b"vault", organizer.key().as_ref(), &[nonce]],
         bump = escrow.vault_bump,
     )]
     pub vault: AccountInfo<'info>,
 
-    /// Organizer receiving the refund (must be a signer)
-    /// This must match the organizer recorded in the escrow
     #[account(mut)]
     pub organizer: Signer<'info>,
 
-    /// System program for transferring SOL
     pub system_program: Program<'info, System>,
 }

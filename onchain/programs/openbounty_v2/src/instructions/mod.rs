@@ -1,9 +1,9 @@
 pub mod initialize;
-pub mod finalize;
+pub mod vote;
 pub mod claim;
 pub mod refund;
 
 pub use initialize::*;
-pub use finalize::*;
+pub use vote::*;
 pub use claim::*;
 pub use refund::*;

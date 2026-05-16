@@ -2,64 +2,73 @@ use anchor_lang::prelude::*;
 
 #[error_code]
 pub enum EscrowError {
-    #[msg("Signature verification failed")]
+    #[msg("Invalid signature provided")]
     InvalidSignature,
-    
-    #[msg("Insufficient signatures - need more judge approvals")]
+
+    #[msg("Insufficient signatures to meet threshold")]
     InsufficientSignatures,
-    
+
     #[msg("This tier has already been claimed")]
     TierAlreadyClaimed,
-    
-    #[msg("Deadline has not been reached yet")]
+
+    #[msg("The deadline has not been reached yet")]
     DeadlineNotReached,
-    
-    #[msg("Escrow has expired - claiming period is over")]
+
+    #[msg("This escrow has expired")]
     EscrowExpired,
-    
-    #[msg("Invalid judge - not in authorized judge list")]
+
+    #[msg("Invalid judge provided")]
     InvalidJudge,
-    
-    #[msg("Invalid tier index - tier does not exist")]
+
+    #[msg("Invalid tier index")]
     InvalidTier,
-    
-    #[msg("Threshold must be less than or equal to number of judges")]
+
+    #[msg("Invalid threshold")]
     InvalidThreshold,
-    
-    #[msg("Must have at least one judge")]
+
+    #[msg("No judges provided")]
     NoJudges,
-    
-    #[msg("Must have at least one prize tier")]
+
+    #[msg("No tiers provided")]
     NoTiers,
-    
-    #[msg("Amount must be greater than zero")]
+
+    #[msg("Invalid amount")]
     InvalidAmount,
-    
-    #[msg("Deadline must be in the future")]
+
+    #[msg("Invalid deadline")]
     InvalidDeadline,
-    
-    #[msg("Unauthorized - you are not the organizer")]
+
+    #[msg("Unauthorized")]
     Unauthorized,
-    
-    #[msg("Winner already finalized for this tier")]
+
+    #[msg("This tier has already been finalized")]
     AlreadyFinalized,
-    
-    #[msg("Cannot claim - winner not yet finalized")]
+
+    #[msg("This tier has not been finalized yet")]
     NotFinalized,
-    
-    #[msg("Message format invalid for signature verification")]
+
+    #[msg("Invalid message")]
     InvalidMessage,
-    
-    #[msg("Deadline has not passed yet - cannot refund")]
+
+    #[msg("Deadline has not passed yet")]
     DeadlineNotPassed,
-    
-    #[msg("No unclaimed funds available to refund")]
+
+    #[msg("No unclaimed funds to refund")]
     NoUnclaimedFunds,
 
-    // NEW — metadata validation errors
-    #[msg("Title must be between 1 and 50 characters")]
+    #[msg("Title is empty or exceeds 50 characters")]
     InvalidTitle,
 
-    #[msg("Metadata URI must be 100 characters or fewer")]
+    #[msg("Metadata URI exceeds 100 characters")]
     InvalidMetadataUri,
+
+    // New errors for vote_winner instruction
+    #[msg("This judge has already voted on this tier")]
+    AlreadyVoted,
+
+    #[msg("Signer is not a judge on this escrow")]
+    NotAJudge,
+
+    #[msg("This tier has already been finalized and cannot receive more votes")]
+    TierAlreadyFinalized,
 }
