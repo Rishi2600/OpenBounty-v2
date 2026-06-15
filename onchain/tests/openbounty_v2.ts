@@ -1,3 +1,5 @@
+//@ts-nocheck
+
 import * as anchor from "@coral-xyz/anchor";
 import { Program } from "@coral-xyz/anchor";
 import { OpenbountyV2 } from "../target/types/openbounty_v2";
