@@ -33,7 +33,7 @@ Run searches from the repo root:
 
 ## Look
 
-- **Keep the current identity:** warm dark brown with ochre highlights.
+- **Keep the current identity:** warm dark brown with ochre highlights. The browns were deepened on 2026-09-26 (same hue, 2–3 points darker, slightly richer). The v1 values are in git history if they ever need restoring.
 - **Dark theme only for now.** Colors are defined by meaning (below), so a light theme can be added later without touching components.
 - **Background:** keep the soft ochre glow at the top of the page. The grain texture stays.
 - **Contrast:** every text color below is at least 4.5:1 on both the page and card backgrounds.
@@ -44,26 +44,26 @@ Base values live in `globals.css` only. Components use the meaning-based names t
 
 | Name (shadcn) | Value | Used for |
 |---|---|---|
-| `background` | `#1A100A` | Page |
-| `foreground` | `#F5EFE6` | Main text (16:1) |
-| `card` | `#2C1A0F` | Cards, panels |
-| `popover` | `#2C1A0F` | Menus, dialogs |
+| `background` | `#130B06` | Page |
+| `foreground` | `#F5EFE6` | Main text (17:1) |
+| `card` | `#23150C` | Cards, panels |
+| `popover` | `#23150C` | Menus, dialogs |
 | `primary` | `#C8860A` ochre | Main buttons, active tab, focus ring |
-| `primary-foreground` | `#1A100A` | Text on ochre (6.1:1) |
-| `secondary` / `muted` | `#4A2E1A` | Quiet buttons, input backgrounds, tier rows |
-| `muted-foreground` | `#C4B49E` | Secondary text (8.2:1 on card) |
+| `primary-foreground` | `#130B06` | Text on ochre (6.4:1) |
+| `secondary` / `muted` | `#382214` | Quiet buttons, input backgrounds, tier rows |
+| `muted-foreground` | `#C4B49E` | Secondary text (8.8:1 on card) |
 | `accent` | ochre at 15% | Hover backgrounds, selected items |
 | `accent-foreground` | `#F0C060` | Text on accent |
-| `destructive` | `#E06C52` | Errors, refund, danger. Button text uses `#1A100A` (5.7:1). |
+| `destructive` | `#E06C52` | Errors, refund, danger. Button text uses `#130B06` (6.0:1). |
 | `success` (custom) | `#9DBD72` | Claimed, winner, success toasts |
 | `highlight` (custom) | `#F0C060` | SOL amounts, key numbers |
-| `border` / `input` | brown `#6B4226` at 40% | All borders |
+| `border` / `input` | brown `#623D22` at 55% | All borders |
 | `ring` | `#C8860A` | Keyboard focus |
 
 Rules:
 - No hex values or `style={{}}` color objects in components.
 - Never fade text with `opacity`; use `text-muted-foreground`.
-- `#8C6248` (brown-muted) is for borders and dividers only. As text it's 3.1:1, which fails.
+- `#825B40` (brown-600) is for borders and dividers only. It's too faint for text.
 
 ### Type
 

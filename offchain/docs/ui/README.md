@@ -144,6 +144,13 @@ To add a sample, add another `escrow({...})` entry in `buildMockEscrows`.
   - [x] Wallet picker restyled to match; Explore and detail checked at 768px and 1024px
   - [x] OpenBounty icon as favicon; create-next-app starter files removed; README rewritten
 
+## Changes after the refactor
+
+- **Deeper brown palette** (branch `feat/news-feed-and-palette`): same hue, 2–3 points darker and slightly richer.
+  - **Where:** only the base palette in `globals.css` changed (`--brown-950` ... `--brown-600`, plus border opacity).
+  - **Contrast:** every text color still passes, e.g. main text is 17:1 on the page.
+  - **To revert:** restore the old five values from git history.
+
 ## How the refactor was checked
 
 In mock mode, with a headless browser, at 1440px and 390px:

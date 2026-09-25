@@ -14,11 +14,12 @@
 
 /* 1. Base palette */
 :root {
-  --brown-950: #1A100A;
-  --brown-900: #2C1A0F;
-  --brown-800: #4A2E1A;
-  --brown-700: #6B4226;
-  --brown-600: #8C6248; /* borders and dividers only, too faint for text */
+  /* Deep espresso browns: same hue, darker and slightly richer than v1 */
+  --brown-950: #130B06;
+  --brown-900: #23150C;
+  --brown-800: #382214;
+  --brown-700: #623D22;
+  --brown-600: #825B40; /* borders and dividers only, too faint for text */
 
   --ochre-600: #C8860A;
   --ochre-500: #E8A020;
@@ -59,8 +60,8 @@
   --success: var(--green-400);
   --highlight: var(--ochre-300);
 
-  --border: rgb(107 66 38 / 40%);
-  --input: rgb(107 66 38 / 40%);
+  --border: rgb(98 61 34 / 55%);
+  --input: rgb(98 61 34 / 55%);
   --ring: var(--ochre-600);
 
   --radius: 0.625rem;
@@ -154,7 +155,7 @@
   whichever file loads first.
 */
 .wallet-adapter-modal .wallet-adapter-modal-overlay {
-  background: rgb(26 16 10 / 70%);
+  background: rgb(19 11 6 / 70%);
 }
 
 .wallet-adapter-modal .wallet-adapter-modal-wrapper {
