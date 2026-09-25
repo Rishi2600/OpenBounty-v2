@@ -95,6 +95,9 @@
   --color-input: var(--input);
   --color-ring: var(--ring);
 
+  /* Ochre glow, only for the organizer's own bounty cards */
+  --shadow-glow: 0 0 24px rgb(200 134 10 / 18%);
+
   --radius-sm: calc(var(--radius) * 0.6);
   --radius-md: calc(var(--radius) * 0.8);
   --radius-lg: var(--radius);

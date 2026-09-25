@@ -30,6 +30,19 @@ Page layout: `app/layout.tsx` wraps every page in `<main className="mx-auto w-fu
 | `ErrorState` | A plain-English error with a "Try again" button (`role="alert"`) | `message?`, `onRetry?` |
 | `StatCard` | An uppercase label above one value | `label`, `value` (text or a node such as `SolAmount`) |
 
+| `FilterButtons` | A row of toggle buttons (`aria-pressed`) with optional counts, which wrap on phones. Used for filters instead of Tabs, because Tabs expect content panels. | `label` (for screen readers), `options` (`{ value, label, count? }[]`), `value`, `onChange` |
+
+## bounty/
+
+| Component | What it shows | Props |
+|---|---|---|
+| `BountyCard` | Title, status, prize pool, your role, "x of y prizes decided", and the deadline. The whole card links to `/bounty/[address]`. Your own bounties get the ochre glow. | `escrow`, `viewer` (the connected wallet or `null`) |
+| `BountyCardSkeleton` | Loading placeholder with the same shape | none |
+| `BountyStatusBadge` | "Open" (green), "Ending soon" (ochre), "Ended" (muted). Styles come from `STATUS_STYLES`. | `status` |
+| `RoleBadges` | "You organize", "You judge", "You won". Renders nothing when you have no role. | `roles` (from `getViewerRoles`) |
+
+The glow uses the `shadow-glow` class, defined as `--shadow-glow` in `globals.css`.
+
 ```tsx
 <EmptyState
   icon={Inbox}
