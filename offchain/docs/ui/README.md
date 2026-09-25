@@ -129,7 +129,25 @@ To add a sample, add another `escrow({...})` entry in `buildMockEscrows`.
   - [x] Bounty detail page (`/bounty/[address]`): vote (auto-picks the winner at the threshold), claim, refund with confirmation, closed and not-found states. Tested in mock mode as judge, winner and organizer, at 1440px and 390px.
   - [x] "Your bounties" page (`/me`), linked in the nav. Replaces the broken `/claim` link.
   - [x] 404 page (`app/not-found.tsx`); `/claim` redirects to `/me` (`next.config.ts`)
-- [ ] Phase 4: loading/empty/error states, mobile layouts, accessibility, clean build
+- [x] Phase 4: loading/empty/error states, mobile layouts, accessibility, clean build
   - [x] Production build passes; `/dev/components` returns 404 in production
   - [x] Skip link, link focus outline, reduced motion, page titles, server-side 404 for bad bounty addresses
   - [x] Wallet picker restyled to match; Explore and detail checked at 768px and 1024px
+  - [x] OpenBounty icon as favicon; create-next-app starter files removed; README rewritten
+
+## How the refactor was checked
+
+In mock mode, with a headless browser, at 1440px and 390px:
+- **Create:** errors on an empty submit, the duplicate-judge error, a successful create, and the new bounty showing on Explore.
+- **Detail, as a judge:** voting, with the winner picked automatically at the threshold.
+- **Detail, as a winner:** claiming the last prize, which closes the bounty.
+- **Detail, as an organizer:** refunding, which closes the bounty.
+- **Bad address:** returns a 404.
+- **Your bounties:** every section, the Vote link, and the logged-out prompt after Disconnect.
+- **Keyboard:** the skip link comes first, focus rings are visible, and page titles are right.
+
+Also: `tsc`, ESLint on the whole app and `next build` are clean. No inline styles, hex colors or emoji remain in components.
+
+**Not checked:** real transactions on devnet. The deployed program is still v1 until it's redeployed.
+
+Before calling a new page done, run the checklist at the end of `.claude/skills/openbounty-ui/SKILL.md`.
