@@ -30,6 +30,7 @@ Page layout: `app/layout.tsx` wraps every page in `<main className="mx-auto w-fu
 | `ErrorState` | A plain-English error with a "Try again" button (`role="alert"`) | `message?`, `onRetry?` |
 | `StatCard` | An uppercase label above one value | `label`, `value` (text or a node such as `SolAmount`) |
 
+| `FormField` | Label, input (children), and helper text that an error replaces (`role="alert"`, red). Give the input `id` and `aria-describedby={messageId(id)}`. | `id`, `label`, `helper?`, `error?`, `children` |
 | `FilterButtons` | A row of toggle buttons (`aria-pressed`) with optional counts, which wrap on phones. Used for filters instead of Tabs, because Tabs expect content panels. | `label` (for screen readers), `options` (`{ value, label, count? }[]`), `value`, `onChange` |
 
 ## bounty/
