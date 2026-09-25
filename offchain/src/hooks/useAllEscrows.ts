@@ -1,13 +1,13 @@
 "use client";
 
+// Every escrow on-chain (or the mock samples in mock mode), with loading/error state.
+
 import { useEffect, useState, useCallback } from "react";
-import { Program, AnchorProvider } from "@coral-xyz/anchor";
-import { Keypair } from "@solana/web3.js";
+import { Program } from "@coral-xyz/anchor";
 import { OpenbountyV2 } from "@/types/onchain/openbounty_v2";
-import IDL from "@/idl/openbounty_v2.json";
-import { devnetConnection } from "@/utils/anchor-setup";
+import { getReadOnlyProgram, toEscrowAccount } from "@/utils/anchor-setup";
 import { ESCROW_ACCOUNT_SIZE } from "@/constants/program";
-import type { EscrowAccount, PrizeTier } from "@/types/escrow";
+import type { EscrowAccount } from "@/types/escrow";
 import { USE_MOCKS, getMockEscrows, mockDelay } from "@/mocks/store";
 
 interface UseAllEscrowsResult {
@@ -15,20 +15,6 @@ interface UseAllEscrowsResult {
   loading: boolean;
   error: string | null;
   refetch: () => void;
-}
-
-function getReadOnlyProgram(): Program<OpenbountyV2> {
-  const dummy = Keypair.generate();
-  const provider = new AnchorProvider(
-    devnetConnection,
-    {
-      publicKey: dummy.publicKey,
-      signTransaction: async (tx) => tx,
-      signAllTransactions: async (txs) => txs,
-    },
-    { commitment: "confirmed" }
-  );
-  return new Program<OpenbountyV2>(IDL as OpenbountyV2, provider);
 }
 
 export function useAllEscrows(
@@ -65,22 +51,7 @@ export function useAllEscrows(
 
         if (cancelled) return;
 
-        const parsed: EscrowAccount[] = raw
-          .map((item) => ({
-            publicKey:   item.publicKey,
-            title:       item.account.title,
-            metadataUri: item.account.metadataUri,
-            organizer:   item.account.organizer,
-            nonce:       item.account.nonce,
-            judges:      item.account.judges,
-            threshold:   item.account.threshold,
-            tiers:       item.account.tiers as PrizeTier[],
-            deadline:    item.account.deadline,
-            bump:        item.account.bump,
-            vaultBump:   item.account.vaultBump,
-          }));
-
-        setEscrows(parsed);
+        setEscrows(raw.map((item) => toEscrowAccount(item.publicKey, item.account)));
         setError(null);
       } catch (err) {
         console.error("useAllEscrows full error:", err);
