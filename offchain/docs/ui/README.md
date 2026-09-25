@@ -2,6 +2,15 @@
 
 Notes for the UI refactor on `feat/ui-refactor`. Each change updates these docs in the same commit.
 
+**Design rules:** [`.claude/skills/openbounty-ui/SKILL.md`](../../../.claude/skills/openbounty-ui/SKILL.md) covers colors, fonts, pages, components, patterns and code rules. Read it before changing any UI.
+
+**Reference skills** (in `.claude/skills/`, MIT licensed, from [ui-ux-pro-max-skill](https://github.com/nextlevelbuilder/ui-ux-pro-max-skill)):
+- `ui-ux-pro-max`: a searchable UX and design database
+- `design-system`: how design values are layered
+- `ui-styling`: shadcn and Tailwind guides
+
+The copies were trimmed (test folders and a 5.5MB font folder removed), and the script path in `ui-ux-pro-max` was fixed to run from the repo root.
+
 ## Running
 
 | Command | Data source |
@@ -40,7 +49,8 @@ To add a sample, add another `escrow({...})` entry in `buildMockEscrows`.
 ## Progress
 
 - [x] Mock data mode
-- [ ] Phase 0: read the skill file, record design decisions
+- [x] Install reference skills
+- [ ] Phase 0: design decisions in `openbounty-ui` (proposed, waiting for approval)
 - [ ] Phase 1: design values, base components, page shell
 - [ ] Phase 2: refactor Dashboard, BountyCard, Create form, Header
 - [ ] Phase 3: bounty detail page, judge voting, `/claim` page, real claim and refund
