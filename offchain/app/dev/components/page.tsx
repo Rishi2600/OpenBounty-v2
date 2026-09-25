@@ -18,6 +18,7 @@ import SolAmount from "@/components/common/SolAmount";
 import EmptyState from "@/components/common/EmptyState";
 import ErrorState from "@/components/common/ErrorState";
 import StatCard from "@/components/common/StatCard";
+import PageHeader from "@/components/layout/PageHeader";
 
 const SWATCHES = [
   "bg-background", "bg-card", "bg-secondary", "bg-primary",
@@ -40,7 +41,11 @@ export default function ComponentsPreview() {
 
   return (
     <div className="flex flex-col gap-10">
-      <h1 className="font-display text-4xl">Design system</h1>
+      <PageHeader
+        title="Design system"
+        description="Colors, type and shared components. Development only."
+        actions={<Button variant="outline">Page action</Button>}
+      />
 
       <Section title="Colors">
         <div className="grid grid-cols-4 gap-3 sm:grid-cols-8">

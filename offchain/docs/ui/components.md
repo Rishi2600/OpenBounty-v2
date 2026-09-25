@@ -11,7 +11,12 @@ To see everything in one place, run `yarn dev:mock` and open **http://localhost:
 | `SiteHeader` | Sticky top bar: logo, nav links, a "Create bounty" button (hidden on phones) and `WalletButton`. Below `md` the links move into `MobileNav`. |
 | `MobileNav` | Menu button (phones only) that opens the nav links and "Create bounty" in a left-side sheet. The sheet closes on navigation. |
 | `WalletButton` | Logged out: "Connect wallet" opens the wallet picker. Connected: a menu with the wallet name, balance, copy address, explorer link, change wallet and disconnect. |
+| `SiteFooter` | One-line footer. A server component (no `"use client"`). |
+| `PageHeader` | Page title (`h1`, serif) with an optional description and optional actions on the right. They stack on phones. Use it at the top of every page. |
+| `MockBanner` | Strip shown above the header only in mock mode |
 | `navLinks.ts` | `NAV_LINKS` (the list of links) and `isActivePath()`. Add a page to the nav here and both headers pick it up. |
+
+Page layout: `app/layout.tsx` wraps every page in `<main className="mx-auto w-full max-w-6xl flex-1 px-4 py-10 sm:px-6">`, so pages shouldn't add their own outer container.
 
 `useBalance()` (in `src/hooks/`) returns the connected wallet's balance in lamports, or `null`.
 

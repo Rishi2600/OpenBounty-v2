@@ -2,8 +2,8 @@ import type { Metadata } from "next";
 import { DM_Sans, DM_Serif_Display, JetBrains_Mono } from "next/font/google";
 import WalletProvider from "@/components/WalletProvider";
 import SiteHeader from "@/components/layout/SiteHeader";
-import Footer from "@/components/Footer";
-import MockBanner from "@/components/MockBanner";
+import SiteFooter from "@/components/layout/SiteFooter";
+import MockBanner from "@/components/layout/MockBanner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { Toaster } from "@/components/ui/sonner";
 import { cn } from "@/lib/utils";
@@ -53,7 +53,7 @@ export default function RootLayout({ children }: Props) {
             <main className="mx-auto w-full max-w-6xl flex-1 px-4 py-10 sm:px-6">
               {children}
             </main>
-            <Footer />
+            <SiteFooter />
             <Toaster position="bottom-right" />
           </TooltipProvider>
         </WalletProvider>
