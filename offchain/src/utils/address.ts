@@ -10,3 +10,12 @@ export function parseAddress(text: string): PublicKey | null {
     return null;
   }
 }
+
+// The organizer's "details link" as a safe href, or null.
+// Only http(s) and ipfs:// are allowed, so a "javascript:" link can never run.
+export function safeDetailsUrl(uri: string): string | null {
+  const text = uri.trim();
+  if (text.startsWith("ipfs://")) return `https://ipfs.io/ipfs/${text.slice("ipfs://".length)}`;
+  if (text.startsWith("https://") || text.startsWith("http://")) return text;
+  return null;
+}
