@@ -120,4 +120,5 @@ To add a sample, add another `escrow({...})` entry in `buildMockEscrows`.
   - [x] Old CSS variable block removed; no inline styles or hex colors left in components
 - [ ] Phase 3: bounty detail page, judge voting, `/me` page (replaces `/claim`), real claim and refund, 404 page
   - [x] Bounty detail page (`/bounty/[address]`): vote (auto-picks the winner at the threshold), claim, refund with confirmation, closed and not-found states. Tested in mock mode as judge, winner and organizer, at 1440px and 390px.
+  - [x] "Your bounties" page (`/me`), linked in the nav. Replaces the broken `/claim` link.
 - [ ] Phase 4: loading/empty/error states, mobile layouts, accessibility, clean build

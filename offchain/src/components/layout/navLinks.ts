@@ -2,6 +2,7 @@
 
 export const NAV_LINKS = [
   { label: "Explore", href: "/" },
+  { label: "Your bounties", href: "/me" },
 ];
 
 // "/" matches only the home page; other links also match their sub-pages.
