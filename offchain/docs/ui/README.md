@@ -61,7 +61,7 @@ Available now: `alert`, `badge`, `button`, `card`, `dialog`, `dropdown-menu`, `i
 | Path | What's there |
 |---|---|
 | `src/types/escrow.ts` | `EscrowAccount`, `PrizeTier`, `TierVote`, the escrow shape every component uses |
-| `src/utils/format.ts` | `formatSol`, `formatDeadline`, `formatDate`, `placeLabel` ("1st prize"), `truncateAddress`, `totalLocked`, `unclaimedTotal` |
+| `src/utils/format.ts` | `formatSol`, `formatDeadline`, `formatTimeAgo`, `formatDate`, `placeLabel` ("1st prize"), `truncateAddress`, `totalLocked`, `unclaimedTotal` |
 | `src/utils/status.ts` | `getBountyStatus` (open / ending-soon / ended), `getTierProgress` (awaiting / voting / winner / claimed), `getCandidateTallies` (votes per candidate), `countDecidedTiers` |
 | `src/utils/roles.ts` | `getViewerRoles(escrow, wallet)`: is the wallet the organizer, a judge, or a winner (and of which tiers) |
 | `src/constants/program.ts` | Program ID, explorer URLs, and the program's limits (`MAX_JUDGES`, `MAX_TIERS`, `MAX_TITLE_BYTES`, `MAX_METADATA_URI_BYTES`) |
@@ -70,6 +70,7 @@ Available now: `alert`, `badge`, `button`, `card`, `dialog`, `dropdown-menu`, `i
 | `src/utils/txErrors.ts` | `friendlyTxError(err)`: program errors (`Error Code: X`) and wallet errors as short plain-English text for toasts. Add new program errors here. |
 | `src/utils/anchor-setup.ts` | `getProgram` (signs with the wallet), `getReadOnlyProgram` (logged-out reads), `toEscrowAccount` (decoded account -> `EscrowAccount`), `findNextNonce` |
 | `src/utils/txToast.ts` | `toastTxSuccess(message, signature)` (with a "View" explorer action, or a "Mock transaction" note) and `toastTxError(err)` |
+| `src/types/news.ts`, `src/utils/news.ts`, `src/hooks/useNews.ts` | Landing-page news feed:<br>• `getNews()` is the one place the items come from (sample items from `src/mocks/news.ts` for now)<br>• `NEWS_IS_SAMPLE` shows a "Sample" badge<br>• `useNews()` adds loading and error state |
 | `src/hooks/useBountyActions.ts` | `vote(tier, candidate)`, `claim(tier)`, `refund()` for one bounty, plus `pending` (`"vote-0"`, `"claim-1"`, `"refund"`). Uses the mock actions in mock mode. |
 | `src/hooks/` | Data hooks: `useAllEscrows` (every bounty), `useEscrow(address)` (one bounty; `null` if missing or closed), `useCreateBounty`, `useBalance`, `useProgram`. The read hooks work without a wallet. |
 | `src/mocks/` | Mock mode data (see below) |
