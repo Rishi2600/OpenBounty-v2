@@ -1,36 +1,35 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# OpenBounty frontend
 
-## Getting Started
+Next.js app for OpenBounty, the Solana bounty escrow in `../onchain`:
+- **Organizers** lock a prize pool.
+- **Judges** vote on winners.
+- **Winners** claim directly.
+- **Organizers** refund anything unclaimed after the deadline.
 
-First, run the development server:
+## Run it
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+yarn install
+yarn dev:mock   # sample data, no chain, a throwaway wallet connects automatically
+yarn dev        # real program on devnet (connect Phantom or Solflare)
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open http://localhost:3000. Other commands: `yarn build`, `yarn start`, `yarn lint`.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Pages
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+| Route | Page |
+|---|---|
+| `/` | Explore every bounty, filtered by Open, Ending soon or Ended |
+| `/bounty/[address]` | One bounty: judges vote, winners claim, the organizer refunds |
+| `/create` | Create a bounty |
+| `/me` | Your bounties: votes, claims and refunds to do, plus what you organize and judge |
 
-## Learn More
+## Where things are
 
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- **UI docs:** [`docs/ui/`](docs/ui/README.md) covers styling, the code map, mock mode, the component guide and progress.
+- **Design rules:** [`../.claude/skills/openbounty-ui/SKILL.md`](../.claude/skills/openbounty-ui/SKILL.md) covers colors, type, patterns and code rules.
+- **Program connection:**
+  - The program ID and limits are in `src/constants/program.ts`.
+  - The IDL and types are in `src/idl/` and `src/types/onchain/`.
+  - After changing the program, copy `onchain/target/idl` and `onchain/target/types` back into those folders.
