@@ -11,6 +11,19 @@ Notes for the UI refactor on `feat/ui-refactor`. Each change updates these docs 
 
 The copies were trimmed (test folders and a 5.5MB font folder removed), and the script path in `ui-ux-pro-max` was fixed to run from the repo root.
 
+## Styling
+
+- **Setup:** Tailwind v4 and shadcn/ui (Radix, "nova" preset). The shadcn settings are in `components.json`.
+- **Colors and fonts:** `app/globals.css`, in three layers:
+  1. Base palette (raw values)
+  2. Meanings (shadcn names like `--primary`)
+  3. `@theme inline`, which turns the meanings into classes like `bg-primary`
+- **In components:** use only the classes, never raw hex values.
+- **Fonts:** loaded in `app/layout.tsx` and available as `font-sans` (DM Sans), `font-display` (DM Serif Display) and `font-mono` (JetBrains Mono).
+- **Dark only:** `<html>` always has the `dark` class.
+- **Temporary block:** the "old variable names" block in `globals.css` keeps not-yet-refactored pages working. Delete it at the end of Phase 2.
+- **`cn()`:** `src/lib/utils.ts` re-exports it from the `cn` package, shadcn's replacement for clsx + tailwind-merge.
+
 ## Running
 
 | Command | Data source |
@@ -50,8 +63,9 @@ To add a sample, add another `escrow({...})` entry in `buildMockEscrows`.
 
 - [x] Mock data mode
 - [x] Install reference skills
-- [ ] Phase 0: design decisions in `openbounty-ui` (proposed, waiting for approval)
+- [x] Phase 0: design decisions in `openbounty-ui` (approved)
 - [ ] Phase 1: design values, base components, page shell
+  - [x] shadcn setup and theme
 - [ ] Phase 2: refactor Dashboard, BountyCard, Create form, Header
-- [ ] Phase 3: bounty detail page, judge voting, `/claim` page, real claim and refund
+- [ ] Phase 3: bounty detail page, judge voting, `/me` page (replaces `/claim`), real claim and refund, 404 page
 - [ ] Phase 4: loading/empty/error states, mobile layouts, accessibility, clean build

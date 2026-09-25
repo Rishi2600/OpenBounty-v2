@@ -1,56 +1,156 @@
 @import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
 
+/* The app is dark-only: <html> always has the "dark" class */
+@custom-variant dark (&:is(.dark *));
 
+/*
+  Colors come in three layers (see .claude/skills/openbounty-ui/SKILL.md):
+  1. Base palette  - raw values, used only in this file
+  2. Meanings      - shadcn names like --primary; what components use
+  3. @theme inline - exposes the meanings as Tailwind classes (bg-primary, ...)
+*/
+
+/* 1. Base palette */
 :root {
-  /* Brown palette */
-  --brown-deepest:  #1A100A;
-  --brown-dark:     #2C1A0F;
-  --brown-mid:      #4A2E1A;
-  --brown-warm:     #6B4226;
-  --brown-muted:    #8C6248;
+  --brown-950: #1A100A;
+  --brown-900: #2C1A0F;
+  --brown-800: #4A2E1A;
+  --brown-700: #6B4226;
+  --brown-600: #8C6248; /* borders and dividers only, too faint for text */
 
-  /* Ochre palette */
-  --ochre:          #C8860A;
-  --ochre-light:    #E8A020;
-  --ochre-pale:     #F0C060;
-  --ochre-dim:      rgba(200, 134, 10, 0.15);
+  --ochre-600: #C8860A;
+  --ochre-500: #E8A020;
+  --ochre-300: #F0C060;
 
-  /* Off-white palette */
-  --offwhite:       #F5EFE6;
-  --offwhite-dim:   #E8DDD0;
-  --offwhite-muted: #C4B49E;
-  --offwhite-ghost: rgba(245, 239, 230, 0.06);
+  --cream-50:  #F5EFE6;
+  --cream-100: #E8DDD0;
+  --cream-300: #C4B49E;
 
-  /* Semantic */
-  --error:          #C0392B;
-  --success:        #7D9A5C;
-
-  /* Typography */
-  --font-display:   'DM Serif Display', Georgia, serif;
-  --font-heading:   'Playfair Display', Georgia, serif;
-  --font-body:      'DM Sans', system-ui, sans-serif;
-  --font-mono:      'Courier New', Courier, monospace;
-
-  /* Borders & shadows */
-  --border:         rgba(107, 66, 38, 0.4);
-  --border-bright:  rgba(200, 134, 10, 0.5);
-  --shadow-warm:    0 4px 24px rgba(26, 16, 10, 0.5);
-  --shadow-ochre:   0 0 20px rgba(200, 134, 10, 0.2);
+  --red-400:   #E06C52;
+  --green-400: #9DBD72;
 }
 
-*, *::before, *::after {
-  box-sizing: border-box;
-  margin: 0;
-  padding: 0;
+/* 2. Meanings */
+:root {
+  --background: var(--brown-950);
+  --foreground: var(--cream-50);
+
+  --card: var(--brown-900);
+  --card-foreground: var(--cream-50);
+  --popover: var(--brown-900);
+  --popover-foreground: var(--cream-50);
+
+  --primary: var(--ochre-600);
+  --primary-foreground: var(--brown-950);
+
+  --secondary: var(--brown-800);
+  --secondary-foreground: var(--cream-50);
+  --muted: var(--brown-800);
+  --muted-foreground: var(--cream-300);
+
+  --accent: rgb(200 134 10 / 15%);
+  --accent-foreground: var(--ochre-300);
+
+  --destructive: var(--red-400);
+  --destructive-foreground: var(--brown-950);
+
+  --success: var(--green-400);
+  --highlight: var(--ochre-300);
+
+  --border: rgb(107 66 38 / 40%);
+  --input: rgb(107 66 38 / 40%);
+  --ring: var(--ochre-600);
+
+  --radius: 0.625rem;
 }
 
-body {
-  font-family: var(--font-body);
-  background-color: var(--brown-deepest);
-  color: var(--offwhite);
-  line-height: 1.65;
-  min-height: 100vh;
-  background-image:
-    radial-gradient(ellipse 80% 50% at 50% -10%, rgba(200,134,10,0.08) 0%, transparent 70%),
-    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+/* 3. Tailwind classes */
+@theme inline {
+  --font-sans: var(--font-dm-sans), system-ui, sans-serif;
+  --font-display: var(--font-dm-serif), Georgia, serif;
+  --font-heading: var(--font-dm-serif), Georgia, serif;
+  --font-mono: var(--font-jetbrains-mono), ui-monospace, monospace;
+
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-success: var(--success);
+  --color-highlight: var(--highlight);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+
+  --radius-sm: calc(var(--radius) * 0.6);
+  --radius-md: calc(var(--radius) * 0.8);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) * 1.4);
+  --radius-2xl: calc(var(--radius) * 1.8);
+  --radius-3xl: calc(var(--radius) * 2.2);
+  --radius-4xl: calc(var(--radius) * 2.6);
+}
+
+/*
+  Old variable names, still used by pages written with inline styles.
+  Delete this block once Phase 2 has moved every page to Tailwind classes.
+*/
+:root {
+  --brown-deepest: var(--brown-950);
+  --brown-dark: var(--brown-900);
+  --brown-mid: var(--brown-800);
+  --brown-warm: var(--brown-700);
+  --brown-muted: var(--brown-600);
+  --ochre: var(--ochre-600);
+  --ochre-light: var(--ochre-500);
+  --ochre-pale: var(--ochre-300);
+  --ochre-dim: rgb(200 134 10 / 15%);
+  --offwhite: var(--cream-50);
+  --offwhite-dim: var(--cream-100);
+  --offwhite-muted: var(--cream-300);
+  --offwhite-ghost: rgb(245 239 230 / 6%);
+  --error: var(--red-400);
+  --font-body: var(--font-dm-sans), system-ui, sans-serif;
+  --font-display: var(--font-dm-serif), Georgia, serif;
+  --font-heading: var(--font-dm-serif), Georgia, serif;
+  --font-mono: var(--font-jetbrains-mono), ui-monospace, monospace;
+  --border-bright: rgb(200 134 10 / 50%);
+  --shadow-warm: 0 4px 24px rgb(26 16 10 / 50%);
+  --shadow-ochre: 0 0 20px rgb(200 134 10 / 20%);
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+
+  html {
+    @apply font-sans;
+  }
+
+  /* Soft ochre glow at the top plus a faint grain texture */
+  body {
+    @apply min-h-screen bg-background text-foreground antialiased;
+    background-image:
+      radial-gradient(ellipse 80% 50% at 50% -10%, rgb(200 134 10 / 8%) 0%, transparent 70%),
+      url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+  }
+
+  button:not(:disabled),
+  [role="button"]:not(:disabled) {
+    cursor: pointer;
+  }
 }

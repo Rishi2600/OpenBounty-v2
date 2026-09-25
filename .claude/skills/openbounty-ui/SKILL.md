@@ -7,7 +7,7 @@ description: OpenBounty UI rules and design decisions. Use when building, refact
 
 The single source of truth for how the OpenBounty frontend looks and is built. When these rules conflict with a reference skill, these rules win.
 
-> **Status: proposed (Phase 0).** Waiting for approval before Phase 1 starts.
+> **Status: approved** on 2026-09-25.
 
 ## Reference skills
 
