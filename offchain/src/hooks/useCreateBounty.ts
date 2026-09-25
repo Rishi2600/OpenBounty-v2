@@ -9,6 +9,7 @@ import { BN } from "@coral-xyz/anchor";
 import { LAMPORTS_PER_SOL, PublicKey, SystemProgram } from "@solana/web3.js";
 import { useProgram } from "./useProgram";
 import { deriveEscrowAccounts } from "@/utils/pda";
+import { parseAddress } from "@/utils/address";
 import { findNextNonce } from "@/utils/anchor-setup";
 import {
   MAX_JUDGES,
@@ -43,15 +44,6 @@ function byteLength(text: string): number {
   return new TextEncoder().encode(text).length;
 }
 
-function isValidAddress(text: string): boolean {
-  try {
-    new PublicKey(text);
-    return true;
-  } catch {
-    return false;
-  }
-}
-
 function toLamports(sol: string): BN {
   return new BN(Math.round(Number(sol) * LAMPORTS_PER_SOL));
 }
@@ -60,7 +52,7 @@ function validateJudges(judges: string[]): string | undefined {
   if (judges.length === 0) return "Add at least one judge.";
   if (judges.length > MAX_JUDGES) return `You can add up to ${MAX_JUDGES} judges.`;
 
-  const invalid = judges.find((judge) => !isValidAddress(judge.trim()));
+  const invalid = judges.find((judge) => parseAddress(judge) === null);
   if (invalid) return `"${invalid.slice(0, 8)}..." isn't a valid wallet address.`;
 
   // A repeated judge can only vote once, which can make the threshold impossible

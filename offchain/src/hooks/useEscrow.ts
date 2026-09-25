@@ -5,19 +5,11 @@
 // because the bounty was closed after every prize was claimed or refunded.
 
 import { useCallback, useEffect, useState } from "react";
-import { PublicKey } from "@solana/web3.js";
 import { useProgram } from "./useProgram";
 import { getReadOnlyProgram, toEscrowAccount } from "@/utils/anchor-setup";
 import type { EscrowAccount } from "@/types/escrow";
+import { parseAddress } from "@/utils/address";
 import { USE_MOCKS, getMockEscrowCopy, mockDelay } from "@/mocks/store";
-
-function parseAddress(address: string): PublicKey | null {
-  try {
-    return new PublicKey(address);
-  } catch {
-    return null;
-  }
-}
 
 export function useEscrow(address: string) {
   const program = useProgram();
