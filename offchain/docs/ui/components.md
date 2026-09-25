@@ -40,10 +40,11 @@ Page layout: `app/layout.tsx` wraps every page in `<main className="mx-auto w-fu
 | `BountyCard` | Title, status, prize pool, your role, "x of y prizes decided", and the deadline. The whole card links to `/bounty/[address]`. Your own bounties get the ochre glow. | `escrow`, `viewer` (the connected wallet or `null`) |
 | `BountyCardSkeleton` | Loading placeholder with the same shape | none |
 | `BountyStatusBadge` | "Open" (green), "Ending soon" (ochre), "Ended" (muted). Styles come from `STATUS_STYLES`. | `status` |
-| `TierStatusBadge` | "Awaiting votes", "Voting · 2 of 3", "Winner picked" or "Claimed" | `progress` (from `getTierProgress`), `threshold` |
+| `TierStatusBadge` | "Awaiting votes", "Voting · 2 of 3", "Winner picked", "Claimed", or "No winner" after the deadline | `progress` (from `getTierProgress`), `threshold`, `isEnded` |
 | `TierCard` | One prize on the detail page: place and amount, status, then either the winner or a vote progress bar with each candidate's votes. Shows "Vote for a winner" to judges who haven't voted (before the deadline) and "Claim X SOL" to an unclaimed winner. | `escrow`, `tierIndex`, `viewer`, `isEnded`, `pending`, `onVote`, `onClaim` |
 | `VoteDialog` | Lets a judge vote on one prize: current candidates as pick buttons (with vote counts) plus an address field. Says votes can't be changed. | `open`, `prizeLabel`, `threshold`, `tallies`, `submitting`, `onOpenChange`, `onSubmit(candidate)` |
 | `RefundDialog` | Confirms a refund and warns that the bounty closes and unclaimed winners lose their prize | `open`, `amountText`, `submitting`, `onOpenChange`, `onConfirm` |
+| `BountyDetail` | The whole `/bounty/[address]` page:<br>• loading, error, not found, and a "Bounty closed" state after you close it<br>• header with status and your roles<br>• a "connect wallet" hint when logged out<br>• a refund panel for the organizer after the deadline<br>• tier cards, the details panel, and the vote and refund dialogs<br><br>Every action ends in a success or error toast and a refetch. | `address` |
 | `BountyDetailsPanel` | Side panel on the detail page: prize pool and amount still locked, deadline (relative and full date), judges with "N of M votes to win", organizer, escrow account, and the organizer's details link | `escrow`, `viewer` |
 | `BountyDetailSkeleton` | Loading placeholder for the detail page | none |
 | `RoleBadges` | "You organize", "You judge", "You won". Renders nothing when you have no role. | `roles` (from `getViewerRoles`) |

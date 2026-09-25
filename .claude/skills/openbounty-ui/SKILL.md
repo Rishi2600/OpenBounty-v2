@@ -95,7 +95,7 @@ Rules:
 ### Status names users see
 
 - **Bounty:** `Open` (before the deadline), `Ending soon` (under 24 hours left), `Ended` (after the deadline).
-- **Tier:** `Awaiting votes`, `Voting · 2 of 3`, `Winner picked`, `Claimed`.
+- **Tier:** `Awaiting votes`, `Voting · 2 of 3`, `Winner picked`, `Claimed`, or `No winner` (the deadline passed before any candidate reached the threshold).
 - There is no "Claimed" status for a whole bounty: the program closes a bounty once every tier is claimed.
 
 ## Components

@@ -49,7 +49,7 @@ export default function TierCard({ escrow, tierIndex, viewer, isEnded, pending, 
           </span>
           <SolAmount lamports={tier.amount} className="text-2xl" />
         </div>
-        <TierStatusBadge progress={progress} threshold={escrow.threshold} />
+        <TierStatusBadge progress={progress} threshold={escrow.threshold} isEnded={isEnded} />
       </div>
 
       {tier.winner && (
@@ -59,7 +59,11 @@ export default function TierCard({ escrow, tierIndex, viewer, isEnded, pending, 
         </div>
       )}
 
-      {!tier.winner && (
+      {!tier.winner && isEnded && (
+        <p className="text-sm text-muted-foreground">Voting closed without a winner.</p>
+      )}
+
+      {!tier.winner && !isEnded && (
         <div className="flex flex-col gap-2">
           <Progress
             value={(progress.leadingVotes / escrow.threshold) * 100}
