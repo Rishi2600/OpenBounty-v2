@@ -1,6 +1,6 @@
 import { PublicKey } from "@solana/web3.js";
 import { BN } from "@coral-xyz/anchor";
-import type { EscrowAccount } from "@/hooks/useAllEscrows";
+import type { EscrowAccount } from "@/types/escrow";
 import { deriveEscrowPda } from "@/utils/pda";
 import { buildMockEscrows } from "./fixtures";
 

@@ -40,6 +40,18 @@ If you re-run `shadcn add --overwrite` on these files, apply the tweaks again.
 
 Available now: `alert`, `badge`, `button`, `card`, `dialog`, `dropdown-menu`, `input`, `label`, `progress`, `separator`, `sheet`, `skeleton`, `sonner`, `tabs`, `textarea`, `tooltip`. `TooltipProvider` and `Toaster` are already mounted in `app/layout.tsx`.
 
+## Code map
+
+| Path | What's there |
+|---|---|
+| `src/types/escrow.ts` | `EscrowAccount`, `PrizeTier`, `TierVote`, the escrow shape every component uses |
+| `src/utils/format.ts` | `formatSol`, `formatDeadline`, `formatDate`, `truncateAddress`, `totalLocked`, `unclaimedTotal` |
+| `src/utils/status.ts` | `getBountyStatus` (open / ending-soon / ended), `getTierProgress` (awaiting / voting / winner / claimed), `countDecidedTiers` |
+| `src/utils/roles.ts` | `getViewerRoles(escrow, wallet)`: is the wallet the organizer, a judge, or a winner (and of which tiers) |
+| `src/utils/bountyStatus.ts` | Old status logic, used only by the old dashboard. Delete it with that dashboard. |
+| `src/hooks/` | Data hooks: `useAllEscrows`, `useEscrow`, `useCreateBounty`, `useBalance`, `useProgram` |
+| `src/mocks/` | Mock mode data (see below) |
+
 ## Running
 
 | Command | Data source |

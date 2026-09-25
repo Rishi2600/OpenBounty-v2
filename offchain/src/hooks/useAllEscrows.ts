@@ -2,39 +2,13 @@
 
 import { useEffect, useState, useCallback } from "react";
 import { Program, AnchorProvider } from "@coral-xyz/anchor";
-import { PublicKey, Keypair } from "@solana/web3.js";
-import { BN } from "@coral-xyz/anchor";
+import { Keypair } from "@solana/web3.js";
 import { OpenbountyV2 } from "@/types/onchain/openbounty_v2";
 import IDL from "@/idl/openbounty_v2.json";
 import { devnetConnection } from "@/utils/anchor-setup";
 import { ESCROW_ACCOUNT_SIZE } from "@/constants/program";
+import type { EscrowAccount, PrizeTier } from "@/types/escrow";
 import { USE_MOCKS, getMockEscrows, mockDelay } from "@/mocks/store";
-
-export interface TierVote {
-  judge: PublicKey;
-  candidate: PublicKey;
-}
-
-export interface PrizeTier {
-  amount: BN;
-  winner: PublicKey | null;
-  claimed: boolean;
-  votes: TierVote[];
-}
-
-export interface EscrowAccount {
-  publicKey: PublicKey;
-  title: string;
-  metadataUri: string;
-  organizer: PublicKey;
-  nonce: number;
-  judges: PublicKey[];
-  threshold: number;
-  tiers: PrizeTier[];
-  deadline: BN;
-  bump: number;
-  vaultBump: number;
-}
 
 interface UseAllEscrowsResult {
   escrows: EscrowAccount[];
@@ -54,7 +28,7 @@ function getReadOnlyProgram(): Program<OpenbountyV2> {
     },
     { commitment: "confirmed" }
   );
-  return new Program<OpenbountyV2>(IDL as any, provider);
+  return new Program<OpenbountyV2>(IDL as OpenbountyV2, provider);
 }
 
 export function useAllEscrows(
@@ -108,9 +82,9 @@ export function useAllEscrows(
 
         setEscrows(parsed);
         setError(null);
-      } catch (err: any) {
+      } catch (err) {
         console.error("useAllEscrows full error:", err);
-        if (!cancelled) setError(err.message ?? "Failed to fetch escrows");
+        if (!cancelled) setError(err instanceof Error ? err.message : "Failed to fetch escrows");
       } finally {
         if (!cancelled) setLoading(false);
       }

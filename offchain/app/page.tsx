@@ -7,12 +7,8 @@ import { BN } from "@coral-xyz/anchor";
 import { useAllEscrows } from "@/hooks/useAllEscrows";
 import { useProgram } from "@/hooks/useProgram";
 import BountyCard from "@/components/dashboard/BountyCard";
-import {
-  deriveBountyStatus,
-  formatSol,
-  unclaimedTotal,
-  BountyStatus,
-} from "@/utils/bountyStatus";
+import { deriveBountyStatus, BountyStatus } from "@/utils/bountyStatus";
+import { formatSol, unclaimedTotal } from "@/utils/format";
 
 // ---------------------------------------------------------------------------
 // Types

@@ -18,7 +18,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useBalance } from "@/hooks/useBalance";
-import { formatSol, truncateAddress } from "@/utils/bountyStatus";
+import { formatSol, truncateAddress } from "@/utils/format";
 import { explorerAddressUrl } from "@/constants/program";
 
 export default function WalletButton() {

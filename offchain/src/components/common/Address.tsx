@@ -6,7 +6,7 @@ import { Copy } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
-import { truncateAddress } from "@/utils/bountyStatus";
+import { truncateAddress } from "@/utils/format";
 import { cn } from "@/lib/utils";
 
 interface Props {

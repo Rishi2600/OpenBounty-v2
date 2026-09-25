@@ -4,7 +4,7 @@ import { useEffect, useState, useCallback } from "react";
 import { PublicKey } from "@solana/web3.js";
 import { BN } from "@coral-xyz/anchor";
 import { useProgram } from "./useProgram";
-import { PrizeTier } from "./useAllEscrows";
+import type { PrizeTier } from "@/types/escrow";
 import { deriveEscrowPda } from "../utils/pda";
 import { fetchEscrow } from "../utils/anchor-setup";
 import { USE_MOCKS, getMockEscrows, mockDelay } from "@/mocks/store";
@@ -73,9 +73,9 @@ export function useEscrow(
         if (!cancelled) {
           setEscrow(account as EscrowAccount | null);
         }
-      } catch (err: any) {
+      } catch (err) {
         if (!cancelled) {
-          setError(err.message ?? "Failed to fetch escrow");
+          setError(err instanceof Error ? err.message : "Failed to fetch escrow");
         }
       } finally {
         if (!cancelled) setLoading(false);

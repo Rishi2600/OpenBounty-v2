@@ -1,6 +1,6 @@
 import { Keypair, PublicKey, LAMPORTS_PER_SOL } from "@solana/web3.js";
 import { BN } from "@coral-xyz/anchor";
-import type { EscrowAccount, PrizeTier, TierVote } from "@/hooks/useAllEscrows";
+import type { EscrowAccount, PrizeTier, TierVote } from "@/types/escrow";
 
 // Sample bounties for UI work. Each one covers a different state or role,
 // so every screen can be checked without a deployed program.

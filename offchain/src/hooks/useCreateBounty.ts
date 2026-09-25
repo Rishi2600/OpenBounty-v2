@@ -175,9 +175,9 @@ export function useCreateBounty(): UseCreateBountyResult {
         .rpc();
 
       setTxSignature(tx);
-    } catch (err: any) {
+    } catch (err) {
       // Surface the most useful part of Anchor errors
-      const msg: string = err?.message ?? "Transaction failed";
+      const msg = err instanceof Error ? err.message : "Transaction failed";
       if (msg.includes("already in use")) {
         // Another tx grabbed the same nonce between lookup and send
         setError("That bounty slot was just taken. Please submit again.");

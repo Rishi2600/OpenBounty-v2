@@ -3,15 +3,9 @@
 import { useState } from "react";
 import { useWallet } from "@solana/wallet-adapter-react";
 import { useWalletModal } from "@solana/wallet-adapter-react-ui";
-import { EscrowAccount } from "@/hooks/useAllEscrows";
-import {
-  deriveBountyStatus,
-  formatSol,
-  formatDeadline,
-  totalLocked,
-  truncateAddress,
-  BountyStatus,
-} from "@/utils/bountyStatus";
+import type { EscrowAccount } from "@/types/escrow";
+import { deriveBountyStatus, BountyStatus } from "@/utils/bountyStatus";
+import { formatSol, formatDeadline, totalLocked, truncateAddress } from "@/utils/format";
 
 // ---------------------------------------------------------------------------
 // Status badge
