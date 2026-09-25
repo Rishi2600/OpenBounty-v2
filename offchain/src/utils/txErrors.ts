@@ -19,6 +19,7 @@ const PROGRAM_ERRORS: Record<string, string> = {
   Unauthorized:         "Your wallet isn't allowed to do this.",
   DeadlineNotPassed:    "Refunds open after the deadline.",
   NoUnclaimedFunds:     "There's nothing left to refund.",
+  AccountNotInitialized: "This bounty is closed.",
 };
 
 // Wallet and network errors, matched by a piece of their message

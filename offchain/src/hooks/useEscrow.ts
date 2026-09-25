@@ -9,7 +9,7 @@ import { PublicKey } from "@solana/web3.js";
 import { useProgram } from "./useProgram";
 import { getReadOnlyProgram, toEscrowAccount } from "@/utils/anchor-setup";
 import type { EscrowAccount } from "@/types/escrow";
-import { USE_MOCKS, getMockEscrows, mockDelay } from "@/mocks/store";
+import { USE_MOCKS, getMockEscrowCopy, mockDelay } from "@/mocks/store";
 
 function parseAddress(address: string): PublicKey | null {
   try {
@@ -42,7 +42,7 @@ export function useEscrow(address: string) {
         if (key && USE_MOCKS) {
           await mockDelay();
           const viewer = program?.provider.publicKey ?? null;
-          found = getMockEscrows(viewer).find((e) => e.publicKey.equals(key)) ?? null;
+          found = getMockEscrowCopy(viewer, key);
         } else if (key) {
           const client = program ?? getReadOnlyProgram();
           const raw = await client.account.escrow.fetchNullable(key);

@@ -6,14 +6,45 @@ import { buildMockEscrows } from "./fixtures";
 
 // Mock mode: run `yarn dev:mock` (sets NEXT_PUBLIC_MOCK=1).
 // Hooks then read and write the in-memory data below instead of devnet,
-// and no transactions are sent.
+// and no transactions are sent. Everything resets on page reload.
 export const USE_MOCKS = process.env.NEXT_PUBLIC_MOCK === "1";
 
-// Bounties created during this browser session. Cleared on page reload.
+// Samples are built around the connected wallet and rebuilt if it changes
+let samples: EscrowAccount[] = [];
+let samplesBuiltFor: string | null = null;
+
+// Bounties created during this session
 const created: EscrowAccount[] = [];
 
 export function getMockEscrows(viewer: PublicKey | null): EscrowAccount[] {
-  return [...buildMockEscrows(viewer), ...created];
+  const key = viewer ? viewer.toBase58() : "logged-out";
+  if (samplesBuiltFor !== key) {
+    samples = buildMockEscrows(viewer);
+    samplesBuiltFor = key;
+  }
+  return [...samples, ...created];
+}
+
+// The stored escrow itself, for mock actions to change
+export function findMockEscrow(address: PublicKey): EscrowAccount | undefined {
+  return [...samples, ...created].find((e) => e.publicKey.equals(address));
+}
+
+// A copy of one escrow, so React sees a new object after a mock action changes it
+export function getMockEscrowCopy(viewer: PublicKey | null, address: PublicKey): EscrowAccount | null {
+  const escrow = getMockEscrows(viewer).find((e) => e.publicKey.equals(address));
+  if (!escrow) return null;
+  return {
+    ...escrow,
+    tiers: escrow.tiers.map((tier) => ({ ...tier, votes: [...tier.votes] })),
+  };
+}
+
+// Like the program closing the account after the last claim or a refund
+export function removeMockEscrow(address: PublicKey): void {
+  samples = samples.filter((e) => !e.publicKey.equals(address));
+  const index = created.findIndex((e) => e.publicKey.equals(address));
+  if (index !== -1) created.splice(index, 1);
 }
 
 export interface NewMockEscrow {

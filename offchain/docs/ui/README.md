@@ -75,7 +75,8 @@ In mock mode a throwaway **Burner Wallet** connects automatically, so no wallet 
 Turned on by `NEXT_PUBLIC_MOCK=1`, which `yarn dev:mock` sets. A banner at the top of every page shows when it's on.
 
 - **Samples:** `src/mocks/fixtures.ts`
-- **Flag, created bounties, fake tx helpers:** `src/mocks/store.ts`
+- **Flag, in-memory state, fake tx helpers:** `src/mocks/store.ts`
+- **Mock vote, claim and refund:** `src/mocks/actions.ts`. They run the same checks as the program and throw the same `Error Code: X` errors, so error toasts can be tested too.
 - **Hooks that switch to mock data:** `useAllEscrows`, `useEscrow`, `useCreateBounty`
 
 The samples are built around the connected wallet ("you"), so every role can be tested with one wallet:
@@ -90,7 +91,8 @@ The samples are built around the connected wallet ("you"), so every role can be 
 | Hackathon: Best Mobile dApp | None | Expired; a winner was picked but never claimed |
 
 Other behavior:
-- **Created bounties:** they're kept in memory and show up on the dashboard. A page reload clears them.
+- **Changes stick until reload:** created bounties, votes, claims and refunds all stay in memory. A reload resets everything to the samples.
+- **Closing like the program:** claiming the last prize or refunding removes the bounty, like the program closing the account.
 - **Transactions:** each mock transaction waits about 0.6s so loading states are visible, then returns a signature like `mock-tx-<time>`. Explorer links for these go nowhere.
 - **No fully claimed bounty:** once every tier is claimed, the program closes the escrow, so that state never appears on-chain. That's why Explore filters by deadline (Open / Ending soon / Ended) and has no "Claimed" filter.
 
