@@ -51,6 +51,8 @@ Available now: `alert`, `badge`, `button`, `card`, `dialog`, `dropdown-menu`, `i
 | `src/constants/program.ts` | Program ID, explorer URLs, and the program's limits (`MAX_JUDGES`, `MAX_TIERS`, `MAX_TITLE_BYTES`, `MAX_METADATA_URI_BYTES`) |
 | `src/utils/txErrors.ts` | `friendlyTxError(err)`: program errors (`Error Code: X`) and wallet errors as short plain-English text for toasts. Add new program errors here. |
 | `src/utils/anchor-setup.ts` | `getProgram` (signs with the wallet), `getReadOnlyProgram` (logged-out reads), `toEscrowAccount` (decoded account -> `EscrowAccount`), `findNextNonce` |
+| `src/utils/txToast.ts` | `toastTxSuccess(message, signature)` (with a "View" explorer action, or a "Mock transaction" note) and `toastTxError(err)` |
+| `src/hooks/useBountyActions.ts` | `vote(tier, candidate)`, `claim(tier)`, `refund()` for one bounty, plus `pending` (`"vote-0"`, `"claim-1"`, `"refund"`). Uses the mock actions in mock mode. |
 | `src/hooks/` | Data hooks: `useAllEscrows` (every bounty), `useEscrow(address)` (one bounty; `null` if missing or closed), `useCreateBounty`, `useBalance`, `useProgram`. The read hooks work without a wallet. |
 | `src/mocks/` | Mock mode data (see below) |
 
