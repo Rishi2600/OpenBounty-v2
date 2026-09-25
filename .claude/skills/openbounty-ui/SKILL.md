@@ -88,7 +88,7 @@ Rules:
 
 | Route | Page | Status |
 |---|---|---|
-| `/` | **Explore:** all bounties, filter by Open, Ending soon or Ended | Refactor |
+| `/` | **Explore:** all bounties, filter by Open, Ending soon or Ended. Below them, the **"Around Solana"** news section. | Refactor, news added |
 | `/bounty/[address]` | **Bounty detail:** tiers with vote progress, judges, organizer. Actions depend on your role: vote (judge), claim (winner), refund (organizer, after the deadline). | New |
 | `/create` | **Create bounty** form | Refactor |
 | `/me` | **Your bounties:** "Needs your vote", "Ready to claim", "Refund available", "Organizing". Replaces the broken `/claim` link. | New |

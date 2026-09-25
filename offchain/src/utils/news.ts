@@ -3,7 +3,7 @@
 // Planned real source ("option A", no backend needed):
 // Solana's official feed, https://solana.com/news/rss.xml, allows browser requests.
 // Fetch it, parse it with DOMParser, map each <item> (title, link, description,
-// pubDate) to a NewsItem, then set NEWS_IS_SAMPLE to false.
+// pubDate) to a NewsItem, keep only https:// links, then set NEWS_IS_SAMPLE to false.
 
 import type { NewsItem } from "@/types/news";
 import { buildSampleNews } from "@/mocks/news";

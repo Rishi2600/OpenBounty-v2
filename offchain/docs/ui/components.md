@@ -10,6 +10,14 @@ To see everything in one place, run `yarn dev:mock` and open **http://localhost:
 |---|---|
 | `ExploreBounties` | The whole home page:<br>• status filter with counts<br>• sorted grid (running bounties with the nearest deadline first, then ended ones)<br>• loading, empty, filtered-empty and error states |
 
+## news/
+
+| Component | What it shows | Props |
+|---|---|---|
+| `NewsFeed` | "Around Solana" section below the bounties on the home page: heading, a "Sample" badge while `NEWS_IS_SAMPLE` is true, a "More news" link to solana.com/news, and a grid of `NewsCard`s with loading, empty and error states | none |
+| `NewsCard` | Source and time ago, headline, a 2-line summary and "Read more". The whole card opens the article in a new tab (announced to screen readers). | `item` (`NewsItem`) |
+| `NewsCardSkeleton` | Loading placeholder with the same shape | none |
+
 ## layout/
 
 | Component | What it does |

@@ -152,6 +152,12 @@ To add a sample, add another `escrow({...})` entry in `buildMockEscrows`.
   - **Contrast:** every text color still passes, e.g. main text is 17:1 on the page.
   - **To revert:** restore the old five values from git history.
 
+- **News feed on the home page** (same branch): an "Around Solana" section below the bounties, with sample items for now.
+  - **Where the items come from:** only `getNews()` in `src/utils/news.ts`.
+  - **Planned real source ("option A"):** Solana's official RSS feed, which the browser can fetch directly, with no backend or keys.
+  - **Switching over:** implement `getNews()` and set `NEWS_IS_SAMPLE = false`. The UI doesn't change.
+  - **Checked:** at 1440px and 390px.
+
 ## How the refactor was checked
 
 In mock mode, with a headless browser, at 1440px and 390px:
