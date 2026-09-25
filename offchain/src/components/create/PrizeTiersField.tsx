@@ -7,8 +7,7 @@ import { Plus, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { MAX_TIERS } from "@/constants/program";
-
-const PLACE_LABELS = ["1st prize", "2nd prize", "3rd prize", "4th prize"];
+import { placeLabel } from "@/utils/format";
 
 interface Props {
   amounts: string[];  // kept as text so half-typed values like "0." still work
@@ -36,7 +35,7 @@ export default function PrizeTiersField({ amounts, error, onChange }: Props) {
 
       {amounts.map((amount, index) => (
         <div key={index} className="flex items-center gap-2">
-          <span className="w-20 shrink-0 text-sm text-muted-foreground">{PLACE_LABELS[index]}</span>
+          <span className="w-20 shrink-0 text-sm text-muted-foreground">{placeLabel(index)}</span>
           <div className="relative w-full max-w-48">
             <Input
               type="number"
@@ -46,7 +45,7 @@ export default function PrizeTiersField({ amounts, error, onChange }: Props) {
               value={amount}
               onChange={(e) => updateAmount(index, e.target.value)}
               placeholder="0.00"
-              aria-label={`${PLACE_LABELS[index]} in SOL`}
+              aria-label={`${placeLabel(index)} in SOL`}
               aria-invalid={Boolean(error)}
               className="pr-12 tabular-nums"
             />
@@ -60,7 +59,7 @@ export default function PrizeTiersField({ amounts, error, onChange }: Props) {
               variant="ghost"
               size="icon"
               onClick={() => removeAmount(index)}
-              aria-label={`Remove ${PLACE_LABELS[index]}`}
+              aria-label={`Remove ${placeLabel(index)}`}
             >
               <X />
             </Button>

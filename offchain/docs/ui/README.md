@@ -45,8 +45,8 @@ Available now: `alert`, `badge`, `button`, `card`, `dialog`, `dropdown-menu`, `i
 | Path | What's there |
 |---|---|
 | `src/types/escrow.ts` | `EscrowAccount`, `PrizeTier`, `TierVote`, the escrow shape every component uses |
-| `src/utils/format.ts` | `formatSol`, `formatDeadline`, `formatDate`, `truncateAddress`, `totalLocked`, `unclaimedTotal` |
-| `src/utils/status.ts` | `getBountyStatus` (open / ending-soon / ended), `getTierProgress` (awaiting / voting / winner / claimed), `countDecidedTiers` |
+| `src/utils/format.ts` | `formatSol`, `formatDeadline`, `formatDate`, `placeLabel` ("1st prize"), `truncateAddress`, `totalLocked`, `unclaimedTotal` |
+| `src/utils/status.ts` | `getBountyStatus` (open / ending-soon / ended), `getTierProgress` (awaiting / voting / winner / claimed), `getCandidateTallies` (votes per candidate), `countDecidedTiers` |
 | `src/utils/roles.ts` | `getViewerRoles(escrow, wallet)`: is the wallet the organizer, a judge, or a winner (and of which tiers) |
 | `src/constants/program.ts` | Program ID, explorer URLs, and the program's limits (`MAX_JUDGES`, `MAX_TIERS`, `MAX_TITLE_BYTES`, `MAX_METADATA_URI_BYTES`) |
 | `src/utils/txErrors.ts` | `friendlyTxError(err)`: program errors (`Error Code: X`) and wallet errors as short plain-English text for toasts. Add new program errors here. |

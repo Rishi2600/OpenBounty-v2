@@ -50,6 +50,13 @@ export function formatDate(deadline: BN): string {
   });
 }
 
+// 0 -> "1st prize", 1 -> "2nd prize", ...
+const PLACE_LABELS = ["1st prize", "2nd prize", "3rd prize", "4th prize"];
+
+export function placeLabel(index: number): string {
+  return PLACE_LABELS[index] ?? `Prize ${index + 1}`;
+}
+
 // "4BagKz...35Hp" -> "4Bag...35Hp"
 export function truncateAddress(address: string, chars = 4): string {
   return `${address.slice(0, chars)}...${address.slice(-chars)}`;

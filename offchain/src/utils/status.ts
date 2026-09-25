@@ -1,7 +1,8 @@
 // Status names users see (see .claude/skills/openbounty-ui/SKILL.md, "Status names").
 
 import { BN } from "@coral-xyz/anchor";
-import type { PrizeTier, TierVote } from "@/types/escrow";
+import { PublicKey } from "@solana/web3.js";
+import type { PrizeTier } from "@/types/escrow";
 
 // Bounty: Open -> Ending soon (last 24h) -> Ended.
 // There is no "claimed" bounty: the program closes it once every tier is claimed.
@@ -25,7 +26,8 @@ export interface TierProgress {
 }
 
 export function getTierProgress(tier: PrizeTier): TierProgress {
-  const leadingVotes = countLeadingVotes(tier.votes);
+  const tallies = getCandidateTallies(tier);
+  const leadingVotes = tallies.length > 0 ? tallies[0].votes : 0;
 
   if (tier.claimed) return { status: "claimed", leadingVotes };
   if (tier.winner) return { status: "winner", leadingVotes };
@@ -38,15 +40,18 @@ export function countDecidedTiers(tiers: PrizeTier[]): number {
   return tiers.filter((tier) => tier.winner !== null).length;
 }
 
-function countLeadingVotes(votes: TierVote[]): number {
-  const counts = new Map<string, number>();
-  for (const vote of votes) {
-    const key = vote.candidate.toBase58();
-    counts.set(key, (counts.get(key) ?? 0) + 1);
+// Votes per candidate on one tier, most votes first
+export interface CandidateTally {
+  candidate: PublicKey;
+  votes: number;
+}
+
+export function getCandidateTallies(tier: PrizeTier): CandidateTally[] {
+  const tallies: CandidateTally[] = [];
+  for (const vote of tier.votes) {
+    const existing = tallies.find((tally) => tally.candidate.equals(vote.candidate));
+    if (existing) existing.votes += 1;
+    else tallies.push({ candidate: vote.candidate, votes: 1 });
   }
-  let most = 0;
-  for (const count of counts.values()) {
-    if (count > most) most = count;
-  }
-  return most;
+  return tallies.sort((a, b) => b.votes - a.votes);
 }

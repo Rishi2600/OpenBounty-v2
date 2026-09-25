@@ -40,6 +40,8 @@ Page layout: `app/layout.tsx` wraps every page in `<main className="mx-auto w-fu
 | `BountyCard` | Title, status, prize pool, your role, "x of y prizes decided", and the deadline. The whole card links to `/bounty/[address]`. Your own bounties get the ochre glow. | `escrow`, `viewer` (the connected wallet or `null`) |
 | `BountyCardSkeleton` | Loading placeholder with the same shape | none |
 | `BountyStatusBadge` | "Open" (green), "Ending soon" (ochre), "Ended" (muted). Styles come from `STATUS_STYLES`. | `status` |
+| `TierStatusBadge` | "Awaiting votes", "Voting · 2 of 3", "Winner picked" or "Claimed" | `progress` (from `getTierProgress`), `threshold` |
+| `TierCard` | One prize on the detail page: place and amount, status, then either the winner or a vote progress bar with each candidate's votes. Shows "Vote for a winner" to judges who haven't voted (before the deadline) and "Claim X SOL" to an unclaimed winner. | `escrow`, `tierIndex`, `viewer`, `isEnded`, `pending`, `onVote`, `onClaim` |
 | `RoleBadges` | "You organize", "You judge", "You won". Renders nothing when you have no role. | `roles` (from `getViewerRoles`) |
 
 ## create/
