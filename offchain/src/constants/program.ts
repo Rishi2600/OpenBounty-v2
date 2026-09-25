@@ -23,3 +23,8 @@ export const explorerUrl = (
   signature: string,
   cluster: "devnet" | "mainnet" = "devnet"
 ) => `${EXPLORER_BASE[cluster]}/${signature}?cluster=${cluster}`;
+
+export const explorerAddressUrl = (
+  address: string,
+  cluster: "devnet" | "mainnet" = "devnet"
+) => `https://explorer.solana.com/address/${address}?cluster=${cluster}`;

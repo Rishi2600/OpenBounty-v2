@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { DM_Sans, DM_Serif_Display, JetBrains_Mono } from "next/font/google";
 import WalletProvider from "@/components/WalletProvider";
-import Header from "@/components/Header";
+import SiteHeader from "@/components/layout/SiteHeader";
 import Footer from "@/components/Footer";
 import MockBanner from "@/components/MockBanner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -49,7 +49,7 @@ export default function RootLayout({ children }: Props) {
         <WalletProvider>
           <TooltipProvider>
             <MockBanner />
-            <Header />
+            <SiteHeader />
             <main className="mx-auto w-full max-w-6xl flex-1 px-4 py-10 sm:px-6">
               {children}
             </main>

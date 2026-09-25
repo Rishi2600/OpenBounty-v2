@@ -4,6 +4,17 @@ Our own shared components. For the shadcn ones (`Button`, `Card`, `Badge`, ...) 
 
 To see everything in one place, run `yarn dev:mock` and open **http://localhost:3000/dev/components**. That page exists only in development and returns a 404 in production.
 
+## layout/
+
+| Component | What it does |
+|---|---|
+| `SiteHeader` | Sticky top bar: logo, nav links, a "Create bounty" button (hidden on phones) and `WalletButton`. Below `md` the links move into `MobileNav`. |
+| `MobileNav` | Menu button (phones only) that opens the nav links and "Create bounty" in a left-side sheet. The sheet closes on navigation. |
+| `WalletButton` | Logged out: "Connect wallet" opens the wallet picker. Connected: a menu with the wallet name, balance, copy address, explorer link, change wallet and disconnect. |
+| `navLinks.ts` | `NAV_LINKS` (the list of links) and `isActivePath()`. Add a page to the nav here and both headers pick it up. |
+
+`useBalance()` (in `src/hooks/`) returns the connected wallet's balance in lamports, or `null`.
+
 ## common/
 
 | Component | What it shows | Props |
