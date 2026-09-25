@@ -8,6 +8,7 @@ import { OpenbountyV2 } from "@/types/onchain/openbounty_v2";
 import IDL from "@/idl/openbounty_v2.json";
 import { devnetConnection } from "@/utils/anchor-setup";
 import { ESCROW_ACCOUNT_SIZE } from "@/constants/program";
+import { USE_MOCKS, getMockEscrows, mockDelay } from "@/mocks/store";
 
 export interface TierVote {
   judge: PublicKey;
@@ -74,6 +75,14 @@ export function useAllEscrows(
       setError(null);
 
       try {
+        if (USE_MOCKS) {
+          await mockDelay();
+          if (cancelled) return;
+          const viewer = connectedProgram?.provider.publicKey ?? null;
+          setEscrows(getMockEscrows(viewer));
+          return;
+        }
+
         const program = connectedProgram ?? getReadOnlyProgram();
         // dataSize filter skips old v1 escrows, which would fail to decode
         const raw = await program.account.escrow.all([

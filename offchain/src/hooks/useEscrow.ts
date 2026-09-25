@@ -7,6 +7,7 @@ import { useProgram } from "./useProgram";
 import { PrizeTier } from "./useAllEscrows";
 import { deriveEscrowPda } from "../utils/pda";
 import { fetchEscrow } from "../utils/anchor-setup";
+import { USE_MOCKS, getMockEscrows, mockDelay } from "@/mocks/store";
 
 export interface EscrowAccount {
   title: string;
@@ -55,6 +56,17 @@ export function useEscrow(
 
       try {
         const organizer = new PublicKey(organizerAddress);
+
+        if (USE_MOCKS) {
+          await mockDelay();
+          const viewer = program.provider.publicKey ?? null;
+          const match  = getMockEscrows(viewer).find(
+            (e) => e.organizer.equals(organizer) && e.nonce === nonce
+          );
+          if (!cancelled) setEscrow(match ?? null);
+          return;
+        }
+
         const [escrowPda] = deriveEscrowPda(organizer, nonce);
         const account = await fetchEscrow(program, escrowPda);
 

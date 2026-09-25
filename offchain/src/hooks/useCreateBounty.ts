@@ -7,6 +7,7 @@ import { PublicKey, LAMPORTS_PER_SOL } from "@solana/web3.js";
 import { useProgram } from "./useProgram";
 import { deriveEscrowAccounts } from "@/utils/pda";
 import { findNextNonce } from "@/utils/anchor-setup";
+import { USE_MOCKS, addMockEscrow, mockDelay, mockSignature } from "@/mocks/store";
 
 // ---------------------------------------------------------------------------
 // Form values — what the Create Bounty form collects
@@ -129,9 +130,6 @@ export function useCreateBounty(): UseCreateBountyResult {
     setTxSignature(null);
 
     try {
-      const nonce = await findNextNonce(program.provider.connection, publicKey);
-      const { escrow, vault } = deriveEscrowAccounts(publicKey, nonce);
-
       const judges      = values.judges.map((j) => new PublicKey(j));
       const tierAmounts = values.tierAmounts.map(
         (amt) => new BN(Math.round(amt * LAMPORTS_PER_SOL))
@@ -139,6 +137,24 @@ export function useCreateBounty(): UseCreateBountyResult {
       const deadline    = new BN(
         Math.floor(new Date(values.deadlineDate).getTime() / 1000)
       );
+
+      if (USE_MOCKS) {
+        await mockDelay();
+        addMockEscrow({
+          title:       values.title.trim(),
+          metadataUri: values.metadataUri.trim(),
+          organizer:   publicKey,
+          judges,
+          threshold:   values.threshold,
+          tierAmounts,
+          deadline,
+        });
+        setTxSignature(mockSignature());
+        return;
+      }
+
+      const nonce = await findNextNonce(program.provider.connection, publicKey);
+      const { escrow, vault } = deriveEscrowAccounts(publicKey, nonce);
 
       const tx = await program.methods
         .initializeEscrow(

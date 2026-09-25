@@ -3,6 +3,7 @@ import { DM_Sans, DM_Serif_Display, Playfair_Display } from "next/font/google";
 import WalletProvider from "@/components/WalletProvider";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
+import MockBanner from "@/components/MockBanner";
 import "./globals.css";
 
 const dmSans = DM_Sans({
@@ -39,6 +40,7 @@ export default function RootLayout({
     <html lang="en">
       <body className={`${dmSans.variable} ${dmSerifDisplay.variable} ${playfairDisplay.variable}`}>
         <WalletProvider>
+          <MockBanner />
           <Header />
           <main style={{
             maxWidth: "1280px",
