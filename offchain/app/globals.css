@@ -147,3 +147,52 @@
     cursor: pointer;
   }
 }
+
+/*
+  Wallet picker from @solana/wallet-adapter-react-ui, restyled to match the theme.
+  Every selector starts with .wallet-adapter-modal so it beats the library's own CSS
+  whichever file loads first.
+*/
+.wallet-adapter-modal .wallet-adapter-modal-overlay {
+  background: rgb(26 16 10 / 70%);
+}
+
+.wallet-adapter-modal .wallet-adapter-modal-wrapper {
+  background: var(--popover);
+  color: var(--popover-foreground);
+  font-family: var(--font-dm-sans), system-ui, sans-serif;
+  border-radius: var(--radius-xl);
+  box-shadow: 0 0 0 1px var(--border), 0 16px 48px rgb(0 0 0 / 50%);
+}
+
+.wallet-adapter-modal .wallet-adapter-modal-title {
+  color: var(--foreground);
+  font-family: var(--font-dm-serif), Georgia, serif;
+  font-weight: 400;
+}
+
+.wallet-adapter-modal .wallet-adapter-modal-button-close {
+  background: var(--secondary);
+}
+
+.wallet-adapter-modal .wallet-adapter-modal-button-close svg {
+  fill: var(--muted-foreground);
+}
+
+.wallet-adapter-modal .wallet-adapter-button {
+  font-family: var(--font-dm-sans), system-ui, sans-serif;
+  color: var(--foreground);
+}
+
+.wallet-adapter-modal .wallet-adapter-button:not([disabled]):hover {
+  background-color: var(--accent);
+}
+
+.wallet-adapter-modal .wallet-adapter-modal-list-more {
+  color: var(--muted-foreground);
+}
+
+.wallet-adapter-modal .wallet-adapter-modal-middle-button {
+  background-color: var(--primary);
+  color: var(--primary-foreground);
+}

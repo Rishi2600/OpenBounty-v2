@@ -26,6 +26,7 @@ The copies were trimmed (test folders and a 5.5MB font folder removed), and the 
   - a "Skip to content" link is the first Tab stop
   - links get a solid 2px ochre focus outline
   - the system "reduce motion" setting turns off animations
+- **Wallet picker:** the popup from `@solana/wallet-adapter-react-ui` is restyled at the bottom of `globals.css` with our colors and fonts.
 - **Page titles:** each `app/**/page.tsx` exports `metadata.title`, and the layout's template turns it into "Title · OpenBounty".
 - **Pages are server components:** they render one client component, like `ExploreBounties`, `MyBounties` or `BountyDetail`. That keeps `"use client"` at the leaves, and lets the bounty page return a real 404 for an address that can't be valid.
 - **`cn()`:** `src/lib/utils.ts` re-exports it from the `cn` package, shadcn's replacement for clsx + tailwind-merge.
@@ -131,3 +132,4 @@ To add a sample, add another `escrow({...})` entry in `buildMockEscrows`.
 - [ ] Phase 4: loading/empty/error states, mobile layouts, accessibility, clean build
   - [x] Production build passes; `/dev/components` returns 404 in production
   - [x] Skip link, link focus outline, reduced motion, page titles, server-side 404 for bad bounty addresses
+  - [x] Wallet picker restyled to match; Explore and detail checked at 768px and 1024px
