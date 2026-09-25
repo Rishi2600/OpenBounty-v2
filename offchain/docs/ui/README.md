@@ -22,6 +22,12 @@ The copies were trimmed (test folders and a 5.5MB font folder removed), and the 
 - **Fonts:** loaded in `app/layout.tsx` and available as `font-sans` (DM Sans), `font-display` (DM Serif Display) and `font-mono` (JetBrains Mono).
 - **Dark only:** `<html>` always has the `dark` class.
 - **Native controls:** `color-scheme: dark` on `<html>` makes the date picker and scrollbars dark too.
+- **Accessibility, set globally in `globals.css` and `layout.tsx`:**
+  - a "Skip to content" link is the first Tab stop
+  - links get a solid 2px ochre focus outline
+  - the system "reduce motion" setting turns off animations
+- **Page titles:** each `app/**/page.tsx` exports `metadata.title`, and the layout's template turns it into "Title · OpenBounty".
+- **Pages are server components:** they render one client component, like `ExploreBounties`, `MyBounties` or `BountyDetail`. That keeps `"use client"` at the leaves, and lets the bounty page return a real 404 for an address that can't be valid.
 - **`cn()`:** `src/lib/utils.ts` re-exports it from the `cn` package, shadcn's replacement for clsx + tailwind-merge.
 
 ### Changes to generated shadcn files
@@ -123,3 +129,5 @@ To add a sample, add another `escrow({...})` entry in `buildMockEscrows`.
   - [x] "Your bounties" page (`/me`), linked in the nav. Replaces the broken `/claim` link.
   - [x] 404 page (`app/not-found.tsx`); `/claim` redirects to `/me` (`next.config.ts`)
 - [ ] Phase 4: loading/empty/error states, mobile layouts, accessibility, clean build
+  - [x] Production build passes; `/dev/components` returns 404 in production
+  - [x] Skip link, link focus outline, reduced motion, page titles, server-side 404 for bad bounty addresses

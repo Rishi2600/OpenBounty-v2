@@ -29,9 +29,10 @@ const jetbrainsMono = JetBrains_Mono({
   variable: "--font-jetbrains-mono",
 });
 
+// Pages set their own title; it becomes "Create a bounty · OpenBounty"
 export const metadata: Metadata = {
-  title: "OpenBounty v2",
-  description: "Trustless hackathon bounties on Solana",
+  title: { default: "OpenBounty · Trustless bounties on Solana", template: "%s · OpenBounty" },
+  description: "Lock a prize pool on Solana. Judges vote on winners, and winners claim directly.",
 };
 
 interface Props {
@@ -48,9 +49,16 @@ export default function RootLayout({ children }: Props) {
       <body className="flex flex-col">
         <WalletProvider>
           <TooltipProvider>
+            {/* First thing keyboard users reach: jumps past the header */}
+            <a
+              href="#main"
+              className="sr-only focus:not-sr-only focus:fixed focus:top-3 focus:left-3 focus:z-50 focus:rounded-md focus:bg-primary focus:px-4 focus:py-2 focus:text-primary-foreground"
+            >
+              Skip to content
+            </a>
             <MockBanner />
             <SiteHeader />
-            <main className="mx-auto w-full max-w-6xl flex-1 px-4 py-10 sm:px-6">
+            <main id="main" className="mx-auto w-full max-w-6xl flex-1 px-4 py-10 sm:px-6">
               {children}
             </main>
             <SiteFooter />

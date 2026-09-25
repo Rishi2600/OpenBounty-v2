@@ -4,6 +4,12 @@ Our own shared components. For the shadcn ones (`Button`, `Card`, `Badge`, ...) 
 
 To see everything in one place, run `yarn dev:mock` and open **http://localhost:3000/dev/components**. That page exists only in development and returns a 404 in production.
 
+## explore/
+
+| Component | What it shows |
+|---|---|
+| `ExploreBounties` | The whole home page:<br>• status filter with counts<br>• sorted grid (running bounties with the nearest deadline first, then ended ones)<br>• loading, empty, filtered-empty and error states |
+
 ## layout/
 
 | Component | What it does |

@@ -1,7 +1,10 @@
 // Create a bounty: lock a prize pool and name the judges.
 
+import type { Metadata } from "next";
 import PageHeader from "@/components/layout/PageHeader";
 import CreateBountyForm from "@/components/create/CreateBountyForm";
+
+export const metadata: Metadata = { title: "Create a bounty" };
 
 export default function CreatePage() {
   return (
