@@ -49,6 +49,14 @@ Page layout: `app/layout.tsx` wraps every page in `<main className="mx-auto w-fu
 | `BountyDetailSkeleton` | Loading placeholder for the detail page | none |
 | `RoleBadges` | "You organize", "You judge", "You won". Renders nothing when you have no role. | `roles` (from `getViewerRoles`) |
 
+## me/
+
+| Component | What it shows | Props |
+|---|---|---|
+| `TaskRow` | One to-do: bounty title, prize and amount, and a button that opens the bounty page (where the action happens) | `href`, `title`, `detail`, `actionLabel` |
+| `TaskSection` | Heading with a count and a list of `TaskRow`s. Renders nothing when empty. | `title`, `count`, `children` |
+| `BountyGridSection` | Heading with a count and a grid of `BountyCard`s, or a short note (and optional action) when empty | `title`, `escrows`, `viewer`, `emptyText`, `emptyAction?` |
+
 ## create/
 
 The create form is split into sections.

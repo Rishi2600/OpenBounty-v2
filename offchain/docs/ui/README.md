@@ -50,6 +50,7 @@ Available now: `alert`, `badge`, `button`, `card`, `dialog`, `dropdown-menu`, `i
 | `src/utils/roles.ts` | `getViewerRoles(escrow, wallet)`: is the wallet the organizer, a judge, or a winner (and of which tiers) |
 | `src/constants/program.ts` | Program ID, explorer URLs, and the program's limits (`MAX_JUDGES`, `MAX_TIERS`, `MAX_TITLE_BYTES`, `MAX_METADATA_URI_BYTES`) |
 | `src/utils/address.ts` | `parseAddress(text)`: a `PublicKey`, or `null` if the text isn't a valid address. `safeDetailsUrl(uri)`: only `http(s)` and `ipfs://` links (turned into a gateway URL); anything else, such as `javascript:`, is dropped. |
+| `src/utils/tasks.ts` | `getViewerTasks(escrows, wallet)`: prizes to vote on, prizes to claim, bounties to refund, plus the bounties you organize and judge |
 | `src/utils/txErrors.ts` | `friendlyTxError(err)`: program errors (`Error Code: X`) and wallet errors as short plain-English text for toasts. Add new program errors here. |
 | `src/utils/anchor-setup.ts` | `getProgram` (signs with the wallet), `getReadOnlyProgram` (logged-out reads), `toEscrowAccount` (decoded account -> `EscrowAccount`), `findNextNonce` |
 | `src/utils/txToast.ts` | `toastTxSuccess(message, signature)` (with a "View" explorer action, or a "Mock transaction" note) and `toastTxError(err)` |
