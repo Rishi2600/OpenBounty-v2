@@ -7,8 +7,7 @@ import { Plus, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import FormField, { messageId } from "@/components/common/FormField";
-
-export const MAX_JUDGES = 5;
+import { MAX_JUDGES } from "@/constants/program";
 
 interface Props {
   judges: string[];

@@ -9,6 +9,12 @@ export const PROGRAM_ID = new PublicKey(
 // but have a different layout and would fail to decode.
 export const ESCROW_ACCOUNT_SIZE = 1842;
 
+// Limits enforced by the program (escrow.rs account space and initialize.rs checks)
+export const MAX_TITLE_BYTES = 50;
+export const MAX_METADATA_URI_BYTES = 100;
+export const MAX_JUDGES = 5;
+export const MAX_TIERS = 4;
+
 export const CLUSTER_URL = {
   devnet: "https://api.devnet.solana.com",
   mainnet: "https://api.mainnet-beta.solana.com",

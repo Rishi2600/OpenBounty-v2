@@ -26,14 +26,16 @@ export interface NewMockEscrow {
   deadline: BN;
 }
 
-export function addMockEscrow(input: NewMockEscrow): void {
+// Returns the new escrow address
+export function addMockEscrow(input: NewMockEscrow): PublicKey {
   // Next free nonce for this organizer, same idea as findNextNonce on-chain
   const nonce = getMockEscrows(input.organizer)
     .filter((e) => e.organizer.equals(input.organizer))
     .length;
 
+  const address = deriveEscrowPda(input.organizer, nonce)[0];
   created.push({
-    publicKey:   deriveEscrowPda(input.organizer, nonce)[0],
+    publicKey:   address,
     title:       input.title,
     metadataUri: input.metadataUri,
     organizer:   input.organizer,
@@ -50,6 +52,7 @@ export function addMockEscrow(input: NewMockEscrow): void {
     bump:        255,
     vaultBump:   255,
   });
+  return address;
 }
 
 // Short wait so loading states are visible while testing

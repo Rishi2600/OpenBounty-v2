@@ -6,8 +6,7 @@
 import { Plus, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-
-export const MAX_TIERS = 4;
+import { MAX_TIERS } from "@/constants/program";
 
 const PLACE_LABELS = ["1st prize", "2nd prize", "3rd prize", "4th prize"];
 

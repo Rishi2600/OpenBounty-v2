@@ -107,41 +107,15 @@
   --radius-4xl: calc(var(--radius) * 2.6);
 }
 
-/*
-  Old variable names, still used by pages written with inline styles.
-  Delete this block once Phase 2 has moved every page to Tailwind classes.
-*/
-:root {
-  --brown-deepest: var(--brown-950);
-  --brown-dark: var(--brown-900);
-  --brown-mid: var(--brown-800);
-  --brown-warm: var(--brown-700);
-  --brown-muted: var(--brown-600);
-  --ochre: var(--ochre-600);
-  --ochre-light: var(--ochre-500);
-  --ochre-pale: var(--ochre-300);
-  --ochre-dim: rgb(200 134 10 / 15%);
-  --offwhite: var(--cream-50);
-  --offwhite-dim: var(--cream-100);
-  --offwhite-muted: var(--cream-300);
-  --offwhite-ghost: rgb(245 239 230 / 6%);
-  --error: var(--red-400);
-  --font-body: var(--font-dm-sans), system-ui, sans-serif;
-  --font-display: var(--font-dm-serif), Georgia, serif;
-  --font-heading: var(--font-dm-serif), Georgia, serif;
-  --font-mono: var(--font-jetbrains-mono), ui-monospace, monospace;
-  --border-bright: rgb(200 134 10 / 50%);
-  --shadow-warm: 0 4px 24px rgb(26 16 10 / 50%);
-  --shadow-ochre: 0 0 20px rgb(200 134 10 / 20%);
-}
-
 @layer base {
   * {
     @apply border-border outline-ring/50;
   }
 
+  /* color-scheme makes native controls (date picker, scrollbars) dark too */
   html {
     @apply font-sans;
+    color-scheme: dark;
   }
 
   /* Soft ochre glow at the top plus a faint grain texture */

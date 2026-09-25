@@ -1,205 +1,169 @@
 "use client";
 
-import { useState, useCallback } from "react";
+// Create-bounty logic: form values, validation that mirrors the program's checks,
+// and the initialize_escrow transaction (or a mock one in mock mode).
+
+import { useState } from "react";
 import { useWallet } from "@solana/wallet-adapter-react";
 import { BN } from "@coral-xyz/anchor";
-import { PublicKey, LAMPORTS_PER_SOL } from "@solana/web3.js";
+import { LAMPORTS_PER_SOL, PublicKey, SystemProgram } from "@solana/web3.js";
 import { useProgram } from "./useProgram";
 import { deriveEscrowAccounts } from "@/utils/pda";
 import { findNextNonce } from "@/utils/anchor-setup";
+import {
+  MAX_JUDGES,
+  MAX_METADATA_URI_BYTES,
+  MAX_TIERS,
+  MAX_TITLE_BYTES,
+} from "@/constants/program";
 import { USE_MOCKS, addMockEscrow, mockDelay, mockSignature } from "@/mocks/store";
-
-// ---------------------------------------------------------------------------
-// Form values — what the Create Bounty form collects
-// ---------------------------------------------------------------------------
 
 export interface CreateBountyValues {
   title: string;
   metadataUri: string;
-  judges: string[];         // pubkey strings, validated before submit
+  judges: string[];       // filled-in addresses only
   threshold: number;
-  tierAmounts: number[];    // in SOL, converted to lamports on submit
-  deadlineDate: string;     // ISO date string from date input
+  tierAmounts: string[];  // SOL amounts as typed, filled-in only
+  deadline: string;       // value of a datetime-local input
+}
+
+export type ValidationErrors = Partial<Record<keyof CreateBountyValues, string>>;
+
+export interface CreatedBounty {
+  signature: string;
+  address: string;        // new escrow account
 }
 
 // ---------------------------------------------------------------------------
-// Validation — mirrors on-chain rules exactly
+// Validation
 // ---------------------------------------------------------------------------
 
-export interface ValidationErrors {
-  title?: string;
-  metadataUri?: string;
-  judges?: string;
-  threshold?: string;
-  tierAmounts?: string;
-  deadlineDate?: string;
+// The program measures strings in bytes, so emoji and accents count for more
+function byteLength(text: string): number {
+  return new TextEncoder().encode(text).length;
+}
+
+function isValidAddress(text: string): boolean {
+  try {
+    new PublicKey(text);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+function toLamports(sol: string): BN {
+  return new BN(Math.round(Number(sol) * LAMPORTS_PER_SOL));
+}
+
+function validateJudges(judges: string[]): string | undefined {
+  if (judges.length === 0) return "Add at least one judge.";
+  if (judges.length > MAX_JUDGES) return `You can add up to ${MAX_JUDGES} judges.`;
+
+  const invalid = judges.find((judge) => !isValidAddress(judge.trim()));
+  if (invalid) return `"${invalid.slice(0, 8)}..." isn't a valid wallet address.`;
+
+  // A repeated judge can only vote once, which can make the threshold impossible
+  const unique = new Set(judges.map((judge) => judge.trim()));
+  if (unique.size !== judges.length) return "Each judge can only be added once.";
+
+  return undefined;
+}
+
+function validateThreshold(threshold: number, judgeCount: number): string | undefined {
+  if (judgeCount === 0) return undefined; // the judges error already covers this
+  if (!Number.isInteger(threshold) || threshold < 1) return "At least 1 vote is needed.";
+  if (threshold > judgeCount) return `Can't be more than the number of judges (${judgeCount}).`;
+  return undefined;
+}
+
+function validateAmounts(amounts: string[]): string | undefined {
+  if (amounts.length === 0) return "Add at least one prize.";
+  if (amounts.length > MAX_TIERS) return `You can add up to ${MAX_TIERS} prizes.`;
+  const tooSmall = amounts.some((amount) => toLamports(amount).lte(new BN(0)));
+  if (tooSmall) return "Every prize needs an amount above 0 SOL.";
+  return undefined;
+}
+
+function validateDeadline(deadline: string): string | undefined {
+  if (!deadline) return "Pick a deadline.";
+  const time = new Date(deadline).getTime();
+  if (Number.isNaN(time)) return "That date isn't valid.";
+  if (time <= Date.now()) return "The deadline must be in the future.";
+  return undefined;
 }
 
 export function validateForm(values: CreateBountyValues): ValidationErrors {
   const errors: ValidationErrors = {};
 
-  if (!values.title.trim()) {
-    errors.title = "Title is required";
-  } else if (values.title.length > 50) {
-    errors.title = "Title must be 50 characters or less";
+  const title = values.title.trim();
+  if (!title) errors.title = "Give the bounty a title.";
+  else if (byteLength(title) > MAX_TITLE_BYTES) errors.title = `Keep the title under ${MAX_TITLE_BYTES} characters.`;
+
+  if (byteLength(values.metadataUri.trim()) > MAX_METADATA_URI_BYTES) {
+    errors.metadataUri = `Keep the link under ${MAX_METADATA_URI_BYTES} characters.`;
   }
 
-  if (values.metadataUri.length > 100) {
-    errors.metadataUri = "Metadata URI must be 100 characters or less";
-  }
-
-  if (values.judges.length === 0) {
-    errors.judges = "At least one judge is required";
-  } else if (values.judges.length > 5) {
-    errors.judges = "Maximum 5 judges allowed";
-  } else {
-    for (const j of values.judges) {
-      try {
-        new PublicKey(j);
-      } catch {
-        errors.judges = `Invalid public key: ${j.slice(0, 8)}...`;
-        break;
-      }
-    }
-  }
-
-  if (!values.threshold || values.threshold < 1) {
-    errors.threshold = "Threshold must be at least 1";
-  } else if (values.threshold > values.judges.length) {
-    errors.threshold = `Threshold cannot exceed judge count (${values.judges.length})`;
-  }
-
-  if (values.tierAmounts.length === 0) {
-    errors.tierAmounts = "At least one prize tier is required";
-  } else if (values.tierAmounts.length > 4) {
-    errors.tierAmounts = "Maximum 4 prize tiers allowed";
-  } else {
-    for (const amt of values.tierAmounts) {
-      if (!amt || amt <= 0) {
-        errors.tierAmounts = "All tier amounts must be greater than 0";
-        break;
-      }
-    }
-  }
-
-  if (!values.deadlineDate) {
-    errors.deadlineDate = "Deadline is required";
-  } else {
-    const deadlineTs = Math.floor(new Date(values.deadlineDate).getTime() / 1000);
-    const nowTs      = Math.floor(Date.now() / 1000);
-    if (deadlineTs <= nowTs) {
-      errors.deadlineDate = "Deadline must be in the future";
-    }
-  }
+  errors.judges = validateJudges(values.judges);
+  errors.threshold = validateThreshold(values.threshold, values.judges.length);
+  errors.tierAmounts = validateAmounts(values.tierAmounts);
+  errors.deadline = validateDeadline(values.deadline);
 
   return errors;
+}
+
+export function hasErrors(errors: ValidationErrors): boolean {
+  return Object.values(errors).some(Boolean);
 }
 
 // ---------------------------------------------------------------------------
 // Hook
 // ---------------------------------------------------------------------------
 
-interface UseCreateBountyResult {
-  submit: (values: CreateBountyValues) => Promise<void>;
-  loading: boolean;
-  error: string | null;
-  txSignature: string | null;
-  reset: () => void;
-}
-
-export function useCreateBounty(): UseCreateBountyResult {
-  const program   = useProgram();
+export function useCreateBounty() {
+  const program = useProgram();
   const { publicKey } = useWallet();
-  const [loading,     setLoading]     = useState(false);
-  const [error,       setError]       = useState<string | null>(null);
-  const [txSignature, setTxSignature] = useState<string | null>(null);
+  const [submitting, setSubmitting] = useState(false);
 
-  const reset = useCallback(() => {
-    setError(null);
-    setTxSignature(null);
-  }, []);
+  // Sends the transaction. Throws on failure; show errors with friendlyTxError().
+  async function createBounty(values: CreateBountyValues): Promise<CreatedBounty> {
+    if (!program || !publicKey) throw new Error("Connect a wallet first.");
 
-  const submit = useCallback(async (values: CreateBountyValues) => {
-    if (!program || !publicKey) {
-      setError("Wallet not connected");
-      return;
-    }
-
-    setLoading(true);
-    setError(null);
-    setTxSignature(null);
-
+    setSubmitting(true);
     try {
-      const judges      = values.judges.map((j) => new PublicKey(j));
-      const tierAmounts = values.tierAmounts.map(
-        (amt) => new BN(Math.round(amt * LAMPORTS_PER_SOL))
-      );
-      const deadline    = new BN(
-        Math.floor(new Date(values.deadlineDate).getTime() / 1000)
-      );
+      const title = values.title.trim();
+      const metadataUri = values.metadataUri.trim();
+      const judges = values.judges.map((judge) => new PublicKey(judge.trim()));
+      const tierAmounts = values.tierAmounts.map(toLamports);
+      const deadline = new BN(Math.floor(new Date(values.deadline).getTime() / 1000));
 
       if (USE_MOCKS) {
         await mockDelay();
-        addMockEscrow({
-          title:       values.title.trim(),
-          metadataUri: values.metadataUri.trim(),
-          organizer:   publicKey,
-          judges,
-          threshold:   values.threshold,
-          tierAmounts,
-          deadline,
+        const address = addMockEscrow({
+          title, metadataUri, organizer: publicKey, judges,
+          threshold: values.threshold, tierAmounts, deadline,
         });
-        setTxSignature(mockSignature());
-        return;
+        return { signature: mockSignature(), address: address.toBase58() };
       }
 
       const nonce = await findNextNonce(program.provider.connection, publicKey);
       const { escrow, vault } = deriveEscrowAccounts(publicKey, nonce);
 
-      const tx = await program.methods
-        .initializeEscrow(
-          values.title.trim(),
-          values.metadataUri.trim(),
-          judges,
-          values.threshold,
-          tierAmounts,
-          deadline,
-          nonce,
-        )
+      const signature = await program.methods
+        .initializeEscrow(title, metadataUri, judges, values.threshold, tierAmounts, deadline, nonce)
         .accountsPartial({
           escrow,
           vault,
-          organizer:     publicKey,
-          systemProgram: new PublicKey("11111111111111111111111111111111"),
+          organizer: publicKey,
+          systemProgram: SystemProgram.programId,
         })
         .rpc();
 
-      setTxSignature(tx);
-    } catch (err) {
-      // Surface the most useful part of Anchor errors
-      const msg = err instanceof Error ? err.message : "Transaction failed";
-      if (msg.includes("already in use")) {
-        // Another tx grabbed the same nonce between lookup and send
-        setError("That bounty slot was just taken. Please submit again.");
-      } else if (msg.includes("InvalidTitle")) {
-        setError("Title is invalid — must be 1–50 characters.");
-      } else if (msg.includes("InvalidMetadataUri")) {
-        setError("Metadata URI is too long — max 100 characters.");
-      } else if (msg.includes("InvalidThreshold")) {
-        setError("Threshold exceeds the number of judges.");
-      } else if (msg.includes("InvalidDeadline")) {
-        setError("Deadline must be in the future.");
-      } else if (msg.includes("NoJudges")) {
-        setError("At least one judge is required.");
-      } else if (msg.includes("NoTiers")) {
-        setError("At least one prize tier is required.");
-      } else {
-        setError(msg);
-      }
+      return { signature, address: escrow.toBase58() };
     } finally {
-      setLoading(false);
+      setSubmitting(false);
     }
-  }, [program, publicKey]);
+  }
 
-  return { submit, loading, error, txSignature, reset };
+  return { createBounty, submitting };
 }

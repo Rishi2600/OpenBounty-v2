@@ -44,7 +44,15 @@ Page layout: `app/layout.tsx` wraps every page in `<main className="mx-auto w-fu
 
 ## create/
 
-The create form is split into sections. The form component (`CreateBountyForm`) owns the state and passes values and errors down.
+The create form is split into sections.
+
+`CreateBountyForm` owns the state, the validation display and the submit:
+- **Errors:** they appear only after the first submit attempt, and are recomputed on every render from `validateForm` (no effects).
+- **Blank rows:** empty judge and prize rows are ignored.
+- **Logged out:** submit opens the wallet picker.
+- **Submitting:** a spinner shows "Confirming...". Success shows `CreateSuccess`; a failure shows a toast from `friendlyTxError`.
+
+The validation rules and the transaction live in `hooks/useCreateBounty.ts`.
 
 | Component | What it shows | Props |
 |---|---|---|

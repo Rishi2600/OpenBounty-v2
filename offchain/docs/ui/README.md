@@ -21,7 +21,7 @@ The copies were trimmed (test folders and a 5.5MB font folder removed), and the 
 - **In components:** use only the classes, never raw hex values.
 - **Fonts:** loaded in `app/layout.tsx` and available as `font-sans` (DM Sans), `font-display` (DM Serif Display) and `font-mono` (JetBrains Mono).
 - **Dark only:** `<html>` always has the `dark` class.
-- **Temporary block:** the "old variable names" block in `globals.css` keeps not-yet-refactored pages working. Delete it at the end of Phase 2.
+- **Native controls:** `color-scheme: dark` on `<html>` makes the date picker and scrollbars dark too.
 - **`cn()`:** `src/lib/utils.ts` re-exports it from the `cn` package, shadcn's replacement for clsx + tailwind-merge.
 
 ### Changes to generated shadcn files
@@ -48,6 +48,7 @@ Available now: `alert`, `badge`, `button`, `card`, `dialog`, `dropdown-menu`, `i
 | `src/utils/format.ts` | `formatSol`, `formatDeadline`, `formatDate`, `truncateAddress`, `totalLocked`, `unclaimedTotal` |
 | `src/utils/status.ts` | `getBountyStatus` (open / ending-soon / ended), `getTierProgress` (awaiting / voting / winner / claimed), `countDecidedTiers` |
 | `src/utils/roles.ts` | `getViewerRoles(escrow, wallet)`: is the wallet the organizer, a judge, or a winner (and of which tiers) |
+| `src/constants/program.ts` | Program ID, explorer URLs, and the program's limits (`MAX_JUDGES`, `MAX_TIERS`, `MAX_TITLE_BYTES`, `MAX_METADATA_URI_BYTES`) |
 | `src/utils/txErrors.ts` | `friendlyTxError(err)`: program errors (`Error Code: X`) and wallet errors as short plain-English text for toasts. Add new program errors here. |
 | `src/hooks/` | Data hooks: `useAllEscrows`, `useEscrow`, `useCreateBounty`, `useBalance`, `useProgram` |
 | `src/mocks/` | Mock mode data (see below) |
@@ -105,8 +106,10 @@ To add a sample, add another `escrow({...})` entry in `buildMockEscrows`.
   - [x] Shared components (`common/`) and the `/dev/components` preview, see [components.md](components.md)
   - [x] New header with wallet menu and mobile nav
   - [x] Footer, `PageHeader`, mock banner on Tailwind; old Header/Footer removed
-- [ ] Phase 2: refactor Dashboard, BountyCard, Create form, Header
+- [x] Phase 2: refactor Dashboard, BountyCard, Create form, Header
   - [x] Explore page (`/`): status filter with counts, new cards, loading/empty/error states, works without a wallet
   - [x] Header (done in Phase 1)
+  - [x] Create page (`/create`): sectioned form, validation that matches the program (title counted in bytes, duplicate judges caught), toasts, success view with a "View bounty" link
+  - [x] Old CSS variable block removed; no inline styles or hex colors left in components
 - [ ] Phase 3: bounty detail page, judge voting, `/me` page (replaces `/claim`), real claim and refund, 404 page
 - [ ] Phase 4: loading/empty/error states, mobile layouts, accessibility, clean build
