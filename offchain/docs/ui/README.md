@@ -24,6 +24,22 @@ The copies were trimmed (test folders and a 5.5MB font folder removed), and the 
 - **Temporary block:** the "old variable names" block in `globals.css` keeps not-yet-refactored pages working. Delete it at the end of Phase 2.
 - **`cn()`:** `src/lib/utils.ts` re-exports it from the `cn` package, shadcn's replacement for clsx + tailwind-merge.
 
+### Changes to generated shadcn files
+
+Files in `src/components/ui/` come from `npx shadcn add`. Our edits to them, each marked with an `OpenBounty tweak` comment:
+
+| File | Change | Why |
+|---|---|---|
+| `button.tsx` | Default and icon sizes are 44px on phones (`h-11`) and compact from `sm` up (`h-9`). `lg` is always 44px. | Touch targets |
+| `button.tsx` | `destructive` is a solid red fill with dark text | The tinted version was 3.2–4.4:1 contrast, and the minimum is 4.5:1 |
+| `badge.tsx` | `destructive` has no fill: red text and a red border | Same contrast problem |
+| `input.tsx` | 44px tall on phones, `h-9` from `sm` up | Touch targets |
+| `sonner.tsx` | Theme fixed to dark; `next-themes` removed | The app is dark-only |
+
+If you re-run `shadcn add --overwrite` on these files, apply the tweaks again.
+
+Available now: `alert`, `badge`, `button`, `card`, `dialog`, `dropdown-menu`, `input`, `label`, `progress`, `separator`, `sheet`, `skeleton`, `sonner`, `tabs`, `textarea`, `tooltip`. `TooltipProvider` and `Toaster` are already mounted in `app/layout.tsx`.
+
 ## Running
 
 | Command | Data source |
@@ -73,6 +89,7 @@ To add a sample, add another `escrow({...})` entry in `buildMockEscrows`.
 - [x] Phase 0: design decisions in `openbounty-ui` (approved)
 - [ ] Phase 1: design values, base components, page shell
   - [x] shadcn setup and theme
+  - [x] shadcn base components
 - [ ] Phase 2: refactor Dashboard, BountyCard, Create form, Header
 - [ ] Phase 3: bounty detail page, judge voting, `/me` page (replaces `/claim`), real claim and refund, 404 page
 - [ ] Phase 4: loading/empty/error states, mobile layouts, accessibility, clean build

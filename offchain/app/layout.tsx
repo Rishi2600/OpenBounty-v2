@@ -4,6 +4,8 @@ import WalletProvider from "@/components/WalletProvider";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import MockBanner from "@/components/MockBanner";
+import { TooltipProvider } from "@/components/ui/tooltip";
+import { Toaster } from "@/components/ui/sonner";
 import { cn } from "@/lib/utils";
 import "./globals.css";
 
@@ -45,12 +47,15 @@ export default function RootLayout({ children }: Props) {
     <html lang="en" className={htmlClasses}>
       <body className="flex flex-col">
         <WalletProvider>
-          <MockBanner />
-          <Header />
-          <main className="mx-auto w-full max-w-6xl flex-1 px-4 py-10 sm:px-6">
-            {children}
-          </main>
-          <Footer />
+          <TooltipProvider>
+            <MockBanner />
+            <Header />
+            <main className="mx-auto w-full max-w-6xl flex-1 px-4 py-10 sm:px-6">
+              {children}
+            </main>
+            <Footer />
+            <Toaster position="bottom-right" />
+          </TooltipProvider>
         </WalletProvider>
       </body>
     </html>
