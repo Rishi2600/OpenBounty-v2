@@ -1,21 +1,18 @@
 "use client";
 
-import { useEffect, useState, useCallback, ReactNode } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { PublicKey } from "@solana/web3.js";
 import { BN } from "@coral-xyz/anchor";
 import { useProgram } from "./useProgram";
+import { PrizeTier } from "./useAllEscrows";
 import { deriveEscrowPda } from "../utils/pda";
 import { fetchEscrow } from "../utils/anchor-setup";
 
-export interface PrizeTier {
-  amount: BN;
-  winner: PublicKey | null;
-  claimed: boolean;
-}
-
 export interface EscrowAccount {
-  title: ReactNode;
+  title: string;
+  metadataUri: string;
   organizer: PublicKey;
+  nonce: number;
   judges: PublicKey[];
   threshold: number;
   tiers: PrizeTier[];
@@ -31,7 +28,11 @@ interface UseEscrowResult {
   refetch: () => void;
 }
 
-export function useEscrow(organizerAddress: string | null): UseEscrowResult {
+// An organizer can hold many escrows, so one is identified by (organizer, nonce)
+export function useEscrow(
+  organizerAddress: string | null,
+  nonce: number | null
+): UseEscrowResult {
   const program = useProgram();
   const [escrow, setEscrow] = useState<EscrowAccount | null>(null);
   const [loading, setLoading] = useState(false);
@@ -41,7 +42,7 @@ export function useEscrow(organizerAddress: string | null): UseEscrowResult {
   const refetch = useCallback(() => setTick((t) => t + 1), []);
 
   useEffect(() => {
-    if (!program || !organizerAddress) {
+    if (!program || !organizerAddress || nonce === null) {
       setEscrow(null);
       return;
     }
@@ -54,7 +55,7 @@ export function useEscrow(organizerAddress: string | null): UseEscrowResult {
 
       try {
         const organizer = new PublicKey(organizerAddress);
-        const [escrowPda] = deriveEscrowPda(organizer);
+        const [escrowPda] = deriveEscrowPda(organizer, nonce);
         const account = await fetchEscrow(program, escrowPda);
 
         if (!cancelled) {
@@ -74,7 +75,7 @@ export function useEscrow(organizerAddress: string | null): UseEscrowResult {
     return () => {
       cancelled = true;
     };
-  }, [program, organizerAddress, tick]);
+  }, [program, organizerAddress, nonce, tick]);
 
   return { escrow, loading, error, refetch };
 }

@@ -6,6 +6,7 @@ import { BN } from "@coral-xyz/anchor";
 import { PublicKey, LAMPORTS_PER_SOL } from "@solana/web3.js";
 import { useProgram } from "./useProgram";
 import { deriveEscrowAccounts } from "@/utils/pda";
+import { findNextNonce } from "@/utils/anchor-setup";
 
 // ---------------------------------------------------------------------------
 // Form values — what the Create Bounty form collects
@@ -128,7 +129,8 @@ export function useCreateBounty(): UseCreateBountyResult {
     setTxSignature(null);
 
     try {
-      const { escrow, vault } = deriveEscrowAccounts(publicKey);
+      const nonce = await findNextNonce(program.provider.connection, publicKey);
+      const { escrow, vault } = deriveEscrowAccounts(publicKey, nonce);
 
       const judges      = values.judges.map((j) => new PublicKey(j));
       const tierAmounts = values.tierAmounts.map(
@@ -146,6 +148,7 @@ export function useCreateBounty(): UseCreateBountyResult {
           values.threshold,
           tierAmounts,
           deadline,
+          nonce,
         )
         .accountsPartial({
           escrow,
@@ -160,7 +163,8 @@ export function useCreateBounty(): UseCreateBountyResult {
       // Surface the most useful part of Anchor errors
       const msg: string = err?.message ?? "Transaction failed";
       if (msg.includes("already in use")) {
-        setError("You already have an escrow. Only one bounty per wallet is allowed.");
+        // Another tx grabbed the same nonce between lookup and send
+        setError("That bounty slot was just taken. Please submit again.");
       } else if (msg.includes("InvalidTitle")) {
         setError("Title is invalid — must be 1–50 characters.");
       } else if (msg.includes("InvalidMetadataUri")) {

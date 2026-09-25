@@ -4,6 +4,11 @@ export const PROGRAM_ID = new PublicKey(
   "CdWRw7fqNCBpz34qHoFjua9Nry6pbhnVrsfpgMemKKrL"
 );
 
+// Must match Escrow::LEN in onchain/programs/openbounty_v2/src/state/escrow.rs.
+// Used to skip leftover v1 escrow accounts, which share the discriminator
+// but have a different layout and would fail to decode.
+export const ESCROW_ACCOUNT_SIZE = 1842;
+
 export const CLUSTER_URL = {
   devnet: "https://api.devnet.solana.com",
   mainnet: "https://api.mainnet-beta.solana.com",

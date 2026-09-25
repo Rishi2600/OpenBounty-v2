@@ -3,15 +3,14 @@
 import { useState, useMemo } from "react";
 import { useWallet } from "@solana/wallet-adapter-react";
 import { useWalletModal } from "@solana/wallet-adapter-react-ui";
+import { BN } from "@coral-xyz/anchor";
 import { useAllEscrows } from "@/hooks/useAllEscrows";
-import { useEscrow } from "@/hooks/useEscrow";
 import { useProgram } from "@/hooks/useProgram";
 import BountyCard from "@/components/dashboard/BountyCard";
 import {
   deriveBountyStatus,
   formatSol,
-  formatDeadline,
-  totalLocked,
+  unclaimedTotal,
   BountyStatus,
 } from "@/utils/bountyStatus";
 
@@ -168,10 +167,6 @@ export default function HomePage() {
     connected ? program : null
   );
 
-  const { escrow: ownEscrow } = useEscrow(
-    connected && publicKey ? publicKey.toBase58() : null
-  );
-
   const filtered = useMemo(() => {
     if (filter === "all") return escrows;
     return escrows.filter(
@@ -179,10 +174,18 @@ export default function HomePage() {
     );
   }, [escrows, filter]);
 
-  const ownTotal    = ownEscrow ? formatSol(totalLocked(ownEscrow.tiers)) : null;
-  const ownTiers    = ownEscrow ? ownEscrow.tiers.length : null;
-  const ownJudges   = ownEscrow ? ownEscrow.judges.length : null;
-  const ownDeadline = ownEscrow ? formatDeadline(ownEscrow.deadline) : null;
+  // A wallet can organize many bounties (one per nonce), so stats aggregate
+  const ownEscrows = useMemo(
+    () => publicKey ? escrows.filter((e) => e.organizer.equals(publicKey)) : [],
+    [escrows, publicKey]
+  );
+
+  const ownStatuses = ownEscrows.map((e) => deriveBountyStatus(e.tiers, e.deadline));
+  const ownActive   = ownStatuses.filter((s) => s === "active").length;
+  const ownExpired  = ownStatuses.filter((s) => s === "expired").length;
+  const ownLocked   = formatSol(
+    ownEscrows.reduce((acc, e) => acc.add(unclaimedTotal(e.tiers)), new BN(0))
+  );
 
   // ---------------------------------------------------------------------------
   // Disconnected — show hero instead of broken grid
@@ -328,8 +331,8 @@ export default function HomePage() {
         </div>
       )}
 
-      {/* Stats row — below grid, own escrow only */}
-      {ownEscrow && (
+      {/* Stats row — below grid, own escrows only */}
+      {ownEscrows.length > 0 && (
         <section style={{ marginTop: "2.5rem" }}>
           <p style={{
             fontSize: "0.7rem",
@@ -343,10 +346,10 @@ export default function HomePage() {
             Your Bounty Stats
           </p>
           <div style={{ display: "flex", gap: "1rem", flexWrap: "wrap" }}>
-            <StatCard label="Total Locked" value={ownTotal!} />
-            <StatCard label="Prize Tiers"  value={String(ownTiers!)} />
-            <StatCard label="Judges"       value={String(ownJudges!)} />
-            <StatCard label="Deadline"     value={ownDeadline!} />
+            <StatCard label="Your Bounties" value={String(ownEscrows.length)} />
+            <StatCard label="Active"        value={String(ownActive)} />
+            <StatCard label="Expired"       value={String(ownExpired)} />
+            <StatCard label="Total Locked"  value={ownLocked} />
           </div>
         </section>
       )}

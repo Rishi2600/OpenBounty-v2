@@ -7,11 +7,18 @@ import { BN } from "@coral-xyz/anchor";
 import { OpenbountyV2 } from "@/types/onchain/openbounty_v2";
 import IDL from "@/idl/openbounty_v2.json";
 import { devnetConnection } from "@/utils/anchor-setup";
+import { ESCROW_ACCOUNT_SIZE } from "@/constants/program";
+
+export interface TierVote {
+  judge: PublicKey;
+  candidate: PublicKey;
+}
 
 export interface PrizeTier {
   amount: BN;
   winner: PublicKey | null;
   claimed: boolean;
+  votes: TierVote[];
 }
 
 export interface EscrowAccount {
@@ -19,6 +26,7 @@ export interface EscrowAccount {
   title: string;
   metadataUri: string;
   organizer: PublicKey;
+  nonce: number;
   judges: PublicKey[];
   threshold: number;
   tiers: PrizeTier[];
@@ -67,24 +75,20 @@ export function useAllEscrows(
 
       try {
         const program = connectedProgram ?? getReadOnlyProgram();
-        const raw = await program.account.escrow.all();
+        // dataSize filter skips old v1 escrows, which would fail to decode
+        const raw = await program.account.escrow.all([
+          { dataSize: ESCROW_ACCOUNT_SIZE },
+        ]);
 
         if (cancelled) return;
 
         const parsed: EscrowAccount[] = raw
-          .filter((item) => {
-            try {
-              // Verify the account has minimum expected data
-              return item.account.title !== undefined;
-            } catch {
-              return false;
-            }
-          })
           .map((item) => ({
             publicKey:   item.publicKey,
             title:       item.account.title,
             metadataUri: item.account.metadataUri,
             organizer:   item.account.organizer,
+            nonce:       item.account.nonce,
             judges:      item.account.judges,
             threshold:   item.account.threshold,
             tiers:       item.account.tiers as PrizeTier[],

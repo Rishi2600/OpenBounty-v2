@@ -16,10 +16,8 @@ export type OpenbountyV2 = {
     {
       "name": "claimPrize",
       "docs": [
-        "Claim prize for a specific tier",
-        "",
-        "Winner calls this after being finalized by judges.",
-        "Transfers funds from vault to winner's wallet."
+        "Winner claims their prize for a finalized tier",
+        "Closes escrow when all tiers are claimed"
       ],
       "discriminator": [
         157,
@@ -34,126 +32,48 @@ export type OpenbountyV2 = {
       "accounts": [
         {
           "name": "escrow",
-          "docs": [
-            "Escrow account containing prize tier information"
-          ],
           "writable": true
         },
         {
           "name": "vault",
-          "docs": [
-            "Vault PDA that holds the locked SOL",
-            "This account will have SOL deducted when prize is claimed"
-          ],
-          "writable": true,
-          "pda": {
-            "seeds": [
-              {
-                "kind": "const",
-                "value": [
-                  118,
-                  97,
-                  117,
-                  108,
-                  116
-                ]
-              },
-              {
-                "kind": "account",
-                "path": "escrow.organizer",
-                "account": "escrow"
-              }
-            ]
-          }
+          "writable": true
         },
         {
           "name": "winner",
           "docs": [
-            "Winner claiming the prize (must be a signer)",
-            "This must match the winner recorded in the escrow tier"
+            "The winner claiming their prize — must match tier.winner"
           ],
           "writable": true,
           "signer": true
         },
         {
-          "name": "systemProgram",
+          "name": "organizer",
           "docs": [
-            "System program for transferring SOL"
+            "Organizer receives rent when escrow closes"
           ],
+          "writable": true
+        },
+        {
+          "name": "systemProgram",
           "address": "11111111111111111111111111111111"
         }
       ],
       "args": [
         {
-          "name": "tier",
-          "type": "u8"
-        }
-      ]
-    },
-    {
-      "name": "finalizeWinner",
-      "docs": [
-        "Finalize winner for a specific tier",
-        "",
-        "Judges sign off-chain, signatures are verified on-chain.",
-        "When threshold is met, winner is recorded for the tier."
-      ],
-      "discriminator": [
-        146,
-        228,
-        187,
-        253,
-        58,
-        192,
-        194,
-        177
-      ],
-      "accounts": [
-        {
-          "name": "escrow",
-          "docs": [
-            "Escrow account containing judge list and prize tiers"
-          ],
-          "writable": true
-        },
-        {
-          "name": "organizer",
-          "docs": [
-            "The organizer account (optional, for future use)",
-            "We don't strictly need the organizer to call this -",
-            "anyone can submit valid signatures (permissionless!)"
-          ]
-        }
-      ],
-      "args": [
-        {
-          "name": "tier",
+          "name": "nonce",
           "type": "u8"
         },
         {
-          "name": "winner",
-          "type": "pubkey"
-        },
-        {
-          "name": "judgeSignatures",
-          "type": {
-            "vec": {
-              "array": [
-                "u8",
-                64
-              ]
-            }
-          }
+          "name": "tier",
+          "type": "u8"
         }
       ]
     },
     {
       "name": "initializeEscrow",
       "docs": [
-        "Initialize a new bounty escrow",
-        "",
-        "Creates an escrow account and locks funds in a vault PDA.",
-        "Organizer specifies judges, voting threshold, prize tiers, and deadline."
+        "Create a new bounty escrow and lock funds",
+        "nonce allows the same wallet to create multiple escrows"
       ],
       "discriminator": [
         243,
@@ -168,68 +88,19 @@ export type OpenbountyV2 = {
       "accounts": [
         {
           "name": "escrow",
-          "docs": [
-            "Escrow account that stores all metadata"
-          ],
-          "writable": true,
-          "pda": {
-            "seeds": [
-              {
-                "kind": "const",
-                "value": [
-                  101,
-                  115,
-                  99,
-                  114,
-                  111,
-                  119
-                ]
-              },
-              {
-                "kind": "account",
-                "path": "organizer"
-              }
-            ]
-          }
+          "writable": true
         },
         {
           "name": "vault",
-          "docs": [
-            "Vault account that holds the locked SOL"
-          ],
-          "writable": true,
-          "pda": {
-            "seeds": [
-              {
-                "kind": "const",
-                "value": [
-                  118,
-                  97,
-                  117,
-                  108,
-                  116
-                ]
-              },
-              {
-                "kind": "account",
-                "path": "organizer"
-              }
-            ]
-          }
+          "writable": true
         },
         {
           "name": "organizer",
-          "docs": [
-            "Organizer who is creating the bounty"
-          ],
           "writable": true,
           "signer": true
         },
         {
           "name": "systemProgram",
-          "docs": [
-            "System program for account creation and transfers"
-          ],
           "address": "11111111111111111111111111111111"
         }
       ],
@@ -261,16 +132,18 @@ export type OpenbountyV2 = {
         {
           "name": "deadline",
           "type": "i64"
+        },
+        {
+          "name": "nonce",
+          "type": "u8"
         }
       ]
     },
     {
       "name": "refundUnclaimed",
       "docs": [
-        "Refund unclaimed prizes to organizer after deadline",
-        "",
-        "Organizer calls this after deadline passes to reclaim",
-        "funds for prizes that were never claimed."
+        "Organizer refunds unclaimed prizes after deadline",
+        "Closes escrow after refunding"
       ],
       "discriminator": [
         126,
@@ -285,56 +158,73 @@ export type OpenbountyV2 = {
       "accounts": [
         {
           "name": "escrow",
-          "docs": [
-            "Escrow account containing prize tier information"
-          ],
           "writable": true
         },
         {
           "name": "vault",
-          "docs": [
-            "Vault PDA that holds the locked SOL",
-            "This account will have unclaimed SOL transferred back to organizer"
-          ],
-          "writable": true,
-          "pda": {
-            "seeds": [
-              {
-                "kind": "const",
-                "value": [
-                  118,
-                  97,
-                  117,
-                  108,
-                  116
-                ]
-              },
-              {
-                "kind": "account",
-                "path": "escrow.organizer",
-                "account": "escrow"
-              }
-            ]
-          }
+          "writable": true
         },
         {
           "name": "organizer",
-          "docs": [
-            "Organizer receiving the refund (must be a signer)",
-            "This must match the organizer recorded in the escrow"
-          ],
           "writable": true,
           "signer": true
         },
         {
           "name": "systemProgram",
-          "docs": [
-            "System program for transferring SOL"
-          ],
           "address": "11111111111111111111111111111111"
         }
       ],
-      "args": []
+      "args": [
+        {
+          "name": "nonce",
+          "type": "u8"
+        }
+      ]
+    },
+    {
+      "name": "voteWinner",
+      "docs": [
+        "Judge casts a vote for a winner on a specific tier",
+        "Auto-finalizes when vote count reaches threshold"
+      ],
+      "discriminator": [
+        44,
+        247,
+        50,
+        25,
+        60,
+        91,
+        248,
+        84
+      ],
+      "accounts": [
+        {
+          "name": "escrow",
+          "writable": true
+        },
+        {
+          "name": "judge",
+          "docs": [
+            "The judge casting this vote — must be in escrow.judges"
+          ],
+          "writable": true,
+          "signer": true
+        }
+      ],
+      "args": [
+        {
+          "name": "nonce",
+          "type": "u8"
+        },
+        {
+          "name": "tier",
+          "type": "u8"
+        },
+        {
+          "name": "candidate",
+          "type": "pubkey"
+        }
+      ]
     }
   ],
   "accounts": [
@@ -356,12 +246,12 @@ export type OpenbountyV2 = {
     {
       "code": 6000,
       "name": "invalidSignature",
-      "msg": "Signature verification failed"
+      "msg": "Invalid signature provided"
     },
     {
       "code": 6001,
       "name": "insufficientSignatures",
-      "msg": "Insufficient signatures - need more judge approvals"
+      "msg": "Insufficient signatures to meet threshold"
     },
     {
       "code": 6002,
@@ -371,143 +261,138 @@ export type OpenbountyV2 = {
     {
       "code": 6003,
       "name": "deadlineNotReached",
-      "msg": "Deadline has not been reached yet"
+      "msg": "The deadline has not been reached yet"
     },
     {
       "code": 6004,
       "name": "escrowExpired",
-      "msg": "Escrow has expired - claiming period is over"
+      "msg": "This escrow has expired"
     },
     {
       "code": 6005,
       "name": "invalidJudge",
-      "msg": "Invalid judge - not in authorized judge list"
+      "msg": "Invalid judge provided"
     },
     {
       "code": 6006,
       "name": "invalidTier",
-      "msg": "Invalid tier index - tier does not exist"
+      "msg": "Invalid tier index"
     },
     {
       "code": 6007,
       "name": "invalidThreshold",
-      "msg": "Threshold must be less than or equal to number of judges"
+      "msg": "Invalid threshold"
     },
     {
       "code": 6008,
       "name": "noJudges",
-      "msg": "Must have at least one judge"
+      "msg": "No judges provided"
     },
     {
       "code": 6009,
       "name": "noTiers",
-      "msg": "Must have at least one prize tier"
+      "msg": "No tiers provided"
     },
     {
       "code": 6010,
       "name": "invalidAmount",
-      "msg": "Amount must be greater than zero"
+      "msg": "Invalid amount"
     },
     {
       "code": 6011,
       "name": "invalidDeadline",
-      "msg": "Deadline must be in the future"
+      "msg": "Invalid deadline"
     },
     {
       "code": 6012,
       "name": "unauthorized",
-      "msg": "Unauthorized - you are not the organizer"
+      "msg": "Unauthorized"
     },
     {
       "code": 6013,
       "name": "alreadyFinalized",
-      "msg": "Winner already finalized for this tier"
+      "msg": "This tier has already been finalized"
     },
     {
       "code": 6014,
       "name": "notFinalized",
-      "msg": "Cannot claim - winner not yet finalized"
+      "msg": "This tier has not been finalized yet"
     },
     {
       "code": 6015,
       "name": "invalidMessage",
-      "msg": "Message format invalid for signature verification"
+      "msg": "Invalid message"
     },
     {
       "code": 6016,
       "name": "deadlineNotPassed",
-      "msg": "Deadline has not passed yet - cannot refund"
+      "msg": "Deadline has not passed yet"
     },
     {
       "code": 6017,
       "name": "noUnclaimedFunds",
-      "msg": "No unclaimed funds available to refund"
+      "msg": "No unclaimed funds to refund"
     },
     {
       "code": 6018,
       "name": "invalidTitle",
-      "msg": "Title must be between 1 and 50 characters"
+      "msg": "Title is empty or exceeds 50 characters"
     },
     {
       "code": 6019,
       "name": "invalidMetadataUri",
-      "msg": "Metadata URI must be 100 characters or fewer"
+      "msg": "Metadata URI exceeds 100 characters"
+    },
+    {
+      "code": 6020,
+      "name": "alreadyVoted",
+      "msg": "This judge has already voted on this tier"
+    },
+    {
+      "code": 6021,
+      "name": "notAJudge",
+      "msg": "Signer is not a judge on this escrow"
+    },
+    {
+      "code": 6022,
+      "name": "tierAlreadyFinalized",
+      "msg": "This tier has already been finalized and cannot receive more votes"
     }
   ],
   "types": [
     {
       "name": "escrow",
-      "docs": [
-        "Main escrow account that holds all bounty metadata"
-      ],
       "type": {
         "kind": "struct",
         "fields": [
           {
             "name": "title",
-            "docs": [
-              "Human-readable title for the bounty (max 50 characters)"
-            ],
             "type": "string"
           },
           {
             "name": "metadataUri",
-            "docs": [
-              "URI pointing to off-chain metadata JSON (max 100 characters)",
-              "Follows Metaplex convention — can be IPFS or Arweave URI",
-              "e.g. \"ipfs://QmXyz...\" or \"https://arweave.net/abc...\"",
-              "Empty string if organizer chooses not to provide metadata"
-            ],
             "type": "string"
           },
           {
             "name": "organizer",
-            "docs": [
-              "Organizer's public key (who created the escrow)"
-            ],
             "type": "pubkey"
           },
           {
+            "name": "nonce",
+            "type": "u8"
+          },
+          {
             "name": "judges",
-            "docs": [
-              "List of judge public keys (e.g., 5 judges)"
-            ],
             "type": {
               "vec": "pubkey"
             }
           },
           {
             "name": "threshold",
-            "docs": [
-              "Minimum number of judges required to approve a winner (e.g., 3 out of 5)"
-            ],
             "type": "u8"
           },
           {
             "name": "tiers",
-            "docs": [
-              "Prize tiers in lamports (e.g., [20 SOL, 15 SOL, 10 SOL, 5 SOL])"
-            ],
             "type": {
               "vec": {
                 "defined": {
@@ -518,23 +403,14 @@ export type OpenbountyV2 = {
           },
           {
             "name": "deadline",
-            "docs": [
-              "Unix timestamp for when unclaimed funds can be refunded"
-            ],
             "type": "i64"
           },
           {
             "name": "bump",
-            "docs": [
-              "Bump seed for the escrow PDA"
-            ],
             "type": "u8"
           },
           {
             "name": "vaultBump",
-            "docs": [
-              "Bump seed for the vault PDA (holds the actual SOL)"
-            ],
             "type": "u8"
           }
         ]
@@ -542,34 +418,48 @@ export type OpenbountyV2 = {
     },
     {
       "name": "prizeTier",
-      "docs": [
-        "Individual prize tier with winner and claim status"
-      ],
       "type": {
         "kind": "struct",
         "fields": [
           {
             "name": "amount",
-            "docs": [
-              "Amount of SOL for this tier (in lamports)"
-            ],
             "type": "u64"
           },
           {
             "name": "winner",
-            "docs": [
-              "Winner's public key (None if not yet assigned)"
-            ],
             "type": {
               "option": "pubkey"
             }
           },
           {
             "name": "claimed",
-            "docs": [
-              "Whether this tier has been claimed"
-            ],
             "type": "bool"
+          },
+          {
+            "name": "votes",
+            "type": {
+              "vec": {
+                "defined": {
+                  "name": "tierVote"
+                }
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "tierVote",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "judge",
+            "type": "pubkey"
+          },
+          {
+            "name": "candidate",
+            "type": "pubkey"
           }
         ]
       }
