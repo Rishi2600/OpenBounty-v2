@@ -1,7 +1,10 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  /* config options here */
+  // The old "Claim Bounty" link pointed at /claim; claims now live on "Your bounties"
+  async redirects() {
+    return [{ source: "/claim", destination: "/me", permanent: false }];
+  },
 };
 
 export default nextConfig;
