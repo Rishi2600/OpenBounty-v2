@@ -90,6 +90,7 @@ To add a sample, add another `escrow({...})` entry in `buildMockEscrows`.
 - [ ] Phase 1: design values, base components, page shell
   - [x] shadcn setup and theme
   - [x] shadcn base components
+  - [x] Shared components (`common/`) and the `/dev/components` preview, see [components.md](components.md)
 - [ ] Phase 2: refactor Dashboard, BountyCard, Create form, Header
 - [ ] Phase 3: bounty detail page, judge voting, `/me` page (replaces `/claim`), real claim and refund, 404 page
 - [ ] Phase 4: loading/empty/error states, mobile layouts, accessibility, clean build

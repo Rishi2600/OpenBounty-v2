@@ -134,7 +134,7 @@ Treat files in `src/components/ui/` as generated: change them only for theme-wid
 - **Icons:** `lucide-react` only, no emoji. An icon-only button needs an `aria-label`.
 - **Accessibility:**
   - Every interactive element shows a visible focus ring (shadcn default).
-  - Touch targets are at least 44×44px on mobile.
+  - Touch targets are at least 44×44px on mobile: buttons and inputs already are, through the shadcn tweaks. Small inline helpers, such as the copy button in `Address`, may be smaller but never under 24×24px (WCAG AA).
   - Status is never shown by color alone; badges always have text.
 - **Motion:** transitions are 150–200ms on hover and focus only. Wrap anything larger in `motion-safe:`.
 - **Responsive:**
