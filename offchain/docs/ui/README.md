@@ -31,7 +31,14 @@ The copies were trimmed (test folders and a 5.5MB font folder removed), and the 
 | `yarn dev` | Real program on devnet |
 | `yarn dev:mock` | In-memory sample data. No transactions are sent. |
 
-Both run at http://localhost:3000. You still connect a browser wallet in mock mode, because pages use it to decide your role, but nothing is signed.
+Both run at http://localhost:3000.
+
+In mock mode a throwaway **Burner Wallet** connects automatically, so no wallet extension is needed:
+- **Its key:** a new one is created in memory on every page load. It's never saved or funded.
+- **Your role:** the samples are built around the connected address, so you appear as organizer, judge or winner on different bounties.
+- **Logged-out screens:** use "Disconnect". The burner reconnects only on the next reload.
+- **A real wallet:** you can still pick Phantom or Solflare from the wallet menu.
+- **Where it's set up:** `src/components/WalletProvider.tsx`. The burner is never offered outside mock mode.
 
 ## Mock data
 
