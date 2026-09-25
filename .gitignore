@@ -2,3 +2,8 @@ node_modules
 .env
 target/
 dist/
+# Third-party Claude skills: installed locally, not committed.
+# See offchain/docs/ui/README.md ("Reference skills") to install them.
+.claude/skills/ui-ux-pro-max/
+.claude/skills/design-system/
+.claude/skills/ui-styling/

@@ -4,12 +4,21 @@ Notes for the UI refactor on `feat/ui-refactor`. Each change updates these docs 
 
 **Design rules:** [`.claude/skills/openbounty-ui/SKILL.md`](../../../.claude/skills/openbounty-ui/SKILL.md) covers colors, fonts, pages, components, patterns and code rules. Read it before changing any UI.
 
-**Reference skills** (in `.claude/skills/`, MIT licensed, from [ui-ux-pro-max-skill](https://github.com/nextlevelbuilder/ui-ux-pro-max-skill)):
+**Reference skills:** these come from [ui-ux-pro-max-skill](https://github.com/nextlevelbuilder/ui-ux-pro-max-skill) (MIT licensed):
 - `ui-ux-pro-max`: a searchable UX and design database
 - `design-system`: how design values are layered
 - `ui-styling`: shadcn and Tailwind guides
 
-The copies were trimmed (test folders and a 5.5MB font folder removed), and the script path in `ui-ux-pro-max` was fixed to run from the repo root.
+They're third-party tools (Python scripts and data files), so they're **installed locally and not committed**. `.gitignore` lists them. To install them, run from the repo root:
+
+```bash
+git clone --depth 1 https://github.com/nextlevelbuilder/ui-ux-pro-max-skill /tmp/ui-ux-pro-max-skill
+cp -r /tmp/ui-ux-pro-max-skill/.claude/skills/{ui-ux-pro-max,design-system,ui-styling} .claude/skills/
+# The search script assumes a plugin install; point it at the repo instead
+sed -i 's|${CLAUDE_PLUGIN_ROOT}/.claude/skills/|.claude/skills/|g' .claude/skills/ui-ux-pro-max/SKILL.md
+```
+
+This refactor was done with upstream commit `dcc40ff`. The project's own skill (`openbounty-ui`) is committed and doesn't need them to be read. They only add searchable guidance on top.
 
 ## Styling
 

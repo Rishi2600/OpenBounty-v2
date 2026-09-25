@@ -11,6 +11,8 @@ The single source of truth for how the OpenBounty frontend looks and is built. W
 
 ## Reference skills
 
+These are third-party, installed locally and not committed; the install steps are in `offchain/docs/ui/README.md`. If they're missing, these rules still apply on their own.
+
 | Skill | Use it for |
 |---|---|
 | `ui-ux-pro-max` | UX rules (`--domain ux`), stack notes (`--stack shadcn`, `--stack nextjs`), and its pre-delivery checklist before calling a page done. Don't adopt its generic palettes or fonts; the look is decided below. |
