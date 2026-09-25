@@ -48,7 +48,6 @@ Available now: `alert`, `badge`, `button`, `card`, `dialog`, `dropdown-menu`, `i
 | `src/utils/format.ts` | `formatSol`, `formatDeadline`, `formatDate`, `truncateAddress`, `totalLocked`, `unclaimedTotal` |
 | `src/utils/status.ts` | `getBountyStatus` (open / ending-soon / ended), `getTierProgress` (awaiting / voting / winner / claimed), `countDecidedTiers` |
 | `src/utils/roles.ts` | `getViewerRoles(escrow, wallet)`: is the wallet the organizer, a judge, or a winner (and of which tiers) |
-| `src/utils/bountyStatus.ts` | Old status logic, used only by the old dashboard. Delete it with that dashboard. |
 | `src/hooks/` | Data hooks: `useAllEscrows`, `useEscrow`, `useCreateBounty`, `useBalance`, `useProgram` |
 | `src/mocks/` | Mock mode data (see below) |
 
@@ -90,7 +89,7 @@ The samples are built around the connected wallet ("you"), so every role can be 
 Other behavior:
 - **Created bounties:** they're kept in memory and show up on the dashboard. A page reload clears them.
 - **Transactions:** each mock transaction waits about 0.6s so loading states are visible, then returns a signature like `mock-tx-<time>`. Explorer links for these go nowhere.
-- **No fully claimed bounty:** once every tier is claimed, the program closes the escrow, so that state never appears on-chain. The dashboard's "Claimed" filter is always empty for that reason.
+- **No fully claimed bounty:** once every tier is claimed, the program closes the escrow, so that state never appears on-chain. That's why Explore filters by deadline (Open / Ending soon / Ended) and has no "Claimed" filter.
 
 To add a sample, add another `escrow({...})` entry in `buildMockEscrows`.
 
@@ -106,5 +105,7 @@ To add a sample, add another `escrow({...})` entry in `buildMockEscrows`.
   - [x] New header with wallet menu and mobile nav
   - [x] Footer, `PageHeader`, mock banner on Tailwind; old Header/Footer removed
 - [ ] Phase 2: refactor Dashboard, BountyCard, Create form, Header
+  - [x] Explore page (`/`): status filter with counts, new cards, loading/empty/error states, works without a wallet
+  - [x] Header (done in Phase 1)
 - [ ] Phase 3: bounty detail page, judge voting, `/me` page (replaces `/claim`), real claim and refund, 404 page
 - [ ] Phase 4: loading/empty/error states, mobile layouts, accessibility, clean build
