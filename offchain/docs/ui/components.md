@@ -42,6 +42,18 @@ Page layout: `app/layout.tsx` wraps every page in `<main className="mx-auto w-fu
 | `BountyStatusBadge` | "Open" (green), "Ending soon" (ochre), "Ended" (muted). Styles come from `STATUS_STYLES`. | `status` |
 | `RoleBadges` | "You organize", "You judge", "You won". Renders nothing when you have no role. | `roles` (from `getViewerRoles`) |
 
+## create/
+
+The create form is split into sections. The form component (`CreateBountyForm`) owns the state and passes values and errors down.
+
+| Component | What it shows | Props |
+|---|---|---|
+| `JudgesField` | Up to 5 judge address inputs (add and remove), plus the "votes needed" number with a live "out of N judges" hint | `judges`, `threshold`, `judgesError?`, `thresholdError?`, `onJudgesChange`, `onThresholdChange` |
+| `PrizeTiersField` | Up to 4 SOL amounts labelled "1st prize", "2nd prize", ..., plus the live total to lock. Amounts are kept as text so a half-typed "0." works. | `amounts`, `error?`, `onChange` |
+| `CreateSuccess` | Confirmation, an explorer link (or "Mock transaction" in mock mode), and "View bounty" / "Create another" | `signature`, `address`, `onCreateAnother` |
+
+Buttons inside the form that don't submit need `type="button"`; a plain `<button>` inside a `<form>` submits it.
+
 The glow uses the `shadow-glow` class, defined as `--shadow-glow` in `globals.css`.
 
 ```tsx
