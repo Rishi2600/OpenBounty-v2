@@ -1,34 +1,39 @@
 "use client";
 
-// The bounty detail page: title and status, prizes with voting and claiming,
-// a refund panel for the organizer after the deadline, and the details panel.
+// The bounty detail page: header, notices, and tabs for Prizes and Submissions (entries,
+// mock mode) next to the details panel. Owns the vote, claim and refund handlers so
+// every tab and dialog shares them.
 
 import { useState } from "react";
 import Link from "next/link";
 import { PublicKey } from "@solana/web3.js";
 import { useWallet } from "@solana/wallet-adapter-react";
 import { useWalletModal } from "@solana/wallet-adapter-react-ui";
-import { ArrowLeft, CircleCheck, SearchX, Undo2, Wallet } from "lucide-react";
+import { CircleCheck, SearchX } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import EmptyState from "@/components/common/EmptyState";
 import ErrorState from "@/components/common/ErrorState";
+import SubmissionGallery from "@/components/submissions/SubmissionGallery";
 import BountyDetailSkeleton from "./BountyDetailSkeleton";
 import BountyDetailsPanel from "./BountyDetailsPanel";
-import BountyStatusBadge from "./BountyStatusBadge";
-import RefundDialog from "./RefundDialog";
-import RoleBadges from "./RoleBadges";
-import TierCard from "./TierCard";
-import VoteDialog from "./VoteDialog";
+import BountyHeader from "./BountyHeader";
+import BountyNotices from "./BountyNotices";
 import ClaimDialog from "./ClaimDialog";
-import { ASSETS } from "@/constants/assets";
-import { CHAINS } from "@/constants/chains";
-import type { Payout } from "@/types/escrow";
+import PrizeList from "./PrizeList";
+import RefundDialog from "./RefundDialog";
+import VoteDialog from "./VoteDialog";
 import { useEscrow } from "@/hooks/useEscrow";
 import { useBountyActions } from "@/hooks/useBountyActions";
-import { formatAmount, formatDeadline, placeLabel, unclaimedTotal } from "@/utils/format";
-import { countDecidedTiers, getBountyStatus, getCandidateTallies } from "@/utils/status";
+import { useSubmissions } from "@/hooks/useSubmissions";
+import { ASSETS } from "@/constants/assets";
+import { CHAINS } from "@/constants/chains";
+import { SUBMISSIONS_PREVIEW } from "@/constants/submissions";
+import type { Payout } from "@/types/escrow";
+import { formatAmount, placeLabel, unclaimedTotal } from "@/utils/format";
+import { getBountyStatus } from "@/utils/status";
 import { getViewerRoles } from "@/utils/roles";
+import { getVoteCandidates } from "@/utils/submissions";
 import { toastTxError, toastTxSuccess } from "@/utils/txToast";
 
 interface Props {
@@ -40,6 +45,7 @@ export default function BountyDetail({ address }: Props) {
   const { setVisible } = useWalletModal();
   const { escrow, loading, error, refetch } = useEscrow(address);
   const { vote, claim, refund, pending } = useBountyActions(escrow);
+  const entries = useSubmissions(escrow);
   const [voteTier, setVoteTier] = useState<number | null>(null);
   const [refundOpen, setRefundOpen] = useState(false);
   const [claimDialogTier, setClaimDialogTier] = useState<number | null>(null);
@@ -75,22 +81,33 @@ export default function BountyDetail({ address }: Props) {
   const roles = getViewerRoles(escrow, publicKey);
   const unclaimed = unclaimedTotal(escrow.tiers);
   const canRefund = roles.isOrganizer && isEnded && !unclaimed.isZero();
-  const decided = countDecidedTiers(escrow.tiers);
 
-  async function handleVote(candidate: PublicKey) {
-    if (voteTier === null) return;
+  // The bounty and its entries refresh together after any change
+  function refreshAll() {
+    refetch();
+    entries.refetch();
+  }
+
+  // Shared by the vote dialog (and the judging board). Returns true on success.
+  async function castVote(tierIndex: number, candidate: PublicKey): Promise<boolean> {
     try {
-      const signature = await vote(voteTier, candidate);
+      const signature = await vote(tierIndex, candidate);
       toastTxSuccess("Vote recorded", signature);
-      setVoteTier(null);
-      refetch();
+      refreshAll();
+      return true;
     } catch (err) {
       toastTxError(err);
+      return false;
     }
   }
 
+  async function handleVote(candidate: PublicKey) {
+    if (voteTier === null) return;
+    if (await castVote(voteTier, candidate)) setVoteTier(null);
+  }
+
   // Sends the claim; `payout` is set when the winner picked a destination chain.
-  // Returns true on success. The caller decides when to refetch.
+  // Returns true on success. The caller decides when to refresh.
   async function claimTier(tierIndex: number, payout?: Payout): Promise<boolean> {
     if (!escrow) return false;
     const amount = formatAmount(escrow.tiers[tierIndex].amount, escrow.asset);
@@ -114,7 +131,7 @@ export default function BountyDetail({ address }: Props) {
       setClaimDialogTier(tierIndex);
       return;
     }
-    if (await claimTier(tierIndex)) refetch();
+    if (await claimTier(tierIndex)) refreshAll();
   }
 
   async function handleRefund() {
@@ -125,65 +142,63 @@ export default function BountyDetail({ address }: Props) {
       toastTxSuccess(`Refunded ${amount}`, signature);
       setRefundOpen(false);
       setClosedMessage(`${amount} went back to your wallet and the bounty is now closed.`);
-      refetch();
+      refreshAll();
     } catch (err) {
       toastTxError(err);
     }
   }
 
+  const prizeList = (
+    <PrizeList
+      escrow={escrow}
+      viewer={publicKey}
+      isEnded={isEnded}
+      pending={pending}
+      onVote={setVoteTier}
+      onClaim={handleClaim}
+    />
+  );
+  const entryCount = entries.loading ? "" : ` (${entries.submissions.length})`;
+
   return (
     <div className="flex flex-col gap-8">
-      <Link href="/" className="inline-flex items-center gap-1.5 self-start text-sm text-muted-foreground hover:text-foreground">
-        <ArrowLeft className="size-4" aria-hidden /> All bounties
-      </Link>
-
-      <div className="flex flex-col gap-3">
-        <div className="flex flex-wrap items-center gap-2">
-          <BountyStatusBadge status={status} />
-          <RoleBadges roles={roles} />
-        </div>
-        <h1 className="font-display text-3xl sm:text-4xl">{escrow.title}</h1>
-        <p className="text-muted-foreground">
-          {decided} of {escrow.tiers.length} prizes decided · {formatDeadline(escrow.deadline)}
-        </p>
-      </div>
-
-      {!publicKey && (
-        <Card className="flex-row flex-wrap items-center justify-between gap-3 px-5 py-4">
-          <p className="text-sm">Judge or winner? Connect your wallet to vote or claim.</p>
-          <Button variant="outline" onClick={() => setVisible(true)}>
-            <Wallet /> Connect wallet
-          </Button>
-        </Card>
-      )}
-
-      {canRefund && (
-        <Card className="flex-row flex-wrap items-center justify-between gap-3 px-5 py-4 ring-destructive/40">
-          <p className="text-sm">
-            The deadline has passed. You can refund the {formatAmount(unclaimed, escrow.asset)} nobody claimed.
-          </p>
-          <Button variant="destructive" onClick={() => setRefundOpen(true)}>
-            <Undo2 /> Refund {formatAmount(unclaimed, escrow.asset)}
-          </Button>
-        </Card>
-      )}
+      <BountyHeader escrow={escrow} status={status} roles={roles} />
+      <BountyNotices
+        showConnect={!publicKey}
+        refundText={canRefund ? formatAmount(unclaimed, escrow.asset) : null}
+        onConnect={() => setVisible(true)}
+        onRefund={() => setRefundOpen(true)}
+      />
 
       <div className="grid gap-6 lg:grid-cols-[1fr_20rem] lg:items-start">
-        <section aria-labelledby="prizes-heading" className="flex flex-col gap-4">
-          <h2 id="prizes-heading" className="font-display text-2xl">Prizes</h2>
-          {escrow.tiers.map((_, index) => (
-            <TierCard
-              key={index}
-              escrow={escrow}
-              tierIndex={index}
-              viewer={publicKey}
-              isEnded={isEnded}
-              pending={pending}
-              onVote={setVoteTier}
-              onClaim={handleClaim}
-            />
-          ))}
-        </section>
+        {SUBMISSIONS_PREVIEW && (
+          <Tabs defaultValue="prizes" className="gap-4">
+            <TabsList>
+              <TabsTrigger value="prizes">Prizes</TabsTrigger>
+              <TabsTrigger value="submissions">Submissions{entryCount}</TabsTrigger>
+            </TabsList>
+            <TabsContent value="prizes">{prizeList}</TabsContent>
+            <TabsContent value="submissions">
+              <SubmissionGallery
+                escrow={escrow}
+                viewer={publicKey}
+                submissions={entries.submissions}
+                loading={entries.loading}
+                error={entries.error}
+                submitting={entries.submitting}
+                onRetry={entries.refetch}
+                onSubmitEntry={entries.submitEntry}
+                onSubmitted={entries.refetch}
+              />
+            </TabsContent>
+          </Tabs>
+        )}
+        {!SUBMISSIONS_PREVIEW && (
+          <section aria-labelledby="prizes-heading" className="flex flex-col gap-4">
+            <h2 id="prizes-heading" className="font-display text-2xl">Prizes</h2>
+            {prizeList}
+          </section>
+        )}
         <BountyDetailsPanel escrow={escrow} viewer={publicKey} />
       </div>
 
@@ -191,7 +206,7 @@ export default function BountyDetail({ address }: Props) {
         open={voteTier !== null}
         prizeLabel={placeLabel(voteTier ?? 0)}
         threshold={escrow.threshold}
-        tallies={voteTier === null ? [] : getCandidateTallies(escrow.tiers[voteTier])}
+        candidates={voteTier === null ? [] : getVoteCandidates(escrow.tiers[voteTier], entries.submissions)}
         submitting={pending !== null && pending.startsWith("vote")}
         onOpenChange={(open) => { if (!open) setVoteTier(null); }}
         onSubmit={handleVote}
@@ -206,7 +221,7 @@ export default function BountyDetail({ address }: Props) {
             // Refresh only after the dialog closes, so its transfer steps can finish showing
             if (!open) {
               setClaimDialogTier(null);
-              refetch();
+              refreshAll();
             }
           }}
           onClaim={(payout) => claimTier(claimDialogTier ?? 0, payout)}

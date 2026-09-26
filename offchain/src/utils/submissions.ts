@@ -2,10 +2,11 @@
 // on-chain votes (which point at wallet addresses) map onto entries.
 
 import { PublicKey } from "@solana/web3.js";
-import type { EscrowAccount } from "@/types/escrow";
+import type { EscrowAccount, PrizeTier } from "@/types/escrow";
 import type { Submission } from "@/types/submission";
 import { MAX_SUBMISSION_DESCRIPTION, MAX_SUBMISSION_TITLE } from "@/constants/submissions";
-import { getBountyStatus } from "./status";
+import { getBountyStatus, getCandidateTallies } from "./status";
+import { truncateAddress } from "./format";
 import { safeDetailsUrl } from "./address";
 
 // Why a wallet can't submit an entry right now (null = it can)
@@ -51,6 +52,30 @@ export function wonTiers(escrow: EscrowAccount, submitter: PublicKey): number[] 
     if (tier.winner && tier.winner.equals(submitter)) won.push(index);
   });
   return won;
+}
+
+// Who a judge can vote for on one tier: every entry (named by its title), plus any
+// wallet that already has votes without an entry. Most votes first.
+export interface VoteCandidate {
+  address: PublicKey;
+  label: string;
+  votes: number;
+}
+
+export function getVoteCandidates(tier: PrizeTier, submissions: Submission[]): VoteCandidate[] {
+  const candidates: VoteCandidate[] = submissions.map((s) => ({
+    address: s.submitter,
+    label: s.title,
+    votes: tier.votes.filter((vote) => vote.candidate.equals(s.submitter)).length,
+  }));
+
+  for (const tally of getCandidateTallies(tier)) {
+    const known = candidates.some((c) => c.address.equals(tally.candidate));
+    if (!known) {
+      candidates.push({ address: tally.candidate, label: truncateAddress(tally.candidate.toBase58()), votes: tally.votes });
+    }
+  }
+  return candidates.sort((a, b) => b.votes - a.votes);
 }
 
 export interface SubmissionValues {

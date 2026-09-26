@@ -17,7 +17,7 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import FormField, { messageId } from "@/components/common/FormField";
-import type { CandidateTally } from "@/utils/status";
+import type { VoteCandidate } from "@/utils/submissions";
 import { truncateAddress } from "@/utils/format";
 import { parseAddress } from "@/utils/address";
 import { cn } from "@/lib/utils";
@@ -26,7 +26,7 @@ interface Props {
   open: boolean;
   prizeLabel: string;       // e.g. "1st prize"
   threshold: number;
-  tallies: CandidateTally[];
+  candidates: VoteCandidate[];   // entries and already-voted wallets, most votes first
   submitting: boolean;
   onOpenChange: (open: boolean) => void;
   onSubmit: (candidate: PublicKey) => void;
@@ -36,7 +36,7 @@ export default function VoteDialog({
   open,
   prizeLabel,
   threshold,
-  tallies,
+  candidates,
   submitting,
   onOpenChange,
   onSubmit,
@@ -76,11 +76,11 @@ export default function VoteDialog({
             </DialogDescription>
           </DialogHeader>
 
-          {tallies.length > 0 && (
-            <div className="flex flex-col gap-2">
-              <span className="text-sm font-medium">Current candidates</span>
-              {tallies.map((tally) => {
-                const address = tally.candidate.toBase58();
+          {candidates.length > 0 && (
+            <div className="flex max-h-72 flex-col gap-2 overflow-y-auto">
+              <span className="text-sm font-medium">Candidates</span>
+              {candidates.map((option) => {
+                const address = option.address.toBase58();
                 const selected = candidate.trim() === address;
                 return (
                   <button
@@ -93,9 +93,12 @@ export default function VoteDialog({
                       selected && "border-primary bg-accent"
                     )}
                   >
-                    <span className="font-mono">{truncateAddress(address)}</span>
-                    <span className="tabular-nums text-muted-foreground">
-                      {tally.votes} {tally.votes === 1 ? "vote" : "votes"}
+                    <span className="flex min-w-0 flex-col">
+                      <span className="truncate font-medium">{option.label}</span>
+                      <span className="font-mono text-xs text-muted-foreground">{truncateAddress(address)}</span>
+                    </span>
+                    <span className="shrink-0 tabular-nums text-muted-foreground">
+                      {option.votes} {option.votes === 1 ? "vote" : "votes"}
                     </span>
                   </button>
                 );
@@ -106,7 +109,7 @@ export default function VoteDialog({
           <FormField
             id="candidate"
             label="Winner's wallet address"
-            helper="Paste an address, or pick a candidate above."
+            helper="Pick a candidate above, or paste any wallet address."
             error={error}
           >
             <Input
