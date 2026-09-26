@@ -4,7 +4,6 @@
 // organize or judge. Asks you to connect a wallet first.
 
 import Link from "next/link";
-import { BN } from "@coral-xyz/anchor";
 import { PublicKey } from "@solana/web3.js";
 import { useWallet } from "@solana/wallet-adapter-react";
 import { useWalletModal } from "@solana/wallet-adapter-react-ui";
@@ -14,7 +13,6 @@ import { Skeleton } from "@/components/ui/skeleton";
 import PageHeader from "@/components/layout/PageHeader";
 import EmptyState from "@/components/common/EmptyState";
 import ErrorState from "@/components/common/ErrorState";
-import SolAmount from "@/components/common/SolAmount";
 import StatCard from "@/components/common/StatCard";
 import BountyCardSkeleton from "@/components/bounty/BountyCardSkeleton";
 import BountyGridSection from "./BountyGridSection";
@@ -22,7 +20,7 @@ import TaskRow from "./TaskRow";
 import TaskSection from "./TaskSection";
 import { useAllEscrows } from "@/hooks/useAllEscrows";
 import { useProgram } from "@/hooks/useProgram";
-import { formatDeadline, formatSol, placeLabel, unclaimedTotal } from "@/utils/format";
+import { formatAmount, formatDeadline, formatTotals, placeLabel, unclaimedTotal } from "@/utils/format";
 import { getViewerTasks } from "@/utils/tasks";
 
 function bountyHref(address: PublicKey): string {
@@ -77,9 +75,12 @@ export default function MyBounties() {
   }
 
   const tasks = getViewerTasks(escrows, publicKey);
-  const claimTotal = tasks.toClaim.reduce(
-    (sum, task) => sum.add(task.escrow.tiers[task.tierIndex].amount),
-    new BN(0)
+  // Prizes can be in different assets, so this is one total per asset
+  const claimTotal = formatTotals(
+    tasks.toClaim.map((task) => ({
+      amount: task.escrow.tiers[task.tierIndex].amount,
+      asset: task.escrow.asset,
+    }))
   );
   const todoCount = tasks.toVote.length + tasks.toClaim.length + tasks.toRefund.length;
 
@@ -90,7 +91,7 @@ export default function MyBounties() {
       <div className="grid gap-4 sm:grid-cols-3">
         <StatCard label="Organizing" value={tasks.organizing.length} />
         <StatCard label="Judging" value={tasks.judging.length} />
-        <StatCard label="Ready to claim" value={<SolAmount lamports={claimTotal} />} />
+        <StatCard label="Ready to claim" value={<span className="text-highlight">{claimTotal}</span>} />
       </div>
 
       {todoCount === 0 && (
@@ -107,7 +108,7 @@ export default function MyBounties() {
             key={`${escrow.publicKey.toBase58()}-${tierIndex}`}
             href={bountyHref(escrow.publicKey)}
             title={escrow.title}
-            detail={`${placeLabel(tierIndex)} · ${formatSol(escrow.tiers[tierIndex].amount)} · ${formatDeadline(escrow.deadline)}`}
+            detail={`${placeLabel(tierIndex)} · ${formatAmount(escrow.tiers[tierIndex].amount, escrow.asset)} · ${formatDeadline(escrow.deadline)}`}
             actionLabel="Vote"
           />
         ))}
@@ -119,7 +120,7 @@ export default function MyBounties() {
             key={`${escrow.publicKey.toBase58()}-${tierIndex}`}
             href={bountyHref(escrow.publicKey)}
             title={escrow.title}
-            detail={`${placeLabel(tierIndex)} · ${formatSol(escrow.tiers[tierIndex].amount)}`}
+            detail={`${placeLabel(tierIndex)} · ${formatAmount(escrow.tiers[tierIndex].amount, escrow.asset)}`}
             actionLabel="Claim"
           />
         ))}
@@ -131,7 +132,7 @@ export default function MyBounties() {
             key={escrow.publicKey.toBase58()}
             href={bountyHref(escrow.publicKey)}
             title={escrow.title}
-            detail={`${formatSol(unclaimedTotal(escrow.tiers))} unclaimed · ${formatDeadline(escrow.deadline)}`}
+            detail={`${formatAmount(unclaimedTotal(escrow.tiers), escrow.asset)} unclaimed · ${formatDeadline(escrow.deadline)}`}
             actionLabel="Refund"
           />
         ))}

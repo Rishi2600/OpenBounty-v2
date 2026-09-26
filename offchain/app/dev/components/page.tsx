@@ -14,7 +14,7 @@ import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Progress } from "@/components/ui/progress";
 import Address from "@/components/common/Address";
-import SolAmount from "@/components/common/SolAmount";
+import TokenAmount from "@/components/common/TokenAmount";
 import EmptyState from "@/components/common/EmptyState";
 import ErrorState from "@/components/common/ErrorState";
 import StatCard from "@/components/common/StatCard";
@@ -62,7 +62,7 @@ export default function ComponentsPreview() {
         <p className="font-display text-3xl">DM Serif Display for titles</p>
         <p>DM Sans for body text, labels and buttons.</p>
         <p className="text-sm text-muted-foreground">Muted secondary text, still 8:1 contrast.</p>
-        <SolAmount lamports={new BN(12_500_000_000)} className="text-2xl" />
+        <TokenAmount amount={new BN(12_500_000_000)} asset="SOL" className="text-2xl" />
       </Section>
 
       <Section title="Buttons">
@@ -102,7 +102,7 @@ export default function ComponentsPreview() {
         <Address address={SAMPLE_ADDRESS} isYou />
         <div className="grid gap-4 sm:grid-cols-3">
           <StatCard label="Your bounties" value="2" />
-          <StatCard label="Total locked" value={<SolAmount lamports={new BN(9_500_000_000)} />} />
+          <StatCard label="Total locked" value={<TokenAmount amount={new BN(2_500_000_000)} asset="USDC" />} />
           <div className="flex flex-col gap-2 rounded-xl border p-5">
             <Skeleton className="h-4 w-24" />
             <Skeleton className="h-8 w-32" />

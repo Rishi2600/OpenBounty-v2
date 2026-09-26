@@ -39,10 +39,10 @@ Page layout: `app/layout.tsx` wraps every page in `<main className="mx-auto w-fu
 | Component | What it shows | Props |
 |---|---|---|
 | `Address` | A shortened address (`AbCd...WxYz`) with the full value in a tooltip and a copy button. The copy button shows a toast. | `address`, `isYou?` (adds a "you" tag), `className?` |
-| `SolAmount` | Lamports as SOL (`12.5 SOL`) in the highlight color, with digits that line up | `lamports` (BN), `className?` |
+| `TokenAmount` | An amount in the asset's base units as text (`12.5 SOL`, `2,500 USDC`) in the highlight color, with digits that line up. Replaced `SolAmount` when prizes became multi-asset. | `amount` (BN), `asset`, `className?` |
 | `EmptyState` | An icon, a title, an optional description and at most one action, for lists with nothing in them | `icon` (lucide icon), `title`, `description?`, `action?` |
 | `ErrorState` | A plain-English error with a "Try again" button (`role="alert"`) | `message?`, `onRetry?` |
-| `StatCard` | An uppercase label above one value | `label`, `value` (text or a node such as `SolAmount`) |
+| `StatCard` | An uppercase label above one value | `label`, `value` (text or a node such as `TokenAmount`) |
 
 | `FormField` | Label, input (children), and helper text that an error replaces (`role="alert"`, red). Give the input `id` and `aria-describedby={messageId(id)}`. | `id`, `label`, `helper?`, `error?`, `children` |
 | `FilterButtons` | A row of toggle buttons (`aria-pressed`) with optional counts, which wrap on phones. Used for filters instead of Tabs, because Tabs expect content panels. | `label` (for screen readers), `options` (`{ value, label, count? }[]`), `value`, `onChange` |

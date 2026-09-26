@@ -61,7 +61,7 @@ Available now: `alert`, `badge`, `button`, `card`, `dialog`, `dropdown-menu`, `i
 | Path | What's there |
 |---|---|
 | `src/types/escrow.ts` | `EscrowAccount`, `PrizeTier`, `TierVote`, the escrow shape every component uses |
-| `src/utils/format.ts` | `formatAmount(amount, asset)` (uses the asset's decimals), `formatSol`, `toBaseUnits(text, asset)`, `formatDeadline`, `formatTimeAgo`, `formatDate`, `placeLabel` ("1st prize"), `truncateAddress`, `totalLocked`, `unclaimedTotal` |
+| `src/utils/format.ts` | `formatAmount(amount, asset)` (uses the asset's decimals), `formatTotals` (one total per asset, "4 SOL · 2,500 USDC"), `formatSol`, `toBaseUnits(text, asset)`, `formatDeadline`, `formatTimeAgo`, `formatDate`, `placeLabel` ("1st prize"), `truncateAddress`, `totalLocked`, `unclaimedTotal` |
 | `src/utils/status.ts` | `getBountyStatus` (open / ending-soon / ended), `getTierProgress` (awaiting / voting / winner / claimed), `getCandidateTallies` (votes per candidate), `countDecidedTiers` |
 | `src/utils/roles.ts` | `getViewerRoles(escrow, wallet)`: is the wallet the organizer, a judge, or a winner (and of which tiers) |
 | `src/constants/assets.ts` | Prize asset allowlist (SOL, USDC, USDT, BONK, JUP) with decimals and mainnet mints, plus `MULTI_ASSET_PREVIEW` (on only in mock mode). See [../multichain/README.md](../multichain/README.md). |

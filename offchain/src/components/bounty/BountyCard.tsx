@@ -5,7 +5,7 @@ import Link from "next/link";
 import { PublicKey } from "@solana/web3.js";
 import { Clock, Trophy } from "lucide-react";
 import { Card } from "@/components/ui/card";
-import SolAmount from "@/components/common/SolAmount";
+import TokenAmount from "@/components/common/TokenAmount";
 import BountyStatusBadge from "./BountyStatusBadge";
 import RoleBadges from "./RoleBadges";
 import type { EscrowAccount } from "@/types/escrow";
@@ -45,7 +45,7 @@ export default function BountyCard({ escrow, viewer }: Props) {
           <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
             Prize pool
           </span>
-          <SolAmount lamports={totalLocked(escrow.tiers)} className="text-3xl" />
+          <TokenAmount amount={totalLocked(escrow.tiers)} asset={escrow.asset} className="text-3xl" />
         </div>
 
         <RoleBadges roles={roles} />

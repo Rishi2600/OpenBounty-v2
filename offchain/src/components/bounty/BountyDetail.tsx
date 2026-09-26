@@ -22,7 +22,7 @@ import TierCard from "./TierCard";
 import VoteDialog from "./VoteDialog";
 import { useEscrow } from "@/hooks/useEscrow";
 import { useBountyActions } from "@/hooks/useBountyActions";
-import { formatDeadline, formatSol, placeLabel, unclaimedTotal } from "@/utils/format";
+import { formatAmount, formatDeadline, placeLabel, unclaimedTotal } from "@/utils/format";
 import { countDecidedTiers, getBountyStatus, getCandidateTallies } from "@/utils/status";
 import { getViewerRoles } from "@/utils/roles";
 import { toastTxError, toastTxSuccess } from "@/utils/txToast";
@@ -86,7 +86,7 @@ export default function BountyDetail({ address }: Props) {
 
   async function handleClaim(tierIndex: number) {
     if (!escrow) return;
-    const amount = formatSol(escrow.tiers[tierIndex].amount);
+    const amount = formatAmount(escrow.tiers[tierIndex].amount, escrow.asset);
     const isLastUnclaimed = escrow.tiers.filter((tier) => !tier.claimed).length === 1;
     try {
       const signature = await claim(tierIndex);
@@ -99,7 +99,8 @@ export default function BountyDetail({ address }: Props) {
   }
 
   async function handleRefund() {
-    const amount = formatSol(unclaimed);
+    if (!escrow) return;
+    const amount = formatAmount(unclaimed, escrow.asset);
     try {
       const signature = await refund();
       toastTxSuccess(`Refunded ${amount}`, signature);
@@ -140,10 +141,10 @@ export default function BountyDetail({ address }: Props) {
       {canRefund && (
         <Card className="flex-row flex-wrap items-center justify-between gap-3 px-5 py-4 ring-destructive/40">
           <p className="text-sm">
-            The deadline has passed. You can refund the {formatSol(unclaimed)} nobody claimed.
+            The deadline has passed. You can refund the {formatAmount(unclaimed, escrow.asset)} nobody claimed.
           </p>
           <Button variant="destructive" onClick={() => setRefundOpen(true)}>
-            <Undo2 /> Refund {formatSol(unclaimed)}
+            <Undo2 /> Refund {formatAmount(unclaimed, escrow.asset)}
           </Button>
         </Card>
       )}
@@ -178,7 +179,7 @@ export default function BountyDetail({ address }: Props) {
       />
       <RefundDialog
         open={refundOpen}
-        amountText={formatSol(unclaimed)}
+        amountText={formatAmount(unclaimed, escrow.asset)}
         submitting={pending === "refund"}
         onOpenChange={setRefundOpen}
         onConfirm={handleRefund}

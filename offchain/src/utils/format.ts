@@ -19,6 +19,17 @@ export function formatSol(lamports: BN | number): string {
   return formatAmount(lamports, "SOL");
 }
 
+// Amounts in possibly different assets -> one total per asset: "4 SOL · 2,500 USDC"
+export function formatTotals(items: { amount: BN; asset: AssetId }[]): string {
+  const totals = new Map<AssetId, BN>();
+  for (const item of items) {
+    const sum = totals.get(item.asset) ?? new BN(0);
+    totals.set(item.asset, sum.add(item.amount));
+  }
+  if (totals.size === 0) return "None yet";
+  return [...totals.entries()].map(([asset, amount]) => formatAmount(amount, asset)).join(" · ");
+}
+
 // Typed amount ("2.5") -> base units of the asset (2500000 for USDC)
 export function toBaseUnits(amountText: string, assetId: AssetId): BN {
   return new BN(Math.round(Number(amountText) * 10 ** ASSETS[assetId].decimals));

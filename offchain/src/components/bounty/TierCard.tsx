@@ -9,10 +9,10 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import Address from "@/components/common/Address";
-import SolAmount from "@/components/common/SolAmount";
+import TokenAmount from "@/components/common/TokenAmount";
 import TierStatusBadge from "./TierStatusBadge";
 import type { EscrowAccount } from "@/types/escrow";
-import { formatSol, placeLabel } from "@/utils/format";
+import { formatAmount, placeLabel } from "@/utils/format";
 import { getCandidateTallies, getTierProgress } from "@/utils/status";
 import type { PendingAction } from "@/hooks/useBountyActions";
 
@@ -47,7 +47,7 @@ export default function TierCard({ escrow, tierIndex, viewer, isEnded, pending, 
           <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
             {placeLabel(tierIndex)}
           </span>
-          <SolAmount lamports={tier.amount} className="text-2xl" />
+          <TokenAmount amount={tier.amount} asset={escrow.asset} className="text-2xl" />
         </div>
         <TierStatusBadge progress={progress} threshold={escrow.threshold} isEnded={isEnded} />
       </div>
@@ -99,7 +99,7 @@ export default function TierCard({ escrow, tierIndex, viewer, isEnded, pending, 
       {canClaim && (
         <Button className="self-start" onClick={() => onClaim(tierIndex)} disabled={claiming}>
           {claiming && <Loader2 className="animate-spin" />}
-          {claiming ? "Confirming..." : `Claim ${formatSol(tier.amount)}`}
+          {claiming ? "Confirming..." : `Claim ${formatAmount(tier.amount, escrow.asset)}`}
         </Button>
       )}
     </Card>

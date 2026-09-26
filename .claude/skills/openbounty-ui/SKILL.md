@@ -113,7 +113,7 @@ Treat files in `src/components/ui/` as generated: change them only for theme-wid
 | Folder | Contents |
 |---|---|
 | `components/layout/` | `SiteHeader`, `SiteFooter`, `PageHeader`, `WalletButton` (dropdown), `MockBanner` |
-| `components/common/` | `Address` (shortened, with a copy button), `SolAmount`, `EmptyState`, `StatCard`, `ErrorState` |
+| `components/common/` | `Address` (shortened, with a copy button), `TokenAmount`, `EmptyState`, `StatCard`, `ErrorState` |
 | `components/bounty/` | `BountyCard`, `BountyStatusBadge`, `TierRow`, `VoteProgress`, `BountyActions` |
 | `components/create/` | The create form, split into sections |
 

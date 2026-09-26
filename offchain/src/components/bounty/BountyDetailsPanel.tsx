@@ -5,9 +5,9 @@ import { ExternalLink } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import Address from "@/components/common/Address";
-import SolAmount from "@/components/common/SolAmount";
+import TokenAmount from "@/components/common/TokenAmount";
 import type { EscrowAccount } from "@/types/escrow";
-import { formatDate, formatDeadline, formatSol, totalLocked, unclaimedTotal } from "@/utils/format";
+import { formatAmount, formatDate, formatDeadline, totalLocked, unclaimedTotal } from "@/utils/format";
 import { safeDetailsUrl } from "@/utils/address";
 
 const LABEL = "text-xs font-semibold uppercase tracking-wider text-muted-foreground";
@@ -25,9 +25,9 @@ export default function BountyDetailsPanel({ escrow, viewer }: Props) {
     <Card className="gap-5 px-5 py-5">
       <div className="flex flex-col gap-1">
         <span className={LABEL}>Prize pool</span>
-        <SolAmount lamports={totalLocked(escrow.tiers)} className="text-2xl" />
+        <TokenAmount amount={totalLocked(escrow.tiers)} asset={escrow.asset} className="text-2xl" />
         <span className="text-sm text-muted-foreground">
-          {formatSol(unclaimedTotal(escrow.tiers))} still locked
+          {formatAmount(unclaimedTotal(escrow.tiers), escrow.asset)} still locked
         </span>
       </div>
 
