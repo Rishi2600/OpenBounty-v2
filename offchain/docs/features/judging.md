@@ -24,34 +24,83 @@ Before this, judges voted on bare wallet addresses and never saw what anyone bui
 | **Vote dialog on the Prizes tab** | Lists entries by project name instead of wallet addresses |
 | **Sample data** | Every mock bounty has sample entries, and the existing sample votes point at them |
 
-## How to try it
+## User guide
+
+Step-by-step instructions from the user's point of view: what builders, judges and organizers click, and what happens. Wherever you're asked to "approve in your wallet", your wallet shows the transaction first. In the preview (mock mode) nothing is sent, so there's no approval step.
+
+### For builders
+
+**Submit an entry**
+1. Connect your wallet (top right). Use the wallet that should receive the prize if you win.
+2. Open the bounty from **Explore**, or from a link someone shared.
+3. Select the **Submissions** tab.
+4. Click **Submit entry**. If you don't see the button, a short note says why (see "Common questions").
+5. Fill in the form:
+   - **Project name:** what judges see first.
+   - **Link:** your demo, repo or write-up. It must start with `https://` or `ipfs://`.
+   - **Short description** (optional): one or two sentences, up to 280 characters.
+6. Click **Submit entry** and approve in your wallet. Your entry appears in the list, marked **you**.
+
+**Follow how your entry is doing**
+- On the **Submissions** tab, your entry's card shows its votes, like **2 votes · 1st prize**. Once judges pick it, the card shows **Won 1st prize**.
+- **Your bounties** (in the top menu) lists any prize you've won under **Ready to claim**.
+
+**Claim a prize you won**
+1. Open **Your bounties**, then **Ready to claim**, and click **Claim**. Or open the bounty and go to the **Prizes** tab.
+2. Click **Claim** on your prize and approve in your wallet. For USDC prizes you first choose which chain to be paid on (see [../multichain/README.md](../multichain/README.md)).
+
+### For judges
+
+**Find what needs your vote**
+- Open **Your bounties**. **Needs your vote** lists every prize you still have to decide. Click **Vote** to open that bounty.
+
+**Review and score entries**
+1. On the bounty page, select the **Judging** tab. Only the bounty's judges see it, so connect the wallet you were added with.
+2. Review each entry (its project link is on the **Submissions** tab), then click **Score** on its card.
+3. Rate **Innovation**, **Execution** and **Impact** from 1 to 5, add a note if you like, and click **Save score**. The card then shows **Your score** (for example 14/15).
+4. To rank your favourites, choose **Your score** above the entries. To see everything in one table, click **Compare scores**.
+
+Your scores are private. They stay in your browser, and nobody else (not other judges, not the organizer) can see them.
+
+**Cast your vote**
+1. Drag an entry onto a prize in the **Prizes** column. Or click **Vote as...** on the entry and pick the prize; this works with a keyboard and on phones.
+2. Read the confirmation. It tells you how many votes the entry will have, or that your vote picks the winner.
+3. Click **Cast vote** and approve in your wallet. The prize column shows **your vote**.
+
+You vote once per prize, and a vote can't be changed. When an entry reaches the required number of votes, it wins that prize automatically.
+
+### For organizers
+
+1. **Share** the bounty link so builders can find it.
+2. Watch entries arrive on the **Submissions** tab. On the **Prizes** tab, each prize shows its votes and winner.
+3. You can't enter or judge your own bounty, which keeps the result fair.
+4. After the deadline, click **Refund** on the bounty page to take back anything that wasn't claimed.
+
+### Common questions
+
+- **Why can't I submit an entry?** The note next to the entry count says why:
+  - entries have closed because the deadline passed
+  - you're the organizer or one of the judges
+  - you've already entered
+
+  If you see a **Connect wallet** card instead, connect your wallet first.
+- **Can I edit or remove my entry?** Not yet, so check the link before submitting.
+- **Can I change my vote?** No. Each judge votes once per prize, which is why the confirmation spells out what your vote will do.
+- **Who can see my scores?** Only you, in the browser where you scored. They aren't stored on-chain and don't count as votes.
+- **Can one entry win two prizes?** Yes, if judges vote for it on both.
+- **I'm a judge, but I don't see the Judging tab.** Connect the wallet the organizer added as a judge.
+
+## Try it in the preview
+
+For the team: a quick demo with the sample data.
 
 1. Run `yarn dev:mock` in `offchain/` and open http://localhost:3000. A test wallet connects automatically, and nothing is real.
 2. **As a builder:** open **Community Meme Contest** (you have no role there), go to **Submissions** and click **Submit entry**. Your entry appears in the list marked "you".
 3. **As a judge:** open **Design System for a DeFi Dashboard** and go to the **Judging** tab.
-   - Click **Score** on two entries, then try **Sort: Your score** and **Compare scores**.
+   - Click **Score** on two entries, then choose **Your score** to sort, and open **Compare scores**.
    - Drag **Ledgerline UI** onto **1st prize**. It already has 2 of 3 votes, so the confirmation says your vote picks the winner.
    - Use **Vote as...** on another entry for 2nd prize.
 4. **As an organizer:** open **Build a Solana Wallet Tracker**. You can see its entries but can't enter it or judge it.
-
-## How people use it
-
-**Builders**
-- Open a bounty, go to **Submissions**, and click **Submit entry**: name, link, one or two sentences.
-- One entry per wallet per bounty, until the deadline.
-- Submit from the wallet that should receive the prize. Judges vote for the submitting wallet, and a winning wallet claims the prize, as before.
-
-**Judges**
-- Open the **Judging** tab of a bounty you judge.
-- Score entries as you review them. Only you can see your scores.
-- Vote by dragging an entry onto a prize, or with **Vote as...**, then confirm. Votes are final, and each judge votes once per prize.
-
-**Organizers**
-- Share the bounty link. Entries arrive in **Submissions**, and progress shows on each prize.
-- Organizers can't enter their own bounty.
-
-**Everyone**
-- Browse entries on any bounty: what was built, the links, and how the vote is going.
 
 ## How it benefits them
 
