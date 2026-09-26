@@ -20,11 +20,13 @@ Charts are hand-drawn SVG (no chart library, which keeps pages light) and follow
 
 | Component | What it shows | Props |
 |---|---|---|
+| `MarketsView` | The whole `/markets` page:<br>• freshness label and CoinGecko credit, plus an info note that the claim window's quote is what counts<br>• "Tokens you can claim prizes in" and "For reference" cards<br>• `MarketChartPanel` next to `PrizeConverter`, pre-filled with your first prize to claim; bounties load only when a wallet is connected<br>• loading, error (Retry) and "couldn't refresh" states | none |
+| `UpdatedAgo` | "Updated 12s ago". Ticks by itself, so only the label re-renders each second. | `date` |
 | `MarketCard` | A token's name, price, 24h change and sparkline. It's a toggle button (`aria-pressed`) that picks the token shown in the big chart; BTC and ETH are tagged "Reference". | `asset`, `quote`, `selected`, `onSelect` |
-| `MarketChartPanel` | The selected token's name, price and 24h change, the range buttons (1H, 24H, 7D, 30D) in one row above the chart, then `PriceChart` and `PriceSummary` | `asset`, `quote` |
+| `MarketChartPanel` | The selected token's name, price and 24h change, the range buttons (1H, 24H, 7D, 30D) in one row above the chart, then `PriceChart` and `PriceSummary`. **24H and 7D** draw instantly from the quote's hourly prices. **1H and 30D** are fetched; the old chart stays dimmed (and labelled with what it shows) until they load, and a failed load shows an error with Retry. | `asset`, `quote` |
 | `PrizeConverter` | "What's my prize worth?": an amount and token (native radios) give the dollar value plus the equivalent in every other claimable token, at market prices. It can be pre-filled with a prize waiting to be claimed; render with `key` so a new pre-fill resets it. | `quotes`, `prefill` |
 | `PriceChange` | A signed percent with an up or down arrow, green or red (never color alone) | `percent`, `className?` |
-| `PriceChart` | Price over time for one token.<br>• **Pointer:** crosshair and tooltip<br>• **Keyboard:** Tab in, then ←/→/Home/End; values are announced to screen readers<br>• **End dot:** 8px with a 2px ring<br>• **Loading:** `dimmed` fades the old chart while a new range loads | `points`, `range`, `label`, `dimmed?` |
+| `PriceChart` | Price over time for one token. The left margin is sized to its widest y-axis label.<br>• **Pointer:** crosshair and tooltip<br>• **Keyboard:** Tab in, then ←/→/Home/End; values are announced to screen readers<br>• **End dot:** 8px with a 2px ring<br>• **Loading:** `dimmed` fades the old chart while a new range loads | `points`, `range`, `label`, `dimmed?` |
 | `PriceSummary` | Start, high, low, now and change (signed, colored): the text twin of the chart | `points` |
 | `Sparkline` | Small decorative 7-day trend line (`aria-hidden`); the numbers beside it carry the meaning | `prices`, `className?` |
 

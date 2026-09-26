@@ -12,7 +12,8 @@ import { formatUsd } from "@/utils/format";
 import { cn } from "@/lib/utils";
 
 const HEIGHT = 260;
-const MARGIN = { top: 16, right: 16, bottom: 28, left: 76 };
+const MARGIN = { top: 16, right: 16, bottom: 28 };
+const TICK_CHAR_WIDTH = 7.5;   // rough width of one 12px character, to fit the y-axis labels
 const TOOLTIP_WIDTH = 150;
 
 interface Props {
@@ -36,12 +37,17 @@ export default function PriceChart({ points, range, label, dimmed = false }: Pro
   const padding = (high - low) * 0.1;
   const ticks = niceTicks(low - padding, high + padding, 4);
   const step = ticks.length > 1 ? ticks[1] - ticks[0] : high * 0.01;
+  // Left margin fits the longest y-axis label (tiny prices like $0.0000040 are wide)
+  const tickLabels = ticks.map((tick) => formatTick(tick, step));
+  const longest = Math.max(...tickLabels.map((text) => text.length));
+  const marginLeft = Math.ceil(longest * TICK_CHAR_WIDTH) + 12;
+
   const yMin = Math.min(ticks[0], low);
   const yMax = Math.max(ticks[ticks.length - 1], high);
 
   const plotBottom = HEIGHT - MARGIN.bottom;
-  const plotRight = Math.max(MARGIN.left + 1, width - MARGIN.right);
-  const x = scaleLinear(points[0].time, points[points.length - 1].time, MARGIN.left, plotRight);
+  const plotRight = Math.max(marginLeft + 1, width - MARGIN.right);
+  const x = scaleLinear(points[0].time, points[points.length - 1].time, marginLeft, plotRight);
   const y = scaleLinear(yMin, yMax, plotBottom, MARGIN.top);
 
   const coords = points.map((point) => ({ x: x(point.time), y: y(point.price) }));
@@ -104,11 +110,11 @@ export default function PriceChart({ points, range, label, dimmed = false }: Pro
           className="block touch-pan-y rounded-md focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
         >
           {/* Solid hairline grid with round dollar ticks */}
-          {ticks.map((tick) => (
+          {ticks.map((tick, i) => (
             <g key={tick}>
-              <line x1={MARGIN.left} x2={plotRight} y1={y(tick)} y2={y(tick)} stroke="var(--border)" strokeWidth={1} />
-              <text x={MARGIN.left - 8} y={y(tick)} dy="0.32em" textAnchor="end" fontSize={12} fill="var(--muted-foreground)" className="tabular-nums">
-                {formatTick(tick, step)}
+              <line x1={marginLeft} x2={plotRight} y1={y(tick)} y2={y(tick)} stroke="var(--border)" strokeWidth={1} />
+              <text x={marginLeft - 8} y={y(tick)} dy="0.32em" textAnchor="end" fontSize={12} fill="var(--muted-foreground)" className="tabular-nums">
+                {tickLabels[i]}
               </text>
             </g>
           ))}

@@ -92,6 +92,7 @@ Rules:
 | `/bounty/[address]` | **Bounty detail:** tiers with vote progress, judges, organizer. Actions depend on your role: vote (judge), claim (winner), refund (organizer, after the deadline). In mock mode it has tabs: **Prizes**, **Submissions** (entries) and **Judging** (judges only). | New, tabs added |
 | `/create` | **Create bounty** form | Refactor |
 | `/me` | **Your bounties:** "Needs your vote", "Ready to claim", "Refund available", "Organizing". Replaces the broken `/claim` link. | New |
+| `/markets` | **Markets:**<br>• live prices, 24h change and sparklines for the claimable tokens, plus BTC and ETH for reference<br>• a big chart (1H, 24H, 7D, 30D)<br>• the "What's my prize worth?" converter<br><br>Price data from CoinGecko, credited on the page. | New |
 | not found | `app/not-found.tsx` with a link home | New |
 
 ### Status names users see
