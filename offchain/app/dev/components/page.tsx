@@ -19,11 +19,21 @@ import EmptyState from "@/components/common/EmptyState";
 import ErrorState from "@/components/common/ErrorState";
 import StatCard from "@/components/common/StatCard";
 import PageHeader from "@/components/layout/PageHeader";
+import PriceChart from "@/components/markets/PriceChart";
+import PriceSummary from "@/components/markets/PriceSummary";
+import Sparkline from "@/components/markets/Sparkline";
 
 const SWATCHES = [
   "bg-background", "bg-card", "bg-secondary", "bg-primary",
   "bg-accent", "bg-destructive", "bg-success", "bg-highlight",
 ];
+
+// 24 hours of made-up prices (every 5 minutes) for the chart preview
+const SAMPLE_START = 1_790_000_000_000;
+const SAMPLE_POINTS = Array.from({ length: 288 }, (_, i) => ({
+  time: SAMPLE_START + i * 5 * 60 * 1000,
+  price: 120 + Math.sin(i / 30) * 2.5 + Math.sin(i / 7) * 0.6 + i * 0.004,
+}));
 
 const SAMPLE_ADDRESS = "4BagKzGnVv1b2hW6qS9m3YpTt8xQeRr5LdJ7uNcA35Hp";
 
@@ -96,6 +106,16 @@ export default function ComponentsPreview() {
         <Button variant="outline" className="self-start" onClick={() => toast.success("Bounty created")}>
           Show a toast
         </Button>
+      </Section>
+
+      <Section title="Charts">
+        <div className="flex max-w-3xl flex-col gap-4 rounded-xl border p-5">
+          <PriceChart points={SAMPLE_POINTS} range="24H" label="Sample price" />
+          <PriceSummary points={SAMPLE_POINTS} />
+        </div>
+        <div className="w-40">
+          <Sparkline prices={SAMPLE_POINTS.filter((_, i) => i % 12 === 0).map((p) => p.price)} />
+        </div>
       </Section>
 
       <Section title="Shared components">

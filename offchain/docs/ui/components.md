@@ -10,6 +10,22 @@ To see everything in one place, run `yarn dev:mock` and open **http://localhost:
 |---|---|
 | `ExploreBounties` | The whole home page:<br>• status filter with counts<br>• in mock mode, a prize-asset filter too (All assets, SOL, USDC, ...)<br>• sorted grid (running bounties with the nearest deadline first, then ended ones)<br>• loading, empty, filtered-empty and error states |
 
+## markets/
+
+Charts are hand-drawn SVG (no chart library, which keeps pages light) and follow the dataviz rules:
+- a 2px line with a 10% area wash, and a solid hairline grid
+- round axis ticks
+- a crosshair and tooltip that shows the value first
+- the same readout from the keyboard, and a text summary twin
+
+| Component | What it shows | Props |
+|---|---|---|
+| `PriceChart` | Price over time for one token.<br>• **Pointer:** crosshair and tooltip<br>• **Keyboard:** Tab in, then ←/→/Home/End; values are announced to screen readers<br>• **End dot:** 8px with a 2px ring<br>• **Loading:** `dimmed` fades the old chart while a new range loads | `points`, `range`, `label`, `dimmed?` |
+| `PriceSummary` | Start, high, low, now and change (signed, colored): the text twin of the chart | `points` |
+| `Sparkline` | Small decorative 7-day trend line (`aria-hidden`); the numbers beside it carry the meaning | `prices`, `className?` |
+
+Chart helpers are in `src/utils/chart.ts` (`scaleLinear`, `niceTicks`, `formatTick`, `linePath`, time labels). `useElementWidth` measures the chart so it draws at the exact size.
+
 ## news/
 
 | Component | What it shows | Props |

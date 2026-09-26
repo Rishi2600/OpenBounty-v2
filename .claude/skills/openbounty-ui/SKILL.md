@@ -61,7 +61,7 @@ Base values live in `globals.css` only. Components use the meaning-based names t
 | `ring` | `#C8860A` | Keyboard focus |
 
 Rules:
-- No hex values or `style={{}}` color objects in components.
+- No hex values or `style={{}}` color objects in components. The one exception for inline `style`: positions computed at runtime, such as a chart tooltip following the pointer (`style={{ left }}`). Never colors.
 - Never fade text with `opacity`; use `text-muted-foreground`.
 - `#825B40` (brown-600) is for borders and dividers only. It's too faint for text.
 
@@ -166,5 +166,5 @@ Treat files in `src/components/ui/` as generated: change them only for theme-wid
 1. Loading, empty and error states exist.
 2. Keyboard only: everything can be reached and the focus ring is visible.
 3. Checked at 375px and 1440px widths.
-4. No hex colors, inline `style` or emoji in the new code.
+4. No hex colors, inline `style` (except computed positions) or emoji in the new code.
 5. `npx tsc --noEmit` and ESLint are clean for the touched files.
