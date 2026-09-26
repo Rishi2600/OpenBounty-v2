@@ -14,6 +14,21 @@ export function formatAmount(amount: BN | number, assetId: AssetId): string {
   return `${text} ${asset.id}`;
 }
 
+// US dollars: "$84,001.00", "$121.08", "$1.00", "$0.34", and tiny prices with two
+// significant digits so they don't round to zero: "$0.0000037"
+export function formatUsd(value: number): string {
+  if (value >= 0.1) {
+    return `$${value.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+  }
+  return `$${value.toLocaleString(undefined, { maximumSignificantDigits: 2 })}`;
+}
+
+// Signed percent: "+2.26%", "-0.63%", "0.00%"
+export function formatPercent(value: number): string {
+  const sign = value > 0 ? "+" : "";
+  return `${sign}${value.toFixed(2)}%`;
+}
+
 // Lamports -> "12.5 SOL"
 export function formatSol(lamports: BN | number): string {
   return formatAmount(lamports, "SOL");
