@@ -25,7 +25,8 @@ import VoteDialog from "./VoteDialog";
 import { useEscrow } from "@/hooks/useEscrow";
 import { useBountyActions } from "@/hooks/useBountyActions";
 import { useSubmissions } from "@/hooks/useSubmissions";
-import { ASSETS } from "@/constants/assets";
+import { MULTI_ASSET_PREVIEW } from "@/constants/assets";
+import { BN } from "@coral-xyz/anchor";
 import { CHAINS } from "@/constants/chains";
 import { SUBMISSIONS_PREVIEW } from "@/constants/submissions";
 import type { Payout } from "@/types/escrow";
@@ -110,7 +111,9 @@ export default function BountyDetail({ address }: Props) {
   async function claimTier(tierIndex: number, payout?: Payout): Promise<boolean> {
     if (!escrow) return false;
     const amount = formatAmount(escrow.tiers[tierIndex].amount, escrow.asset);
-    const where = payout && payout.chain !== "solana" ? ` on ${CHAINS[payout.chain].name}` : "";
+    let where = "";
+    if (payout && payout.asset && payout.amount) where += ` as ${formatAmount(new BN(payout.amount), payout.asset)}`;
+    if (payout && payout.chain !== "solana") where += ` on ${CHAINS[payout.chain].name}`;
     const isLastUnclaimed = escrow.tiers.filter((tier) => !tier.claimed).length === 1;
     try {
       const signature = await claim(tierIndex, payout);
@@ -123,10 +126,11 @@ export default function BountyDetail({ address }: Props) {
     }
   }
 
-  // Multichain assets (USDC) open the claim dialog; others pay the Solana wallet directly
+  // In the multi-asset preview every claim opens the claim window (receive as / receive on);
+  // on-chain today the prize goes straight to the winner's Solana wallet
   async function handleClaim(tierIndex: number) {
     if (!escrow) return;
-    if (ASSETS[escrow.asset].crossChain) {
+    if (MULTI_ASSET_PREVIEW) {
       setClaimDialogTier(tierIndex);
       return;
     }
@@ -201,7 +205,8 @@ export default function BountyDetail({ address }: Props) {
       {publicKey && (
         <ClaimDialog
           open={claimDialogTier !== null}
-          amountText={claimDialogTier === null ? "" : formatAmount(escrow.tiers[claimDialogTier].amount, escrow.asset)}
+          prizeAsset={escrow.asset}
+          prizeAmount={claimDialogTier === null ? new BN(0) : escrow.tiers[claimDialogTier].amount}
           walletAddress={publicKey.toBase58()}
           submitting={pending !== null && pending.startsWith("claim")}
           onOpenChange={(open) => {

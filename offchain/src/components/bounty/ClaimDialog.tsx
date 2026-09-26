@@ -1,12 +1,13 @@
 "use client";
 
-// Claim dialog for prizes that can be paid out on several chains (USDC, multichain preview).
-// The winner picks where to receive: their Solana wallet, or an address on Base, Ethereum
-// or Arbitrum. Other chains show the Circle CCTP steps (burn on Solana, mint on the
-// destination). In this preview those steps are simulated.
+// Claim window (multi-asset preview). The winner chooses:
+// - Receive as: keep the prize token, or swap it into another one (live Jupiter quote)
+// - Receive on: when receiving USDC, their Solana wallet or Base / Ethereum / Arbitrum (CCTP)
+// Claims that swap or move chains then show each step. In the preview they're simulated.
 
 import { useState } from "react";
-import { CircleCheck, Circle, Loader2 } from "lucide-react";
+import { BN } from "@coral-xyz/anchor";
+import { Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -18,42 +19,65 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import FormField, { messageId } from "@/components/common/FormField";
-import { CHAINS, CHAIN_IDS, ChainId } from "@/constants/chains";
+import ReceiveAsPicker from "@/components/claim/ReceiveAsPicker";
+import ReceiveOnPicker from "@/components/claim/ReceiveOnPicker";
+import SwapQuoteBox from "@/components/claim/SwapQuoteBox";
+import TransferSteps from "@/components/claim/TransferSteps";
+import { ASSETS, AssetId } from "@/constants/assets";
+import { CHAINS, ChainId } from "@/constants/chains";
 import type { Payout } from "@/types/escrow";
+import { useSwapQuote } from "@/hooks/useSwapQuote";
 import { isEvmAddress } from "@/utils/address";
-import { truncateAddress } from "@/utils/format";
+import { formatAmount, truncateAddress } from "@/utils/format";
 import { mockDelay } from "@/mocks/store";
-import { cn } from "@/lib/utils";
 
 type Phase = "choose" | "transferring" | "done";
 
 interface Props {
   open: boolean;
-  amountText: string;          // e.g. "4,000 USDC"
+  prizeAsset: AssetId;
+  prizeAmount: BN;
   walletAddress: string;       // the winner's Solana wallet
   submitting: boolean;
   onOpenChange: (open: boolean) => void;
   onClaim: (payout: Payout) => Promise<boolean>;   // true when the claim succeeded
 }
 
-export default function ClaimDialog({ open, amountText, walletAddress, submitting, onOpenChange, onClaim }: Props) {
+export default function ClaimDialog(props: Props) {
+  const { open, prizeAsset, prizeAmount, walletAddress, submitting, onOpenChange, onClaim } = props;
+  const [receiveAs, setReceiveAs] = useState<AssetId | null>(null);   // null = keep the prize token
   const [chainId, setChainId] = useState<ChainId>("solana");
   const [evmAddress, setEvmAddress] = useState("");
   const [error, setError] = useState<string | undefined>();
   const [phase, setPhase] = useState<Phase>("choose");
   const [stepsDone, setStepsDone] = useState(0);
 
+  const target = receiveAs ?? prizeAsset;
+  const swapping = target !== prizeAsset;
+  const swap = useSwapQuote(prizeAsset, target, open && swapping ? prizeAmount : null);
+
+  const offerChains = ASSETS[target].crossChain;
   const chain = CHAINS[chainId];
-  const isOtherChain = chain.addressFormat === "evm";
-  const steps = [
-    "Prize released from the escrow on Solana",
-    "USDC burned on Solana by Circle CCTP",
-    "Circle confirms the transfer",
-    `${amountText} minted on ${chain.name} to ${truncateAddress(evmAddress.trim(), 6)}`,
-  ];
+  const toOtherChain = offerChains && chain.addressFormat === "evm";
+
+  let receivedText = formatAmount(prizeAmount, prizeAsset);
+  if (swapping) receivedText = swap.quote ? formatAmount(new BN(swap.quote.outAmount), target) : `your ${target}`;
+
+  const steps = ["Prize released from the escrow on Solana"];
+  if (swapping) steps.push(`Swapped to ${receivedText} with Jupiter`);
+  if (toOtherChain) {
+    steps.push("USDC burned on Solana by Circle CCTP");
+    steps.push("Circle confirms the transfer");
+    steps.push(`${receivedText} minted on ${chain.name} to ${truncateAddress(evmAddress.trim(), 6)}`);
+  }
+
+  let claimLabel = "Claim";
+  if (swapping) claimLabel += ` as ${target}`;
+  if (toOtherChain) claimLabel += ` on ${chain.name}`;
 
   function handleOpenChange(next: boolean) {
     if (!next) {
+      setReceiveAs(null);
       setChainId("solana");
       setEvmAddress("");
       setError(undefined);
@@ -64,19 +88,27 @@ export default function ClaimDialog({ open, amountText, walletAddress, submittin
   }
 
   async function handleClaim() {
-    if (isOtherChain && !isEvmAddress(evmAddress)) {
+    if (toOtherChain && !isEvmAddress(evmAddress)) {
       setError(`Enter your ${chain.name} address (0x followed by 40 characters).`);
       return;
     }
-    const address = isOtherChain ? evmAddress.trim() : walletAddress;
-    const ok = await onClaim({ chain: chainId, address });
+    const payout: Payout = {
+      chain: toOtherChain ? chainId : "solana",
+      address: toOtherChain ? evmAddress.trim() : walletAddress,
+    };
+    if (swapping && swap.quote) {
+      payout.asset = target;
+      payout.amount = swap.quote.outAmount;
+    }
+
+    const ok = await onClaim(payout);
     if (!ok) return;
-    if (!isOtherChain) {
+    if (steps.length === 1) {
       handleOpenChange(false);
       return;
     }
 
-    // Preview only: walk through the CCTP steps with short pauses
+    // Preview only: walk through the steps with short pauses
     setPhase("transferring");
     for (let step = 1; step <= steps.length; step++) {
       setStepsDone(step);
@@ -87,46 +119,21 @@ export default function ClaimDialog({ open, amountText, walletAddress, submittin
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogContent>
+      <DialogContent className="max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Claim {amountText}</DialogTitle>
+          <DialogTitle>Claim {formatAmount(prizeAmount, prizeAsset)}</DialogTitle>
           <DialogDescription>
-            Choose where to receive your prize. On another chain you get native USDC through
-            Circle CCTP, not a wrapped token.
+            Choose what to receive your prize in, and where. Swaps use Jupiter; USDC on another
+            chain arrives as native USDC through Circle CCTP.
           </DialogDescription>
         </DialogHeader>
 
         {phase === "choose" && (
           <div className="flex flex-col gap-5">
-            <fieldset className="flex flex-col gap-2">
-              <legend className="mb-1 text-sm font-medium">Receive on</legend>
-              <div className="grid grid-cols-2 gap-2">
-                {CHAIN_IDS.map((id) => (
-                  <label
-                    key={id}
-                    className={cn(
-                      "flex cursor-pointer flex-col gap-0.5 rounded-lg border px-3 py-2.5 transition-colors hover:bg-accent",
-                      "has-checked:border-primary has-checked:bg-accent has-focus-visible:ring-2 has-focus-visible:ring-ring"
-                    )}
-                  >
-                    <input
-                      type="radio"
-                      name="payout-chain"
-                      value={id}
-                      checked={chainId === id}
-                      onChange={() => { setChainId(id); setError(undefined); }}
-                      className="sr-only"
-                    />
-                    <span className="font-semibold">{CHAINS[id].name}</span>
-                    <span className="text-xs text-muted-foreground">
-                      {id === "solana" ? "Your connected wallet" : "Via Circle CCTP"}
-                    </span>
-                  </label>
-                ))}
-              </div>
-            </fieldset>
-
-            {isOtherChain && (
+            <ReceiveAsPicker prizeAsset={prizeAsset} value={target} onChange={(asset) => { setReceiveAs(asset); setError(undefined); }} />
+            {swapping && <SwapQuoteBox to={target} quote={swap.quote} loading={swap.loading} error={swap.error} />}
+            {offerChains && <ReceiveOnPicker value={chainId} onChange={(id) => { setChainId(id); setError(undefined); }} />}
+            {toOtherChain && (
               <FormField
                 id="payout-address"
                 label={`Your ${chain.name} address`}
@@ -149,31 +156,15 @@ export default function ClaimDialog({ open, amountText, walletAddress, submittin
           </div>
         )}
 
-        {phase !== "choose" && (
-          <ol className="flex flex-col gap-3" aria-live="polite">
-            {steps.map((label, index) => {
-              const done = index < stepsDone;
-              const active = index === stepsDone && phase === "transferring";
-              return (
-                <li key={label} className="flex items-center gap-3 text-sm">
-                  {done && <CircleCheck className="size-5 shrink-0 text-success" aria-hidden />}
-                  {active && <Loader2 className="size-5 shrink-0 animate-spin text-primary" aria-hidden />}
-                  {!done && !active && <Circle className="size-5 shrink-0 text-muted-foreground" aria-hidden />}
-                  <span className={done ? "text-foreground" : "text-muted-foreground"}>{label}</span>
-                </li>
-              );
-            })}
-            <li className="text-xs text-muted-foreground">Preview: these steps are simulated.</li>
-          </ol>
-        )}
+        {phase !== "choose" && <TransferSteps steps={steps} done={stepsDone} running={phase === "transferring"} />}
 
         <DialogFooter>
           {phase === "choose" && (
             <>
               <Button variant="outline" onClick={() => handleOpenChange(false)}>Cancel</Button>
-              <Button onClick={handleClaim} disabled={submitting}>
+              <Button onClick={handleClaim} disabled={submitting || (swapping && !swap.quote)}>
                 {submitting && <Loader2 className="animate-spin" />}
-                {submitting ? "Confirming..." : `Claim on ${chain.name}`}
+                {submitting ? "Confirming..." : claimLabel}
               </Button>
             </>
           )}
