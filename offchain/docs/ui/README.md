@@ -172,6 +172,12 @@ To add a sample, add another `escrow({...})` entry in `buildMockEscrows`.
   - **USDC winners** choose to be paid on Solana, Base, Ethereum or Arbitrum (simulated Circle CCTP).
   - **Docs:** [../multichain/README.md](../multichain/README.md).
 
+- **Entries, judging board and scorecards, preview** (branch `feat/submissions-and-judging`, mock mode only):
+  - **Builders** submit entries.
+  - **Bounty pages** get Prizes, Submissions and Judging tabs.
+  - **Judges** score entries privately and vote by dragging an entry onto a prize (or with a menu).
+  - **Docs:** [../features/judging.md](../features/judging.md).
+
 ## How the refactor was checked
 
 In mock mode, with a headless browser, at 1440px and 390px:

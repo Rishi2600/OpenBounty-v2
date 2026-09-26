@@ -28,6 +28,7 @@ Open http://localhost:3000. Other commands: `yarn build`, `yarn start`, `yarn li
 ## Where things are
 
 - **UI docs:** [`docs/ui/`](docs/ui/README.md) covers styling, the code map, mock mode, the component guide and progress.
+- **Entries, judging board and scorecards (preview):** [`docs/features/judging.md`](docs/features/judging.md)
 - **Multi-asset and multichain prizes (preview):** [`docs/multichain/`](docs/multichain/README.md) covers what it does, how to use it, the benefits, and what's needed to make it real.
 - **Design rules:** [`../.claude/skills/openbounty-ui/SKILL.md`](../.claude/skills/openbounty-ui/SKILL.md) covers colors, type, patterns and code rules.
 - **Program connection:**
