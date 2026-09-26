@@ -19,3 +19,8 @@ export function safeDetailsUrl(uri: string): string | null {
   if (text.startsWith("https://") || text.startsWith("http://")) return text;
   return null;
 }
+
+// An Ethereum-style address (Base, Ethereum, Arbitrum): 0x followed by 40 hex characters
+export function isEvmAddress(text: string): boolean {
+  return /^0x[0-9a-fA-F]{40}$/.test(text.trim());
+}

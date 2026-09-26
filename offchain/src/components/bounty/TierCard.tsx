@@ -12,6 +12,7 @@ import Address from "@/components/common/Address";
 import TokenAmount from "@/components/common/TokenAmount";
 import TierStatusBadge from "./TierStatusBadge";
 import type { EscrowAccount } from "@/types/escrow";
+import { CHAINS } from "@/constants/chains";
 import { formatAmount, placeLabel } from "@/utils/format";
 import { getCandidateTallies, getTierProgress } from "@/utils/status";
 import type { PendingAction } from "@/hooks/useBountyActions";
@@ -56,6 +57,9 @@ export default function TierCard({ escrow, tierIndex, viewer, isEnded, pending, 
         <div className="flex flex-wrap items-center gap-2 text-sm">
           <span className="text-muted-foreground">Winner</span>
           <Address address={tier.winner.toBase58()} isYou={isMyPrize} />
+          {tier.payout && tier.payout.chain !== "solana" && (
+            <span className="text-muted-foreground">· paid out on {CHAINS[tier.payout.chain].name}</span>
+          )}
         </div>
       )}
 

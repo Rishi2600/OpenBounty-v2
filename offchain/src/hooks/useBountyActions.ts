@@ -8,7 +8,7 @@ import { useState } from "react";
 import { PublicKey, SystemProgram } from "@solana/web3.js";
 import { useWallet } from "@solana/wallet-adapter-react";
 import { useProgram } from "./useProgram";
-import type { EscrowAccount } from "@/types/escrow";
+import type { EscrowAccount, Payout } from "@/types/escrow";
 import { deriveVaultPda } from "@/utils/pda";
 import { USE_MOCKS, mockDelay, mockSignature } from "@/mocks/store";
 import { mockClaim, mockRefund, mockVote } from "@/mocks/actions";
@@ -48,13 +48,15 @@ export function useBountyActions(escrow: EscrowAccount | null) {
   }
 
   // Winner withdraws their prize. Claiming the last tier closes the bounty.
-  async function claim(tierIndex: number): Promise<string> {
+  // `payout` (multichain preview) is where to receive it; the deployed program always
+  // pays the winner's Solana wallet, so real mode ignores it.
+  async function claim(tierIndex: number, payout?: Payout): Promise<string> {
     const { program, wallet, escrow, vault } = requireReady();
     setPending(`claim-${tierIndex}`);
     try {
       if (USE_MOCKS) {
         await mockDelay();
-        mockClaim(escrow.publicKey, tierIndex, wallet);
+        mockClaim(escrow.publicKey, tierIndex, wallet, payout);
         return mockSignature();
       }
       return await program.methods

@@ -20,6 +20,10 @@ import RefundDialog from "./RefundDialog";
 import RoleBadges from "./RoleBadges";
 import TierCard from "./TierCard";
 import VoteDialog from "./VoteDialog";
+import ClaimDialog from "./ClaimDialog";
+import { ASSETS } from "@/constants/assets";
+import { CHAINS } from "@/constants/chains";
+import type { Payout } from "@/types/escrow";
 import { useEscrow } from "@/hooks/useEscrow";
 import { useBountyActions } from "@/hooks/useBountyActions";
 import { formatAmount, formatDeadline, placeLabel, unclaimedTotal } from "@/utils/format";
@@ -38,6 +42,7 @@ export default function BountyDetail({ address }: Props) {
   const { vote, claim, refund, pending } = useBountyActions(escrow);
   const [voteTier, setVoteTier] = useState<number | null>(null);
   const [refundOpen, setRefundOpen] = useState(false);
+  const [claimDialogTier, setClaimDialogTier] = useState<number | null>(null);
   const [closedMessage, setClosedMessage] = useState<string | null>(null);
 
   // Keep showing the bounty while it refreshes after a transaction
@@ -84,18 +89,32 @@ export default function BountyDetail({ address }: Props) {
     }
   }
 
-  async function handleClaim(tierIndex: number) {
-    if (!escrow) return;
+  // Sends the claim; `payout` is set when the winner picked a destination chain.
+  // Returns true on success. The caller decides when to refetch.
+  async function claimTier(tierIndex: number, payout?: Payout): Promise<boolean> {
+    if (!escrow) return false;
     const amount = formatAmount(escrow.tiers[tierIndex].amount, escrow.asset);
+    const where = payout && payout.chain !== "solana" ? ` on ${CHAINS[payout.chain].name}` : "";
     const isLastUnclaimed = escrow.tiers.filter((tier) => !tier.claimed).length === 1;
     try {
-      const signature = await claim(tierIndex);
-      toastTxSuccess(`Claimed ${amount}`, signature);
-      if (isLastUnclaimed) setClosedMessage(`You claimed ${amount}. That was the last prize, so the bounty is now closed.`);
-      refetch();
+      const signature = await claim(tierIndex, payout);
+      toastTxSuccess(`Claimed ${amount}${where}`, signature);
+      if (isLastUnclaimed) setClosedMessage(`You claimed ${amount}${where}. That was the last prize, so the bounty is now closed.`);
+      return true;
     } catch (err) {
       toastTxError(err);
+      return false;
     }
+  }
+
+  // Multichain assets (USDC) open the claim dialog; others pay the Solana wallet directly
+  async function handleClaim(tierIndex: number) {
+    if (!escrow) return;
+    if (ASSETS[escrow.asset].crossChain) {
+      setClaimDialogTier(tierIndex);
+      return;
+    }
+    if (await claimTier(tierIndex)) refetch();
   }
 
   async function handleRefund() {
@@ -177,6 +196,22 @@ export default function BountyDetail({ address }: Props) {
         onOpenChange={(open) => { if (!open) setVoteTier(null); }}
         onSubmit={handleVote}
       />
+      {publicKey && (
+        <ClaimDialog
+          open={claimDialogTier !== null}
+          amountText={claimDialogTier === null ? "" : formatAmount(escrow.tiers[claimDialogTier].amount, escrow.asset)}
+          walletAddress={publicKey.toBase58()}
+          submitting={pending !== null && pending.startsWith("claim")}
+          onOpenChange={(open) => {
+            // Refresh only after the dialog closes, so its transfer steps can finish showing
+            if (!open) {
+              setClaimDialogTier(null);
+              refetch();
+            }
+          }}
+          onClaim={(payout) => claimTier(claimDialogTier ?? 0, payout)}
+        />
+      )}
       <RefundDialog
         open={refundOpen}
         amountText={formatAmount(unclaimed, escrow.asset)}

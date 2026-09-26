@@ -67,13 +67,13 @@ Available now: `alert`, `badge`, `button`, `card`, `dialog`, `dropdown-menu`, `i
 | `src/constants/assets.ts` | Prize asset allowlist (SOL, USDC, USDT, BONK, JUP) with decimals and mainnet mints, plus `MULTI_ASSET_PREVIEW` (on only in mock mode). See [../multichain/README.md](../multichain/README.md). |
 | `src/constants/chains.ts` | Chains a USDC prize can be paid out on (Solana, Base, Ethereum, Arbitrum), with their Circle CCTP domain numbers |
 | `src/constants/program.ts` | Program ID, explorer URLs, and the program's limits (`MAX_JUDGES`, `MAX_TIERS`, `MAX_TITLE_BYTES`, `MAX_METADATA_URI_BYTES`) |
-| `src/utils/address.ts` | `parseAddress(text)`: a `PublicKey`, or `null` if the text isn't a valid address. `safeDetailsUrl(uri)`: only `http(s)` and `ipfs://` links (turned into a gateway URL); anything else, such as `javascript:`, is dropped. |
+| `src/utils/address.ts` | `parseAddress(text)`: a `PublicKey`, or `null` if the text isn't a valid address. `safeDetailsUrl(uri)`: only `http(s)` and `ipfs://` links (turned into a gateway URL); anything else, such as `javascript:`, is dropped. `isEvmAddress(text)`: `0x` plus 40 hex characters. |
 | `src/utils/tasks.ts` | `getViewerTasks(escrows, wallet)`: prizes to vote on, prizes to claim, bounties to refund, plus the bounties you organize and judge |
 | `src/utils/txErrors.ts` | `friendlyTxError(err)`: program errors (`Error Code: X`) and wallet errors as short plain-English text for toasts. Add new program errors here. |
 | `src/utils/anchor-setup.ts` | `getProgram` (signs with the wallet), `getReadOnlyProgram` (logged-out reads), `toEscrowAccount` (decoded account -> `EscrowAccount`), `findNextNonce` |
 | `src/utils/txToast.ts` | `toastTxSuccess(message, signature)` (with a "View" explorer action, or a "Mock transaction" note) and `toastTxError(err)` |
 | `src/types/news.ts`, `src/utils/news.ts`, `src/hooks/useNews.ts` | Landing-page news feed:<br>• `getNews()` is the one place the items come from (sample items from `src/mocks/news.ts` for now)<br>• `NEWS_IS_SAMPLE` shows a "Sample" badge<br>• `useNews()` adds loading and error state |
-| `src/hooks/useBountyActions.ts` | `vote(tier, candidate)`, `claim(tier)`, `refund()` for one bounty, plus `pending` (`"vote-0"`, `"claim-1"`, `"refund"`). Uses the mock actions in mock mode. |
+| `src/hooks/useBountyActions.ts` | `vote(tier, candidate)`, `claim(tier, payout?)` (payout chain only matters in mock mode), `refund()` for one bounty, plus `pending` (`"vote-0"`, `"claim-1"`, `"refund"`). Uses the mock actions in mock mode. |
 | `src/hooks/` | Data hooks: `useAllEscrows` (every bounty), `useEscrow(address)` (one bounty; `null` if missing or closed), `useCreateBounty`, `useBalance`, `useProgram`. The read hooks work without a wallet. |
 | `src/mocks/` | Mock mode data (see below) |
 
