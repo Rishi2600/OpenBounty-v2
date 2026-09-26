@@ -64,6 +64,16 @@ Page layout: `app/layout.tsx` wraps every page in `<main className="mx-auto w-fu
 | `BountyDetailSkeleton` | Loading placeholder for the detail page | none |
 | `RoleBadges` | "You organize", "You judge", "You won". Renders nothing when you have no role. | `roles` (from `getViewerRoles`) |
 
+## submissions/
+
+Bounty entries, mock mode only (`SUBMISSIONS_PREVIEW`). See [../features/judging.md](../features/judging.md).
+
+| Component | What it shows | Props |
+|---|---|---|
+| `SubmissionGallery` | The "Submissions" tab:<br>• the entry count and a "Submit entry" button for eligible wallets (otherwise a note saying why they can't enter)<br>• the grid of entries, with loading, empty and error states<br><br>It owns the submit dialog and its toasts. | `escrow`, `viewer`, `submissions`, `loading`, `error`, `submitting`, `onRetry`, `onSubmitEntry`, `onSubmitted` |
+| `SubmissionCard` | Entry name, submitter (`Address`), time, description, "View project" (safe links only), and "Won 1st prize" or "2 votes · 1st prize" badges | `submission`, `escrow`, `viewer` |
+| `SubmitEntryDialog` | Name, link and optional description (with a character count). Validates with `validateSubmission`. | `open`, `submitting`, `onOpenChange`, `onSubmit(values)` |
+
 ## me/
 
 | Component | What it shows | Props |
