@@ -3,6 +3,7 @@
 // "Error Code: X" messages, so the UI's error handling works in mock mode too.
 
 import { PublicKey } from "@solana/web3.js";
+import type { Payout } from "@/types/escrow";
 import { findMockEscrow, removeMockEscrow } from "./store";
 
 function fail(code: string): never {
@@ -36,7 +37,8 @@ export function mockVote(address: PublicKey, tierIndex: number, judge: PublicKey
   if (count >= escrow.threshold) tier.winner = candidate;
 }
 
-export function mockClaim(address: PublicKey, tierIndex: number, claimer: PublicKey): void {
+// `payout` is where the winner chose to receive it (multichain preview); default is their Solana wallet
+export function mockClaim(address: PublicKey, tierIndex: number, claimer: PublicKey, payout?: Payout): void {
   const escrow = getEscrow(address);
   const tier = escrow.tiers[tierIndex];
   if (!tier) fail("InvalidTier");
@@ -45,6 +47,7 @@ export function mockClaim(address: PublicKey, tierIndex: number, claimer: Public
   if (!tier.winner.equals(claimer)) fail("Unauthorized");
 
   tier.claimed = true;
+  tier.payout = payout ?? { chain: "solana", address: claimer.toBase58() };
 
   // The program closes the escrow once every tier is claimed
   if (escrow.tiers.every((t) => t.claimed)) removeMockEscrow(address);

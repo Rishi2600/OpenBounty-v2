@@ -105,14 +105,14 @@ Turned on by `NEXT_PUBLIC_MOCK=1`, which `yarn dev:mock` sets. A banner at the t
 
 The samples are built around the connected wallet ("you"), so every role can be tested with one wallet:
 
-| Bounty | Your role | State |
-|---|---|---|
-| Build a Solana Wallet Tracker | Organizer | Active, no votes yet |
-| Design System for a DeFi Dashboard | Judge (not voted) | Voting in progress: tier 1 at 2 of 3 votes |
-| Smart Contract Audit Challenge | Winner of tier 2 | Tier 1 claimed, tier 2 ready to claim |
-| Anchor Tutorial Series | Organizer | Expired with an unclaimed tier, so refund is possible |
-| Community Meme Contest | None | Ends in about 2 hours |
-| Hackathon: Best Mobile dApp | None | Expired; a winner was picked but never claimed |
+| Bounty | Asset | Your role | State |
+|---|---|---|---|
+| Build a Solana Wallet Tracker | SOL | Organizer | Active, no votes yet |
+| Design System for a DeFi Dashboard | USDC | Judge (not voted) | Voting in progress: tier 1 at 2 of 3 votes |
+| Smart Contract Audit Challenge | USDC | Winner of tier 2 | Tier 1 claimed and paid out on Base; tier 2 ready to claim on any supported chain |
+| Anchor Tutorial Series | SOL | Organizer | Expired with an unclaimed tier, so refund is possible |
+| Community Meme Contest | BONK | None | Ends in about 2 hours |
+| Hackathon: Best Mobile dApp | USDT | None | Expired; a winner was picked but never claimed |
 
 Other behavior:
 - **Changes stick until reload:** created bounties, votes, claims and refunds all stay in memory. A reload resets everything to the samples.
