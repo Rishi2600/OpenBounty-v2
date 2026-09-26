@@ -24,10 +24,12 @@ Open http://localhost:3000. Other commands: `yarn build`, `yarn start`, `yarn li
 | `/bounty/[address]` | One bounty: judges vote, winners claim, the organizer refunds |
 | `/create` | Create a bounty |
 | `/me` | Your bounties: votes, claims and refunds to do, plus what you organize and judge |
+| `/markets` | Live prices and charts for the prize tokens (plus BTC and ETH), and a prize converter |
 
 ## Where things are
 
 - **UI docs:** [`docs/ui/`](docs/ui/README.md) covers styling, the code map, mock mode, the component guide and progress.
+- **Claim in any token and the Markets page (preview):** [`docs/features/claim-in-any-token.md`](docs/features/claim-in-any-token.md)
 - **Entries, judging board and scorecards (preview):** [`docs/features/judging.md`](docs/features/judging.md)
 - **Multi-asset and multichain prizes (preview):** [`docs/multichain/`](docs/multichain/README.md) covers what it does, how to use it, the benefits, and what's needed to make it real.
 - **Design rules:** [`../.claude/skills/openbounty-ui/SKILL.md`](../.claude/skills/openbounty-ui/SKILL.md) covers colors, type, patterns and code rules.

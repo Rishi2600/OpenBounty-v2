@@ -182,6 +182,11 @@ To add a sample, add another `escrow({...})` entry in `buildMockEscrows`.
   - **Judges** score entries privately and vote by dragging an entry onto a prize (or with a menu).
   - **Docs:** [../features/judging.md](../features/judging.md).
 
+- **Claim in any token and Markets** (branch `feat/claim-in-any-token`):
+  - **Winners** pick what to receive their prize in, with a live Jupiter quote. The swap is simulated in mock mode.
+  - **New `/markets` page:** live CoinGecko prices, hand-drawn SVG charts and a prize converter.
+  - **Docs:** [../features/claim-in-any-token.md](../features/claim-in-any-token.md).
+
 ## How the refactor was checked
 
 In mock mode, with a headless browser, at 1440px and 390px:
