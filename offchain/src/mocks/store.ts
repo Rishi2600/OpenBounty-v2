@@ -1,13 +1,14 @@
 import { PublicKey } from "@solana/web3.js";
 import { BN } from "@coral-xyz/anchor";
 import type { EscrowAccount } from "@/types/escrow";
+import type { AssetId } from "@/constants/assets";
 import { deriveEscrowPda } from "@/utils/pda";
 import { buildMockEscrows } from "./fixtures";
 
 // Mock mode: run `yarn dev:mock` (sets NEXT_PUBLIC_MOCK=1).
 // Hooks then read and write the in-memory data below instead of devnet,
 // and no transactions are sent. Everything resets on page reload.
-export const USE_MOCKS = process.env.NEXT_PUBLIC_MOCK === "1";
+export { USE_MOCKS } from "./config";
 
 // Samples are built around the connected wallet and rebuilt if it changes
 let samples: EscrowAccount[] = [];
@@ -48,6 +49,7 @@ export function removeMockEscrow(address: PublicKey): void {
 }
 
 export interface NewMockEscrow {
+  asset: AssetId;
   title: string;
   metadataUri: string;
   organizer: PublicKey;
@@ -70,6 +72,7 @@ export function addMockEscrow(input: NewMockEscrow): PublicKey {
     title:       input.title,
     metadataUri: input.metadataUri,
     organizer:   input.organizer,
+    asset:       input.asset,
     nonce,
     judges:      input.judges,
     threshold:   input.threshold,

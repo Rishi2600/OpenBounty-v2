@@ -1,16 +1,27 @@
-// Display helpers: SOL amounts, deadlines and addresses.
+// Display helpers: token amounts, deadlines and addresses.
 
 import { BN } from "@coral-xyz/anchor";
 import type { PrizeTier } from "@/types/escrow";
+import { ASSETS, AssetId } from "@/constants/assets";
 
-const LAMPORTS_PER_SOL = 1_000_000_000;
+// Base units -> display text, using the asset's decimals:
+// (12500000000, "SOL") -> "12.5 SOL", (2500000000, "USDC") -> "2,500 USDC"
+export function formatAmount(amount: BN | number, assetId: AssetId): string {
+  const asset = ASSETS[assetId];
+  const raw = typeof amount === "number" ? amount : Number(amount.toString());
+  const value = raw / 10 ** asset.decimals;
+  const text = value.toLocaleString(undefined, { maximumFractionDigits: value < 1 ? 4 : 2 });
+  return `${text} ${asset.id}`;
+}
 
-// 50000000000 -> "50 SOL", 12500000000 -> "12.5 SOL"
+// Lamports -> "12.5 SOL"
 export function formatSol(lamports: BN | number): string {
-  const raw = typeof lamports === "number" ? lamports : lamports.toNumber();
-  const sol = raw / LAMPORTS_PER_SOL;
-  const text = sol % 1 === 0 ? sol.toFixed(0) : sol.toFixed(2).replace(/\.?0+$/, "");
-  return `${text} SOL`;
+  return formatAmount(lamports, "SOL");
+}
+
+// Typed amount ("2.5") -> base units of the asset (2500000 for USDC)
+export function toBaseUnits(amountText: string, assetId: AssetId): BN {
+  return new BN(Math.round(Number(amountText) * 10 ** ASSETS[assetId].decimals));
 }
 
 // Sum of every tier's prize

@@ -3,6 +3,8 @@
 
 import { BN } from "@coral-xyz/anchor";
 import { PublicKey } from "@solana/web3.js";
+import type { AssetId } from "@/constants/assets";
+import type { ChainId } from "@/constants/chains";
 
 // One judge's vote on a prize tier
 export interface TierVote {
@@ -10,12 +12,19 @@ export interface TierVote {
   candidate: PublicKey;
 }
 
+// Where a claimed prize was sent (multichain preview only)
+export interface Payout {
+  chain: ChainId;
+  address: string;
+}
+
 // One prize. `winner` is set once a candidate reaches the vote threshold.
 export interface PrizeTier {
-  amount: BN;               // lamports
+  amount: BN;               // base units of the bounty's asset (lamports for SOL)
   winner: PublicKey | null;
   claimed: boolean;
   votes: TierVote[];
+  payout?: Payout;
 }
 
 export interface EscrowAccount {
@@ -23,6 +32,7 @@ export interface EscrowAccount {
   title: string;
   metadataUri: string;
   organizer: PublicKey;
+  asset: AssetId;           // what the prizes are paid in; always "SOL" on-chain today
   nonce: number;            // lets one organizer run many bounties
   judges: PublicKey[];
   threshold: number;        // votes needed to pick a winner

@@ -44,6 +44,7 @@ export function toEscrowAccount(
     title:       account.title,
     metadataUri: account.metadataUri,
     organizer:   account.organizer,
+    asset:       "SOL", // the deployed program only holds SOL
     nonce:       account.nonce,
     judges:      account.judges,
     threshold:   account.threshold,

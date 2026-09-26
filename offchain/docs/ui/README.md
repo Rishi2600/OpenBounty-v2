@@ -61,9 +61,11 @@ Available now: `alert`, `badge`, `button`, `card`, `dialog`, `dropdown-menu`, `i
 | Path | What's there |
 |---|---|
 | `src/types/escrow.ts` | `EscrowAccount`, `PrizeTier`, `TierVote`, the escrow shape every component uses |
-| `src/utils/format.ts` | `formatSol`, `formatDeadline`, `formatTimeAgo`, `formatDate`, `placeLabel` ("1st prize"), `truncateAddress`, `totalLocked`, `unclaimedTotal` |
+| `src/utils/format.ts` | `formatAmount(amount, asset)` (uses the asset's decimals), `formatSol`, `toBaseUnits(text, asset)`, `formatDeadline`, `formatTimeAgo`, `formatDate`, `placeLabel` ("1st prize"), `truncateAddress`, `totalLocked`, `unclaimedTotal` |
 | `src/utils/status.ts` | `getBountyStatus` (open / ending-soon / ended), `getTierProgress` (awaiting / voting / winner / claimed), `getCandidateTallies` (votes per candidate), `countDecidedTiers` |
 | `src/utils/roles.ts` | `getViewerRoles(escrow, wallet)`: is the wallet the organizer, a judge, or a winner (and of which tiers) |
+| `src/constants/assets.ts` | Prize asset allowlist (SOL, USDC, USDT, BONK, JUP) with decimals and mainnet mints, plus `MULTI_ASSET_PREVIEW` (on only in mock mode). See [../multichain/README.md](../multichain/README.md). |
+| `src/constants/chains.ts` | Chains a USDC prize can be paid out on (Solana, Base, Ethereum, Arbitrum), with their Circle CCTP domain numbers |
 | `src/constants/program.ts` | Program ID, explorer URLs, and the program's limits (`MAX_JUDGES`, `MAX_TIERS`, `MAX_TITLE_BYTES`, `MAX_METADATA_URI_BYTES`) |
 | `src/utils/address.ts` | `parseAddress(text)`: a `PublicKey`, or `null` if the text isn't a valid address. `safeDetailsUrl(uri)`: only `http(s)` and `ipfs://` links (turned into a gateway URL); anything else, such as `javascript:`, is dropped. |
 | `src/utils/tasks.ts` | `getViewerTasks(escrows, wallet)`: prizes to vote on, prizes to claim, bounties to refund, plus the bounties you organize and judge |
@@ -96,7 +98,8 @@ In mock mode a throwaway **Burner Wallet** connects automatically, so no wallet 
 Turned on by `NEXT_PUBLIC_MOCK=1`, which `yarn dev:mock` sets. A banner at the top of every page shows when it's on.
 
 - **Samples:** `src/mocks/fixtures.ts`
-- **Flag, in-memory state, fake tx helpers:** `src/mocks/store.ts`
+- **Flag:** `src/mocks/config.ts` (`USE_MOCKS`, also re-exported from `store.ts`)
+- **In-memory state, fake tx helpers:** `src/mocks/store.ts`
 - **Mock vote, claim and refund:** `src/mocks/actions.ts`. They run the same checks as the program and throw the same `Error Code: X` errors, so error toasts can be tested too.
 - **Hooks that switch to mock data:** `useAllEscrows`, `useEscrow`, `useCreateBounty`
 

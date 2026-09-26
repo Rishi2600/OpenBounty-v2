@@ -132,6 +132,7 @@ export function useCreateBounty() {
       if (USE_MOCKS) {
         await mockDelay();
         const address = addMockEscrow({
+          asset: "SOL",
           title, metadataUri, organizer: publicKey, judges,
           threshold: values.threshold, tierAmounts, deadline,
         });

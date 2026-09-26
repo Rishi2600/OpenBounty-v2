@@ -55,6 +55,7 @@ function escrow(input: MockInput): EscrowAccount {
     title:       input.title,
     metadataUri: "",
     organizer:   input.organizer,
+    asset:       "SOL",
     nonce:       input.nonce,
     judges:      input.judges,
     threshold:   input.threshold,
