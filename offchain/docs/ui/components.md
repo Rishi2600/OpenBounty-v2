@@ -8,7 +8,7 @@ To see everything in one place, run `yarn dev:mock` and open **http://localhost:
 
 | Component | What it shows |
 |---|---|
-| `ExploreBounties` | The whole home page:<br>• status filter with counts<br>• sorted grid (running bounties with the nearest deadline first, then ended ones)<br>• loading, empty, filtered-empty and error states |
+| `ExploreBounties` | The whole home page:<br>• status filter with counts<br>• in mock mode, a prize-asset filter too (All assets, SOL, USDC, ...)<br>• sorted grid (running bounties with the nearest deadline first, then ended ones)<br>• loading, empty, filtered-empty and error states |
 
 ## news/
 
@@ -59,7 +59,7 @@ Page layout: `app/layout.tsx` wraps every page in `<main className="mx-auto w-fu
 | `VoteDialog` | Lets a judge vote on one prize: current candidates as pick buttons (with vote counts) plus an address field. Says votes can't be changed. | `open`, `prizeLabel`, `threshold`, `tallies`, `submitting`, `onOpenChange`, `onSubmit(candidate)` |
 | `RefundDialog` | Confirms a refund and warns that the bounty closes and unclaimed winners lose their prize | `open`, `amountText`, `submitting`, `onOpenChange`, `onConfirm` |
 | `BountyDetail` | The whole `/bounty/[address]` page:<br>• loading, error, not found, and a "Bounty closed" state after you close it<br>• header with status and your roles<br>• a "connect wallet" hint when logged out<br>• a refund panel for the organizer after the deadline<br>• tier cards, the details panel, and the vote and refund dialogs<br><br>Every action ends in a success or error toast and a refetch. | `address` |
-| `BountyDetailsPanel` | Side panel on the detail page: prize pool and amount still locked, deadline (relative and full date), judges with "N of M votes to win", organizer, escrow account, and the organizer's details link | `escrow`, `viewer` |
+| `BountyDetailsPanel` | Side panel on the detail page: prize pool and amount still locked, deadline (relative and full date), prize asset (for USDC, the chains winners can be paid on), judges with "N of M votes to win", organizer, escrow account, and the organizer's details link | `escrow`, `viewer` |
 | `BountyDetailSkeleton` | Loading placeholder for the detail page | none |
 | `RoleBadges` | "You organize", "You judge", "You won". Renders nothing when you have no role. | `roles` (from `getViewerRoles`) |
 

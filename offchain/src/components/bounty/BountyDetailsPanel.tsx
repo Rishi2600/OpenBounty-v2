@@ -9,6 +9,8 @@ import TokenAmount from "@/components/common/TokenAmount";
 import type { EscrowAccount } from "@/types/escrow";
 import { formatAmount, formatDate, formatDeadline, totalLocked, unclaimedTotal } from "@/utils/format";
 import { safeDetailsUrl } from "@/utils/address";
+import { ASSETS } from "@/constants/assets";
+import { CHAINS, CHAIN_IDS } from "@/constants/chains";
 
 const LABEL = "text-xs font-semibold uppercase tracking-wider text-muted-foreground";
 
@@ -19,6 +21,9 @@ interface Props {
 
 export default function BountyDetailsPanel({ escrow, viewer }: Props) {
   const detailsUrl = safeDetailsUrl(escrow.metadataUri);
+  const asset = ASSETS[escrow.asset];
+  const chainNames = CHAIN_IDS.map((id) => CHAINS[id].name);
+  const payoutChains = `${chainNames.slice(0, -1).join(", ")} or ${chainNames[chainNames.length - 1]}`;
   const isYou = (key: PublicKey) => viewer !== null && key.equals(viewer);
 
   return (
@@ -35,6 +40,16 @@ export default function BountyDetailsPanel({ escrow, viewer }: Props) {
         <span className={LABEL}>Deadline</span>
         <span>{formatDeadline(escrow.deadline)}</span>
         <span className="text-sm text-muted-foreground">{formatDate(escrow.deadline)}</span>
+      </div>
+
+      <div className="flex flex-col gap-1">
+        <span className={LABEL}>Prize asset</span>
+        <span>{asset.name} ({asset.id})</span>
+        {asset.crossChain && (
+          <span className="text-sm text-muted-foreground">
+            Winners can be paid on {payoutChains}.
+          </span>
+        )}
       </div>
 
       <Separator />

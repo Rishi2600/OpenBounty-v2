@@ -18,6 +18,7 @@ import { useAllEscrows } from "@/hooks/useAllEscrows";
 import { useProgram } from "@/hooks/useProgram";
 import type { EscrowAccount } from "@/types/escrow";
 import { BountyStatus, getBountyStatus } from "@/utils/status";
+import { ASSET_IDS, AssetId, MULTI_ASSET_PREVIEW } from "@/constants/assets";
 
 type Filter = "all" | BountyStatus;
 
@@ -52,11 +53,30 @@ export default function ExploreBounties() {
   const program = useProgram();
   const { escrows, loading, error, refetch } = useAllEscrows(program);
   const [filter, setFilter] = useState<Filter>("all");
+  const [assetFilter, setAssetFilter] = useState<"all" | AssetId>("all");
 
   const sorted = sortForExplore(escrows);
-  const visible = filter === "all"
+  const byStatus = filter === "all"
     ? sorted
     : sorted.filter((e) => getBountyStatus(e.deadline) === filter);
+  const visible = assetFilter === "all"
+    ? byStatus
+    : byStatus.filter((e) => e.asset === assetFilter);
+
+  // Asset filter only exists in the multi-asset preview (mock mode)
+  const assetOptions = [
+    { value: "all", label: "All assets", count: loading ? undefined : escrows.length },
+    ...ASSET_IDS.map((id) => ({
+      value: id,
+      label: id,
+      count: loading ? undefined : escrows.filter((e) => e.asset === id).length,
+    })),
+  ];
+
+  function showAll() {
+    setFilter("all");
+    setAssetFilter("all");
+  }
 
   const filterOptions = FILTERS.map((value) => ({
     value,
@@ -95,9 +115,9 @@ export default function ExploreBounties() {
       return (
         <EmptyState
           icon={SearchX}
-          title={`No ${FILTER_LABELS[filter].toLowerCase()} bounties`}
+          title="No bounties match these filters"
           description="Try another filter."
-          action={<Button variant="outline" onClick={() => setFilter("all")}>Show all</Button>}
+          action={<Button variant="outline" onClick={showAll}>Show all</Button>}
         />
       );
     }
@@ -116,12 +136,22 @@ export default function ExploreBounties() {
         title="Explore bounties"
         description="Prize pools locked on Solana. Judges vote on winners, winners claim directly."
       />
-      <FilterButtons
-        label="Filter by status"
-        options={filterOptions}
-        value={filter}
-        onChange={(value) => setFilter(value as Filter)}
-      />
+      <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+        <FilterButtons
+          label="Filter by status"
+          options={filterOptions}
+          value={filter}
+          onChange={(value) => setFilter(value as Filter)}
+        />
+        {MULTI_ASSET_PREVIEW && (
+          <FilterButtons
+            label="Filter by prize asset"
+            options={assetOptions}
+            value={assetFilter}
+            onChange={(value) => setAssetFilter(value as "all" | AssetId)}
+          />
+        )}
+      </div>
       {renderList()}
     </div>
   );
