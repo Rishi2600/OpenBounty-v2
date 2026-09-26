@@ -23,6 +23,14 @@ export function formatUsd(value: number): string {
   return `$${value.toLocaleString(undefined, { maximumSignificantDigits: 2 })}`;
 }
 
+// How fresh something is: "just now", "12s ago", "3 min ago"
+export function formatUpdatedAgo(date: Date, now: number): string {
+  const seconds = Math.max(0, Math.floor((now - date.getTime()) / 1000));
+  if (seconds < 5) return "just now";
+  if (seconds < 60) return `${seconds}s ago`;
+  return `${Math.floor(seconds / 60)} min ago`;
+}
+
 // Signed percent: "+2.26%", "-0.63%", "0.00%"
 export function formatPercent(value: number): string {
   const sign = value > 0 ? "+" : "";
