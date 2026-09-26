@@ -4,7 +4,9 @@
 
 import { PublicKey } from "@solana/web3.js";
 import type { Payout } from "@/types/escrow";
-import { findMockEscrow, removeMockEscrow } from "./store";
+import { addMockSubmission, findMockEscrow, getMockSubmissions, removeMockEscrow } from "./store";
+import type { Submission } from "@/types/submission";
+import type { SubmissionValues } from "@/utils/submissions";
 
 function fail(code: string): never {
   throw new Error(`Error Code: ${code}.`);
@@ -61,4 +63,26 @@ export function mockRefund(address: PublicKey, organizer: PublicKey): void {
 
   // Refund pays out every unclaimed tier and closes the escrow
   removeMockEscrow(address);
+}
+
+// Mock of a future submit_entry instruction. Error codes are the ones proposed in
+// docs/features/judging.md for that instruction.
+export function mockSubmit(address: PublicKey, submitter: PublicKey, values: SubmissionValues): Submission {
+  const escrow = getEscrow(address);
+  if (nowSeconds() > escrow.deadline.toNumber()) fail("SubmissionsClosed");
+  if (escrow.organizer.equals(submitter)) fail("OrganizerCannotSubmit");
+  if (escrow.judges.some((judge) => judge.equals(submitter))) fail("JudgeCannotSubmit");
+  if (getMockSubmissions(submitter, address).some((s) => s.submitter.equals(submitter))) fail("AlreadySubmitted");
+
+  const submission: Submission = {
+    id: `entry-${Date.now()}`,
+    bounty: address,
+    submitter,
+    title: values.title.trim(),
+    url: values.url.trim(),
+    description: values.description.trim(),
+    submittedAt: new Date(),
+  };
+  addMockSubmission(submission);
+  return submission;
 }

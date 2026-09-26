@@ -20,6 +20,11 @@ const PROGRAM_ERRORS: Record<string, string> = {
   DeadlineNotPassed:    "Refunds open after the deadline.",
   NoUnclaimedFunds:     "There's nothing left to refund.",
   AccountNotInitialized: "This bounty is closed.",
+  // Proposed submit_entry errors (entries are a mock-mode preview for now)
+  SubmissionsClosed:     "This bounty has ended, so entries are closed.",
+  OrganizerCannotSubmit: "Organizers can't enter their own bounty.",
+  JudgeCannotSubmit:     "Judges can't enter a bounty they judge.",
+  AlreadySubmitted:      "You've already submitted an entry to this bounty.",
 };
 
 // Wallet and network errors, matched by a piece of their message

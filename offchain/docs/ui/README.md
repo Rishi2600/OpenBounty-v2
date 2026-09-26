@@ -75,6 +75,7 @@ Available now: `alert`, `badge`, `button`, `card`, `dialog`, `dropdown-menu`, `i
 | `src/utils/txToast.ts` | `toastTxSuccess(message, signature)` (with a "View" explorer action, or a "Mock transaction" note) and `toastTxError(err)` |
 | `src/types/news.ts`, `src/utils/news.ts`, `src/hooks/useNews.ts` | Landing-page news feed:<br>• `getNews()` is the one place the items come from (sample items from `src/mocks/news.ts` for now)<br>• `NEWS_IS_SAMPLE` shows a "Sample" badge<br>• `useNews()` adds loading and error state |
 | `src/hooks/useBountyActions.ts` | `vote(tier, candidate)`, `claim(tier, payout?)` (payout chain only matters in mock mode), `refund()` for one bounty, plus `pending` (`"vote-0"`, `"claim-1"`, `"refund"`). Uses the mock actions in mock mode. |
+| `src/hooks/useSubmissions.ts` | Entries for one bounty (`submissions`, `loading`, `error`, `refetch`) plus `submitEntry(values)`. Mock mode only; real mode returns no entries. |
 | `src/hooks/` | Data hooks: `useAllEscrows` (every bounty), `useEscrow(address)` (one bounty; `null` if missing or closed), `useCreateBounty`, `useBalance`, `useProgram`. The read hooks work without a wallet. |
 | `src/mocks/` | Mock mode data (see below) |
 
@@ -102,7 +103,7 @@ Turned on by `NEXT_PUBLIC_MOCK=1`, which `yarn dev:mock` sets. A banner at the t
 - **Flag:** `src/mocks/config.ts` (`USE_MOCKS`, also re-exported from `store.ts`)
 - **In-memory state, fake tx helpers:** `src/mocks/store.ts` (bounties and entries)
 - **Sample entries:** `src/mocks/submissions.ts`, using the same people as the sample bounties
-- **Mock vote, claim and refund:** `src/mocks/actions.ts`. They run the same checks as the program and throw the same `Error Code: X` errors, so error toasts can be tested too.
+- **Mock vote, claim, refund and submit entry:** `src/mocks/actions.ts`. They run the same checks as the program and throw the same `Error Code: X` errors, so error toasts can be tested too.
 - **Hooks that switch to mock data:** `useAllEscrows`, `useEscrow`, `useCreateBounty`
 
 The samples are built around the connected wallet ("you"), so every role can be tested with one wallet:
