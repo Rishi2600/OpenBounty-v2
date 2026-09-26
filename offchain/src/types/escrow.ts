@@ -12,10 +12,12 @@ export interface TierVote {
   candidate: PublicKey;
 }
 
-// Where a claimed prize was sent (multichain preview only)
+// Where a claimed prize was sent, and in which token (multichain / any-token preview only)
 export interface Payout {
   chain: ChainId;
   address: string;
+  asset?: AssetId;          // token received when the prize was swapped
+  amount?: string;          // amount received, in base units of `asset`
 }
 
 // One prize. `winner` is set once a candidate reaches the vote threshold.

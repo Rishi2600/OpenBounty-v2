@@ -10,6 +10,17 @@ To see everything in one place, run `yarn dev:mock` and open **http://localhost:
 |---|---|
 | `ExploreBounties` | The whole home page:<br>• status filter with counts<br>• in mock mode, a prize-asset filter too (All assets, SOL, USDC, ...)<br>• sorted grid (running bounties with the nearest deadline first, then ended ones)<br>• loading, empty, filtered-empty and error states |
 
+## claim/
+
+The pieces of the claim window. See [../features/claim-in-any-token.md](../features/claim-in-any-token.md).
+
+| Component | What it shows | Props |
+|---|---|---|
+| `ReceiveAsPicker` | "Receive as": each claimable token as a radio card, marked "Keep" for the prize token and "Swap" for the others | `prizeAsset`, `value`, `onChange` |
+| `ReceiveOnPicker` | "Receive on": Solana (your wallet), Base, Ethereum or Arbitrum (via Circle CCTP). Only shown when receiving USDC. | `value`, `onChange` |
+| `SwapQuoteBox` | The live Jupiter quote:<br>• "You'll receive about", with a dollar estimate<br>• the minimum received, and price impact (red above 1%, with a warning)<br>• the target token's 24h sparkline and change, with "See full chart" (opens Markets in a new tab)<br>• a note explaining quotes | `to`, `quote`, `loading`, `error` |
+| `TransferSteps` | Progress list (done, in progress, waiting) for claims that swap or move chains. Simulated in the preview. | `steps`, `done`, `running` |
+
 ## markets/
 
 Charts are hand-drawn SVG (no chart library, which keeps pages light) and follow the dataviz rules:
