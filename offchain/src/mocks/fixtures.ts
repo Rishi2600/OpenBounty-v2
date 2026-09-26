@@ -16,7 +16,7 @@ import { toBaseUnits } from "@/utils/format";
 const DAY = 86_400;
 
 // Stable fake address. Only used in memory, never touches the chain.
-function mockKey(seed: number): PublicKey {
+export function mockKey(seed: number): PublicKey {
   return Keypair.fromSeed(new Uint8Array(32).fill(seed)).publicKey;
 }
 

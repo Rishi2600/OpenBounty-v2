@@ -69,6 +69,7 @@ Available now: `alert`, `badge`, `button`, `card`, `dialog`, `dropdown-menu`, `i
 | `src/constants/program.ts` | Program ID, explorer URLs, and the program's limits (`MAX_JUDGES`, `MAX_TIERS`, `MAX_TITLE_BYTES`, `MAX_METADATA_URI_BYTES`) |
 | `src/utils/address.ts` | `parseAddress(text)`: a `PublicKey`, or `null` if the text isn't a valid address. `safeDetailsUrl(uri)`: only `http(s)` and `ipfs://` links (turned into a gateway URL); anything else, such as `javascript:`, is dropped. `isEvmAddress(text)`: `0x` plus 40 hex characters. |
 | `src/utils/tasks.ts` | `getViewerTasks(escrows, wallet)`: prizes to vote on, prizes to claim, bounties to refund, plus the bounties you organize and judge |
+| `src/types/submission.ts`, `src/constants/submissions.ts`, `src/utils/submissions.ts` | Bounty entries (mock mode only, `SUBMISSIONS_PREVIEW`):<br>• `getSubmitBlock` (who may enter and why not)<br>• `validateSubmission`<br>• `findSubmission`, `votesPerTier`, `wonTiers` (map on-chain votes, which point at wallets, onto entries)<br><br>See [../features/judging.md](../features/judging.md). |
 | `src/utils/txErrors.ts` | `friendlyTxError(err)`: program errors (`Error Code: X`) and wallet errors as short plain-English text for toasts. Add new program errors here. |
 | `src/utils/anchor-setup.ts` | `getProgram` (signs with the wallet), `getReadOnlyProgram` (logged-out reads), `toEscrowAccount` (decoded account -> `EscrowAccount`), `findNextNonce` |
 | `src/utils/txToast.ts` | `toastTxSuccess(message, signature)` (with a "View" explorer action, or a "Mock transaction" note) and `toastTxError(err)` |
@@ -99,7 +100,8 @@ Turned on by `NEXT_PUBLIC_MOCK=1`, which `yarn dev:mock` sets. A banner at the t
 
 - **Samples:** `src/mocks/fixtures.ts`
 - **Flag:** `src/mocks/config.ts` (`USE_MOCKS`, also re-exported from `store.ts`)
-- **In-memory state, fake tx helpers:** `src/mocks/store.ts`
+- **In-memory state, fake tx helpers:** `src/mocks/store.ts` (bounties and entries)
+- **Sample entries:** `src/mocks/submissions.ts`, using the same people as the sample bounties
 - **Mock vote, claim and refund:** `src/mocks/actions.ts`. They run the same checks as the program and throw the same `Error Code: X` errors, so error toasts can be tested too.
 - **Hooks that switch to mock data:** `useAllEscrows`, `useEscrow`, `useCreateBounty`
 

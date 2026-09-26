@@ -4,6 +4,8 @@ import type { EscrowAccount } from "@/types/escrow";
 import type { AssetId } from "@/constants/assets";
 import { deriveEscrowPda } from "@/utils/pda";
 import { buildMockEscrows } from "./fixtures";
+import { buildMockSubmissions } from "./submissions";
+import type { Submission } from "@/types/submission";
 
 // Mock mode: run `yarn dev:mock` (sets NEXT_PUBLIC_MOCK=1).
 // Hooks then read and write the in-memory data below instead of devnet,
@@ -12,7 +14,11 @@ export { USE_MOCKS } from "./config";
 
 // Samples are built around the connected wallet and rebuilt if it changes
 let samples: EscrowAccount[] = [];
+let sampleSubmissions: Submission[] = [];
 let samplesBuiltFor: string | null = null;
+
+// Entries submitted during this session
+const createdSubmissions: Submission[] = [];
 
 // Bounties created during this session
 const created: EscrowAccount[] = [];
@@ -21,6 +27,7 @@ export function getMockEscrows(viewer: PublicKey | null): EscrowAccount[] {
   const key = viewer ? viewer.toBase58() : "logged-out";
   if (samplesBuiltFor !== key) {
     samples = buildMockEscrows(viewer);
+    sampleSubmissions = buildMockSubmissions(viewer);
     samplesBuiltFor = key;
   }
   return [...samples, ...created];
@@ -39,6 +46,18 @@ export function getMockEscrowCopy(viewer: PublicKey | null, address: PublicKey):
     ...escrow,
     tiers: escrow.tiers.map((tier) => ({ ...tier, votes: [...tier.votes] })),
   };
+}
+
+// Entries for one bounty, newest first
+export function getMockSubmissions(viewer: PublicKey | null, bounty: PublicKey): Submission[] {
+  getMockEscrows(viewer); // makes sure the samples exist for this viewer
+  return [...sampleSubmissions, ...createdSubmissions]
+    .filter((s) => s.bounty.equals(bounty))
+    .sort((a, b) => b.submittedAt.getTime() - a.submittedAt.getTime());
+}
+
+export function addMockSubmission(submission: Submission): void {
+  createdSubmissions.push(submission);
 }
 
 // Like the program closing the account after the last claim or a refund
