@@ -20,6 +20,9 @@ Charts are hand-drawn SVG (no chart library, which keeps pages light) and follow
 
 | Component | What it shows | Props |
 |---|---|---|
+| `MarketCard` | A token's name, price, 24h change and sparkline. It's a toggle button (`aria-pressed`) that picks the token shown in the big chart; BTC and ETH are tagged "Reference". | `asset`, `quote`, `selected`, `onSelect` |
+| `MarketChartPanel` | The selected token's name, price and 24h change, the range buttons (1H, 24H, 7D, 30D) in one row above the chart, then `PriceChart` and `PriceSummary` | `asset`, `quote` |
+| `PriceChange` | A signed percent with an up or down arrow, green or red (never color alone) | `percent`, `className?` |
 | `PriceChart` | Price over time for one token.<br>• **Pointer:** crosshair and tooltip<br>• **Keyboard:** Tab in, then ←/→/Home/End; values are announced to screen readers<br>• **End dot:** 8px with a 2px ring<br>• **Loading:** `dimmed` fades the old chart while a new range loads | `points`, `range`, `label`, `dimmed?` |
 | `PriceSummary` | Start, high, low, now and change (signed, colored): the text twin of the chart | `points` |
 | `Sparkline` | Small decorative 7-day trend line (`aria-hidden`); the numbers beside it carry the meaning | `prices`, `className?` |
