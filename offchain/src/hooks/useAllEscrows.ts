@@ -17,8 +17,10 @@ interface UseAllEscrowsResult {
   refetch: () => void;
 }
 
+// `enabled = false` skips loading, e.g. on pages that only need bounties for a connected wallet
 export function useAllEscrows(
-  connectedProgram?: Program<OpenbountyV2> | null
+  connectedProgram?: Program<OpenbountyV2> | null,
+  enabled = true
 ): UseAllEscrowsResult {
   const [escrows, setEscrows] = useState<EscrowAccount[]>([]);
   const [loading, setLoading] = useState(true);
@@ -61,9 +63,9 @@ export function useAllEscrows(
       }
     };
 
-    load();
+    if (enabled) load();
     return () => { cancelled = true; };
-  }, [connectedProgram, tick]);
+  }, [connectedProgram, enabled, tick]);
 
   return { escrows, loading, error, refetch };
 }

@@ -53,6 +53,11 @@ export function formatTotals(items: { amount: BN; asset: AssetId }[]): string {
   return [...totals.entries()].map(([asset, amount]) => formatAmount(amount, asset)).join(" · ");
 }
 
+// Base units -> plain number text for an input: (2500000000, "USDC") -> "2500"
+export function toAmountText(amount: BN, assetId: AssetId): string {
+  return String(Number(amount.toString()) / 10 ** ASSETS[assetId].decimals);
+}
+
 // Typed amount ("2.5") -> base units of the asset (2500000 for USDC)
 export function toBaseUnits(amountText: string, assetId: AssetId): BN {
   return new BN(Math.round(Number(amountText) * 10 ** ASSETS[assetId].decimals));
