@@ -86,8 +86,9 @@ The validation rules and the transaction live in `hooks/useCreateBounty.ts`.
 
 | Component | What it shows | Props |
 |---|---|---|
+| `AssetPicker` | "Prize asset" cards (SOL, USDC, USDT, BONK, JUP), built on native radio buttons. Shown only in mock mode (`MULTI_ASSET_PREVIEW`). | `value`, `onChange` |
 | `JudgesField` | Up to 5 judge address inputs (add and remove), plus the "votes needed" number with a live "out of N judges" hint | `judges`, `threshold`, `judgesError?`, `thresholdError?`, `onJudgesChange`, `onThresholdChange` |
-| `PrizeTiersField` | Up to 4 SOL amounts labelled "1st prize", "2nd prize", ..., plus the live total to lock. Amounts are kept as text so a half-typed "0." works. | `amounts`, `error?`, `onChange` |
+| `PrizeTiersField` | Up to 4 amounts in the chosen asset labelled "1st prize", "2nd prize", ..., plus the live total to lock. Amounts are kept as text so a half-typed "0." works. | `asset`, `amounts`, `error?`, `onChange` |
 | `CreateSuccess` | Confirmation, an explorer link (or "Mock transaction" in mock mode), and "View bounty" / "Create another" | `signature`, `address`, `onCreateAnother` |
 
 Buttons inside the form that don't submit need `type="button"`; a plain `<button>` inside a `<form>` submits it.

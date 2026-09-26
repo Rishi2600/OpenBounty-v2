@@ -15,6 +15,8 @@ import { Separator } from "@/components/ui/separator";
 import FormField, { messageId } from "@/components/common/FormField";
 import JudgesField from "./JudgesField";
 import PrizeTiersField from "./PrizeTiersField";
+import AssetPicker from "./AssetPicker";
+import { AssetId, MULTI_ASSET_PREVIEW } from "@/constants/assets";
 import CreateSuccess from "./CreateSuccess";
 import {
   CreateBountyValues,
@@ -30,6 +32,7 @@ export default function CreateBountyForm() {
   const { setVisible } = useWalletModal();
   const { createBounty, submitting } = useCreateBounty();
 
+  const [asset, setAsset] = useState<AssetId>("SOL");
   const [title, setTitle] = useState("");
   const [metadataUri, setMetadataUri] = useState("");
   const [judges, setJudges] = useState<string[]>([""]);
@@ -41,6 +44,7 @@ export default function CreateBountyForm() {
 
   // Blank rows are ignored, so a spare empty input never blocks submitting
   const values: CreateBountyValues = {
+    asset,
     title,
     metadataUri,
     judges: judges.filter((judge) => judge.trim() !== ""),
@@ -56,6 +60,7 @@ export default function CreateBountyForm() {
     setJudges([""]);
     setThreshold(1);
     setAmounts([""]);
+    setAsset("SOL");
     setDeadline("");
     setTriedSubmit(false);
     setCreated(null);
@@ -142,7 +147,9 @@ export default function CreateBountyForm() {
 
         <Separator />
 
-        <PrizeTiersField amounts={amounts} error={errors.tierAmounts} onChange={setAmounts} />
+        {MULTI_ASSET_PREVIEW && <AssetPicker value={asset} onChange={setAsset} />}
+
+        <PrizeTiersField asset={asset} amounts={amounts} error={errors.tierAmounts} onChange={setAmounts} />
 
         <Separator />
 

@@ -1,21 +1,23 @@
 "use client";
 
-// Prizes part of the create form: 1 to 4 prize amounts in SOL (1st place first)
-// and the total that will be locked.
+// Prizes part of the create form: 1 to 4 prize amounts in the chosen asset
+// (1st place first) and the total that will be locked.
 
 import { Plus, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { MAX_TIERS } from "@/constants/program";
 import { placeLabel } from "@/utils/format";
+import type { AssetId } from "@/constants/assets";
 
 interface Props {
+  asset: AssetId;
   amounts: string[];  // kept as text so half-typed values like "0." still work
   error?: string;
   onChange: (amounts: string[]) => void;
 }
 
-export default function PrizeTiersField({ amounts, error, onChange }: Props) {
+export default function PrizeTiersField({ asset, amounts, error, onChange }: Props) {
   const total = amounts.reduce((sum, amount) => sum + (Number(amount) || 0), 0);
 
   function updateAmount(index: number, value: string) {
@@ -45,12 +47,12 @@ export default function PrizeTiersField({ amounts, error, onChange }: Props) {
               value={amount}
               onChange={(e) => updateAmount(index, e.target.value)}
               placeholder="0.00"
-              aria-label={`${placeLabel(index)} in SOL`}
+              aria-label={`${placeLabel(index)} in ${asset}`}
               aria-invalid={Boolean(error)}
               className="pr-12 tabular-nums"
             />
             <span className="pointer-events-none absolute inset-y-0 right-3 flex items-center text-sm text-muted-foreground">
-              SOL
+              {asset}
             </span>
           </div>
           {amounts.length > 1 && (
@@ -81,7 +83,7 @@ export default function PrizeTiersField({ amounts, error, onChange }: Props) {
         <p className="text-sm text-muted-foreground">
           Total to lock:{" "}
           <span className="font-semibold tabular-nums text-highlight">
-            {Number(total.toFixed(4))} SOL
+            {Number(total.toFixed(4)).toLocaleString()} {asset}
           </span>
         </p>
       </div>

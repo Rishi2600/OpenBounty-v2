@@ -6,10 +6,12 @@
 import { useState } from "react";
 import { useWallet } from "@solana/wallet-adapter-react";
 import { BN } from "@coral-xyz/anchor";
-import { LAMPORTS_PER_SOL, PublicKey, SystemProgram } from "@solana/web3.js";
+import { PublicKey, SystemProgram } from "@solana/web3.js";
 import { useProgram } from "./useProgram";
 import { deriveEscrowAccounts } from "@/utils/pda";
 import { parseAddress } from "@/utils/address";
+import { toBaseUnits } from "@/utils/format";
+import type { AssetId } from "@/constants/assets";
 import { findNextNonce } from "@/utils/anchor-setup";
 import {
   MAX_JUDGES,
@@ -20,11 +22,12 @@ import {
 import { USE_MOCKS, addMockEscrow, mockDelay, mockSignature } from "@/mocks/store";
 
 export interface CreateBountyValues {
+  asset: AssetId;         // prize asset; always "SOL" outside the mock-mode preview
   title: string;
   metadataUri: string;
   judges: string[];       // filled-in addresses only
   threshold: number;
-  tierAmounts: string[];  // SOL amounts as typed, filled-in only
+  tierAmounts: string[];  // amounts as typed (in whole tokens), filled-in only
   deadline: string;       // value of a datetime-local input
 }
 
@@ -42,10 +45,6 @@ export interface CreatedBounty {
 // The program measures strings in bytes, so emoji and accents count for more
 function byteLength(text: string): number {
   return new TextEncoder().encode(text).length;
-}
-
-function toLamports(sol: string): BN {
-  return new BN(Math.round(Number(sol) * LAMPORTS_PER_SOL));
 }
 
 function validateJudges(judges: string[]): string | undefined {
@@ -69,11 +68,11 @@ function validateThreshold(threshold: number, judgeCount: number): string | unde
   return undefined;
 }
 
-function validateAmounts(amounts: string[]): string | undefined {
+function validateAmounts(amounts: string[], asset: AssetId): string | undefined {
   if (amounts.length === 0) return "Add at least one prize.";
   if (amounts.length > MAX_TIERS) return `You can add up to ${MAX_TIERS} prizes.`;
-  const tooSmall = amounts.some((amount) => toLamports(amount).lte(new BN(0)));
-  if (tooSmall) return "Every prize needs an amount above 0 SOL.";
+  const tooSmall = amounts.some((amount) => toBaseUnits(amount, asset).lte(new BN(0)));
+  if (tooSmall) return `Every prize needs an amount above 0 ${asset}.`;
   return undefined;
 }
 
@@ -98,7 +97,7 @@ export function validateForm(values: CreateBountyValues): ValidationErrors {
 
   errors.judges = validateJudges(values.judges);
   errors.threshold = validateThreshold(values.threshold, values.judges.length);
-  errors.tierAmounts = validateAmounts(values.tierAmounts);
+  errors.tierAmounts = validateAmounts(values.tierAmounts, values.asset);
   errors.deadline = validateDeadline(values.deadline);
 
   return errors;
@@ -126,18 +125,21 @@ export function useCreateBounty() {
       const title = values.title.trim();
       const metadataUri = values.metadataUri.trim();
       const judges = values.judges.map((judge) => new PublicKey(judge.trim()));
-      const tierAmounts = values.tierAmounts.map(toLamports);
+      const tierAmounts = values.tierAmounts.map((amount) => toBaseUnits(amount, values.asset));
       const deadline = new BN(Math.floor(new Date(values.deadline).getTime() / 1000));
 
       if (USE_MOCKS) {
         await mockDelay();
         const address = addMockEscrow({
-          asset: "SOL",
+          asset: values.asset,
           title, metadataUri, organizer: publicKey, judges,
           threshold: values.threshold, tierAmounts, deadline,
         });
         return { signature: mockSignature(), address: address.toBase58() };
       }
+
+      // The deployed program only escrows SOL; other assets exist only in the mock preview
+      if (values.asset !== "SOL") throw new Error("Only SOL bounties are supported on-chain.");
 
       const nonce = await findNextNonce(program.provider.connection, publicKey);
       const { escrow, vault } = deriveEscrowAccounts(publicKey, nonce);
