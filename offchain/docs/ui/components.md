@@ -59,7 +59,8 @@ Page layout: `app/layout.tsx` wraps every page in `<main className="mx-auto w-fu
 | `VoteDialog` | Lets a judge vote on one prize. Candidates come from `getVoteCandidates`: every entry by its project name, plus wallets that already have votes. There's also an address field. It says votes can't be changed. | `open`, `prizeLabel`, `threshold`, `candidates`, `submitting`, `onOpenChange`, `onSubmit(candidate)` |
 | `ClaimDialog` | For multichain assets (USDC, mock mode):<br>• the winner picks where to receive: their Solana wallet, or Base, Ethereum or Arbitrum (with a `0x` address, validated)<br>• other chains then show the Circle CCTP steps (simulated in the preview) and a Done button<br><br>The page refreshes only after the dialog closes. | `open`, `amountText`, `walletAddress`, `submitting`, `onOpenChange`, `onClaim(payout)` |
 | `RefundDialog` | Confirms a refund and warns that the bounty closes and unclaimed winners lose their prize | `open`, `amountText`, `submitting`, `onOpenChange`, `onConfirm` |
-| `BountyDetail` | The whole `/bounty/[address]` page:<br>• loading, error, not-found and "Bounty closed" states<br>• `BountyHeader` and `BountyNotices`<br>• in mock mode, tabs for **Prizes** and **Submissions**; otherwise just the prizes<br>• the details panel, and the vote, claim and refund dialogs<br><br>It owns the shared handlers (`castVote`, `claimTier`, `handleRefund`) and refreshes the bounty and its entries together. | `address` |
+| `BountyDetail` | The whole `/bounty/[address]` page:<br>• loading, error, not-found and "Bounty closed" states<br>• `BountyHeader` and `BountyNotices`<br>• in mock mode, `BountyTabs` (Prizes, Submissions, Judging); otherwise just the prizes<br>• the details panel, and the vote, claim and refund dialogs<br><br>It owns the shared handlers (`castVote`, `claimTier`, `handleRefund`) and refreshes the bounty and its entries together. | `address` |
+| `BountyTabs` | Mock-mode tabs: **Prizes**, **Submissions (N)**, and **Judging** for the bounty's judges | `escrow`, `viewer`, `isJudge`, `prizeList`, `entries`, `pending`, `onVote` |
 | `BountyHeader` | Back link, status and role badges, title, "x of y prizes decided · deadline" | `escrow`, `status`, `roles` |
 | `BountyNotices` | "Connect your wallet" card when logged out, and the organizer's refund card after the deadline | `showConnect`, `refundText`, `onConnect`, `onRefund` |
 | `PrizeList` | The stack of `TierCard`s | `escrow`, `viewer`, `isEnded`, `pending`, `onVote`, `onClaim` |
@@ -76,6 +77,19 @@ Bounty entries, mock mode only (`SUBMISSIONS_PREVIEW`). See [../features/judging
 | `SubmissionGallery` | The "Submissions" tab:<br>• the entry count and a "Submit entry" button for eligible wallets (otherwise a note saying why they can't enter)<br>• the grid of entries, with loading, empty and error states<br><br>It owns the submit dialog and its toasts. | `escrow`, `viewer`, `submissions`, `loading`, `error`, `submitting`, `onRetry`, `onSubmitEntry`, `onSubmitted` |
 | `SubmissionCard` | Entry name, submitter (`Address`), time, description, "View project" (safe links only), and "Won 1st prize" or "2 votes · 1st prize" badges | `submission`, `escrow`, `viewer` |
 | `SubmitEntryDialog` | Name, link and optional description (with a character count). Validates with `validateSubmission`. | `open`, `submitting`, `onOpenChange`, `onSubmit(values)` |
+
+## judging/
+
+The "Judging" tab, for the bounty's judges only, in mock mode. See [../features/judging.md](../features/judging.md).
+
+| Component | What it shows | Props |
+|---|---|---|
+| `JudgingBoard` | **Entries** column (sort by Newest or Your score, plus "Compare scores") next to a **Prizes** column. It owns the score, compare and vote-confirm dialogs. | `escrow`, `judge`, `submissions`, `loading`, `pending`, `onVote(tier, candidate)` |
+| `BoardCard` | An entry: name, address, your score badge, vote count, **Score**, and **Vote as...** (a menu of the prizes you can still vote on). Draggable while you can vote; the menu is the keyboard and phone alternative. | `submission`, `escrow`, `score`, `voteTiers`, `onScore`, `onVote` |
+| `PrizeColumn` | A drop target for one prize: amount, status, progress, the voted entries (winner trophy, "your vote"), and a hint. It accepts drops only while you can still vote on it. | `escrow`, `tierIndex`, `submissions`, `judge`, `isEnded`, `onDropEntry` |
+| `VoteConfirmDialog` | "Vote for X as 1st prize?", saying whether this vote picks the winner ("Your vote reaches 3, so it wins...") | `open`, `entryTitle`, `prizeLabel`, `amountText`, `currentVotes`, `threshold`, `submitting`, `onOpenChange`, `onConfirm` |
+| `ScoreDialog` | Rate Innovation, Execution and Impact 1–5 (native radios), plus a note. Render it with `key={entry id}`. | `open`, `entryTitle`, `initial`, `onOpenChange`, `onSave` |
+| `ScoreCompare` | Table of your scores for every entry, best total first (highlighted), with notes | `open`, `submissions`, `scorecard`, `onOpenChange` |
 
 ## me/
 

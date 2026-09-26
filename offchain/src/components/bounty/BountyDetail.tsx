@@ -1,8 +1,8 @@
 "use client";
 
-// The bounty detail page: header, notices, and tabs for Prizes and Submissions (entries,
-// mock mode) next to the details panel. Owns the vote, claim and refund handlers so
-// every tab and dialog shares them.
+// The bounty detail page: header, notices, and (in mock mode) tabs for Prizes,
+// Submissions and Judging, next to the details panel. Owns the vote, claim and refund
+// handlers so every tab and dialog shares them.
 
 import { useState } from "react";
 import Link from "next/link";
@@ -11,14 +11,13 @@ import { useWallet } from "@solana/wallet-adapter-react";
 import { useWalletModal } from "@solana/wallet-adapter-react-ui";
 import { CircleCheck, SearchX } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import EmptyState from "@/components/common/EmptyState";
 import ErrorState from "@/components/common/ErrorState";
-import SubmissionGallery from "@/components/submissions/SubmissionGallery";
 import BountyDetailSkeleton from "./BountyDetailSkeleton";
 import BountyDetailsPanel from "./BountyDetailsPanel";
 import BountyHeader from "./BountyHeader";
 import BountyNotices from "./BountyNotices";
+import BountyTabs from "./BountyTabs";
 import ClaimDialog from "./ClaimDialog";
 import PrizeList from "./PrizeList";
 import RefundDialog from "./RefundDialog";
@@ -88,7 +87,7 @@ export default function BountyDetail({ address }: Props) {
     entries.refetch();
   }
 
-  // Shared by the vote dialog (and the judging board). Returns true on success.
+  // Shared by the vote dialog and the judging board. Returns true on success.
   async function castVote(tierIndex: number, candidate: PublicKey): Promise<boolean> {
     try {
       const signature = await vote(tierIndex, candidate);
@@ -158,7 +157,6 @@ export default function BountyDetail({ address }: Props) {
       onClaim={handleClaim}
     />
   );
-  const entryCount = entries.loading ? "" : ` (${entries.submissions.length})`;
 
   return (
     <div className="flex flex-col gap-8">
@@ -172,26 +170,15 @@ export default function BountyDetail({ address }: Props) {
 
       <div className="grid gap-6 lg:grid-cols-[1fr_20rem] lg:items-start">
         {SUBMISSIONS_PREVIEW && (
-          <Tabs defaultValue="prizes" className="gap-4">
-            <TabsList>
-              <TabsTrigger value="prizes">Prizes</TabsTrigger>
-              <TabsTrigger value="submissions">Submissions{entryCount}</TabsTrigger>
-            </TabsList>
-            <TabsContent value="prizes">{prizeList}</TabsContent>
-            <TabsContent value="submissions">
-              <SubmissionGallery
-                escrow={escrow}
-                viewer={publicKey}
-                submissions={entries.submissions}
-                loading={entries.loading}
-                error={entries.error}
-                submitting={entries.submitting}
-                onRetry={entries.refetch}
-                onSubmitEntry={entries.submitEntry}
-                onSubmitted={entries.refetch}
-              />
-            </TabsContent>
-          </Tabs>
+          <BountyTabs
+            escrow={escrow}
+            viewer={publicKey}
+            isJudge={roles.isJudge}
+            prizeList={prizeList}
+            entries={entries}
+            pending={pending}
+            onVote={castVote}
+          />
         )}
         {!SUBMISSIONS_PREVIEW && (
           <section aria-labelledby="prizes-heading" className="flex flex-col gap-4">

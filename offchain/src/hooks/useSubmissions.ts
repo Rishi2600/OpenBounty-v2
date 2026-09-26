@@ -14,7 +14,16 @@ import { SUBMISSIONS_PREVIEW } from "@/constants/submissions";
 import { getMockSubmissions, mockDelay, mockSignature } from "@/mocks/store";
 import { mockSubmit } from "@/mocks/actions";
 
-export function useSubmissions(escrow: EscrowAccount | null) {
+export interface SubmissionsState {
+  submissions: Submission[];
+  loading: boolean;
+  error: string | null;
+  refetch: () => void;
+  submitEntry: (values: SubmissionValues) => Promise<string>;
+  submitting: boolean;
+}
+
+export function useSubmissions(escrow: EscrowAccount | null): SubmissionsState {
   const { publicKey } = useWallet();
   const [submissions, setSubmissions] = useState<Submission[]>([]);
   const [loading, setLoading] = useState(true);

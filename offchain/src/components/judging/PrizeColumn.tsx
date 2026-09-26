@@ -47,8 +47,9 @@ export default function PrizeColumn({ escrow, tierIndex, submissions, judge, isE
     if (canDrop && submissionId) onDropEntry(submissionId);
   }
 
-  let hint = "Drop an entry here to vote for it";
-  if (tier.winner) hint = "Winner picked";
+  // No hint once there's a winner: the badge already says so
+  let hint: string | null = "Drop an entry here to vote for it";
+  if (tier.winner) hint = null;
   else if (myVote) hint = "You've voted on this prize";
   else if (isEnded) hint = "Voting closed";
 
@@ -102,7 +103,7 @@ export default function PrizeColumn({ escrow, tierIndex, submissions, judge, isE
         </ul>
       )}
 
-      <p className="text-sm text-muted-foreground">{hint}</p>
+      {hint && <p className="text-sm text-muted-foreground">{hint}</p>}
     </section>
   );
 }
