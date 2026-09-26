@@ -161,6 +161,12 @@ To add a sample, add another `escrow({...})` entry in `buildMockEscrows`.
   - **Switching over:** implement `getNews()` and set `NEWS_IS_SAMPLE = false`. The UI doesn't change.
   - **Checked:** at 1440px and 390px.
 
+- **Multi-asset and multichain prizes, preview** (branch `feat/multi-asset-preview`, mock mode only):
+  - **Assets:** organizers pick SOL, USDC, USDT, BONK or JUP, and amounts show in each token.
+  - **Explore:** filters by asset.
+  - **USDC winners** choose to be paid on Solana, Base, Ethereum or Arbitrum (simulated Circle CCTP).
+  - **Docs:** [../multichain/README.md](../multichain/README.md).
+
 ## How the refactor was checked
 
 In mock mode, with a headless browser, at 1440px and 390px:

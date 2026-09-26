@@ -119,6 +119,12 @@ Treat files in `src/components/ui/` as generated: change them only for theme-wid
 
 ## Patterns
 
+- **Amounts are per asset.** Every bounty has an `asset`, so never assume SOL.
+  - Show amounts with `TokenAmount` or `formatAmount(amount, asset)`.
+  - Parse typed amounts with `toBaseUnits`.
+  - Sum across bounties with `formatTotals`, which keeps one total per asset.
+  - Multi-asset and multichain controls show only when `MULTI_ASSET_PREVIEW` is true (mock mode), until the program supports tokens.
+
 - **Three states for every data view:**
   - **Loading:** a `Skeleton` shaped like the real content, never a blank screen.
   - **Empty:** `EmptyState` with a short message and one action ("No bounties yet" → Create bounty).
